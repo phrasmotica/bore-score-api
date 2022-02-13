@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -48,6 +49,8 @@ var results = []result{
 
 func main() {
 	router := gin.Default()
+
+	router.Use(cors.Default())
 
 	router.GET("/games", getGames)
 	router.GET("/players", getPlayers)
