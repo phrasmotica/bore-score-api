@@ -6,8 +6,9 @@ type game struct {
 }
 
 type player struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
+	ID          int    `json:"id"`
+	Username    string `json:"username"`
+	DisplayName string `json:"displayName"`
 }
 
 type playerScore struct {

@@ -21,12 +21,14 @@ var games = []game{
 
 var players = []player{
 	{
-		ID:   1,
-		Name: "Johanna",
+		ID:          1,
+		Username:    "johannam",
+		DisplayName: "Johanna",
 	},
 	{
-		ID:   2,
-		Name: "Julian",
+		ID:          2,
+		Username:    "julianl",
+		DisplayName: "Julian",
 	},
 }
 
