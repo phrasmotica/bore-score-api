@@ -55,9 +55,11 @@ func main() {
 	router.Use(cors.Default())
 
 	router.GET("/games", getGames)
-	router.GET("/players", getPlayers)
-	router.GET("/results", getResults)
 
+	router.GET("/players", getPlayers)
+	router.POST("/players", postPlayer)
+
+	router.GET("/results", getResults)
 	router.POST("/results", postResult)
 
 	router.Run("localhost:8000")
@@ -69,6 +71,25 @@ func getGames(c *gin.Context) {
 
 func getPlayers(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, players)
+}
+
+func postPlayer(c *gin.Context) {
+	var newPlayer player
+
+	if err := c.BindJSON(&newPlayer); err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "invalid body format"})
+		return
+	}
+
+	if playerExistsByUsername(players, newPlayer.Username) {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("player %s already exists", newPlayer.Username)})
+		return
+	}
+
+	newPlayer.ID = getMaxPlayerId(players) + 1
+
+	players = append(players, newPlayer)
+	c.IndentedJSON(http.StatusCreated, newPlayer)
 }
 
 func getResults(c *gin.Context) {
