@@ -58,6 +58,7 @@ func main() {
 
 	router.GET("/players", getPlayers)
 	router.POST("/players", postPlayer)
+	router.DELETE("/players/:username", deletePlayer)
 
 	router.GET("/results", getResults)
 	router.POST("/results", postResult)
@@ -90,6 +91,18 @@ func postPlayer(c *gin.Context) {
 
 	players = append(players, newPlayer)
 	c.IndentedJSON(http.StatusCreated, newPlayer)
+}
+
+func deletePlayer(c *gin.Context) {
+	username := c.Param("username")
+
+	if !playerExistsByUsername(players, username) {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("player %s does not exist", username)})
+		return
+	}
+
+	players = removePlayer(players, username)
+	c.IndentedJSON(http.StatusNoContent, gin.H{})
 }
 
 func getResults(c *gin.Context) {
