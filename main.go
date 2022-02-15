@@ -47,6 +47,34 @@ var results = []result{
 			},
 		},
 	},
+	{
+		ID:     2,
+		GameID: 1,
+		Scores: []playerScore{
+			{
+				PlayerID: 1,
+				Score:    32,
+			},
+			{
+				PlayerID: 2,
+				Score:    34,
+			},
+		},
+	},
+	{
+		ID:     3,
+		GameID: 2,
+		Scores: []playerScore{
+			{
+				PlayerID: 1,
+				Score:    116,
+			},
+			{
+				PlayerID: 2,
+				Score:    140,
+			},
+		},
+	},
 }
 
 func main() {
