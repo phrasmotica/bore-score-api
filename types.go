@@ -1,8 +1,17 @@
 package main
 
+type GameType string
+
+const (
+	Score GameType = "Score"
+)
+
 type game struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
+	ID         int      `json:"id"`
+	Name       string   `json:"name"`
+	GameType   GameType `json:"gameType"`
+	MinPlayers int      `json:"minPlayers"`
+	MaxPlayers int      `json:"maxPlayers"`
 }
 
 type player struct {

@@ -10,12 +10,25 @@ import (
 
 var games = []game{
 	{
-		ID:   1,
-		Name: "Village Green",
+		ID:         1,
+		Name:       "Village Green",
+		GameType:   Score,
+		MinPlayers: 1,
+		MaxPlayers: 5,
 	},
 	{
-		ID:   2,
-		Name: "Modern Art: The Card Game",
+		ID:         2,
+		Name:       "Modern Art: The Card Game",
+		GameType:   Score,
+		MinPlayers: 2,
+		MaxPlayers: 5,
+	},
+	{
+		ID:         3,
+		Name:       "Love Letter",
+		GameType:   Score,
+		MinPlayers: 2,
+		MaxPlayers: 4,
 	},
 }
 
