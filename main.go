@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -47,8 +48,9 @@ var players = []player{
 
 var results = []result{
 	{
-		ID:     1,
-		GameID: 1,
+		ID:        1,
+		GameID:    1,
+		Timestamp: time.Date(2022, time.January, 22, 10, 34, 0, 0, time.UTC).Unix(),
 		Scores: []playerScore{
 			{
 				PlayerID: 1,
@@ -61,8 +63,9 @@ var results = []result{
 		},
 	},
 	{
-		ID:     2,
-		GameID: 1,
+		ID:        2,
+		GameID:    1,
+		Timestamp: time.Date(2022, time.January, 23, 17, 12, 0, 0, time.UTC).Unix(),
 		Scores: []playerScore{
 			{
 				PlayerID: 1,
@@ -75,8 +78,9 @@ var results = []result{
 		},
 	},
 	{
-		ID:     3,
-		GameID: 2,
+		ID:        3,
+		GameID:    2,
+		Timestamp: time.Date(2022, time.February, 13, 14, 56, 0, 0, time.UTC).Unix(),
 		Scores: []playerScore{
 			{
 				PlayerID: 1,

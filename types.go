@@ -26,7 +26,8 @@ type playerScore struct {
 }
 
 type result struct {
-	ID     int           `json:"id"`
-	GameID int           `json:"gameId"`
-	Scores []playerScore `json:"scores"`
+	ID        int           `json:"id"`
+	GameID    int           `json:"gameId"`
+	Timestamp int64         `json:"timestamp"`
+	Scores    []playerScore `json:"scores"`
 }
