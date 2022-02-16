@@ -12,23 +12,39 @@ import (
 
 var games = []game{
 	{
-		ID:         1,
-		Name:       "Village Green",
-		GameType:   Score,
+		ID:       1,
+		Name:     "Village Green",
+		GameType: Score,
+		Synopsis: "A game of pretty gardens and petty grudges.",
+
+		Description: `It's the first day of spring, and there's only one thing on everyone's mind — the Village Green of the Year competition! In just a few months, the judges of this prestigious contest will be visiting, and the village council have finally put you in charge of the preparations. With your newfound authority, you can show those snobs from Lower Aynesmore just what a properly orchestrated floral arrangement looks like!
+
+		In Village Green, you are rival gardeners, tasked by your respective communities with arranging flowers, planting trees, commissioning statues, and building ponds. You must place each element carefully as time is tight and the stakes couldn't be higher! Split your days between acquiring and installing new features for your green and nominating it for one of the competition's many awards. Will your village green become the local laughing stock, or make the neighboring villages green with envy?`,
+
 		MinPlayers: 1,
 		MaxPlayers: 5,
 	},
 	{
-		ID:         2,
-		Name:       "Modern Art: The Card Game",
-		GameType:   Score,
+		ID:       2,
+		Name:     "Modern Art: The Card Game",
+		GameType: Score,
+		Synopsis: "Assemble the most valuable art collection.",
+
+		Description: "In Modern Art: The Card Game, the players are art critics, collectors and gallery owners. As it is in art galleries the world over, tastes and opinions change constantly in the world of Modern Art. Today’s treasure is tomorrow’s trash, and no one has more influence on the artists’ values than the players in this game. Which players will exert the most influence on the art market? Who will be the best at anticipating the quickly-changing tastes and opinions of buyers, and thus assemble the highest-valued collection of these new masters? Only the most influential collector will come out on top in Modern Art: The Card Game! Same as Master’s Gallery Bookshelf Game.",
+
 		MinPlayers: 2,
 		MaxPlayers: 5,
 	},
 	{
-		ID:         3,
-		Name:       "Love Letter",
-		GameType:   Score,
+		ID:       3,
+		Name:     "Love Letter",
+		GameType: Score,
+		Synopsis: "Can you get a letter to the princess or remove all your rivals? You win either way!",
+
+		Description: `Will your love letter woo the Princess and win her heart? Utilize the characters in the castle to secretly carry your message to the Princess, earning her affection.
+
+		Love Letter is a game of risk, deduction, and luck. Designed by Seiji Kanai, the game features simple rules that create dynamic and fun player interactions. Players attempt to deliver their love letter into the Princess’s hands while keeping other players’ letters away. Powerful cards lead to early gains, but make you a target. Rely on weaker cards for too long and your letter may be tossed in the fire!`,
+
 		MinPlayers: 2,
 		MaxPlayers: 4,
 	},

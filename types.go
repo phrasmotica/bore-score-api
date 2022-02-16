@@ -7,11 +7,13 @@ const (
 )
 
 type game struct {
-	ID         int      `json:"id"`
-	Name       string   `json:"name"`
-	GameType   GameType `json:"gameType"`
-	MinPlayers int      `json:"minPlayers"`
-	MaxPlayers int      `json:"maxPlayers"`
+	ID          int      `json:"id"`
+	Name        string   `json:"name"`
+	GameType    GameType `json:"gameType"`
+	Synopsis    string   `json:"synopsis"`
+	Description string   `json:"description"`
+	MinPlayers  int      `json:"minPlayers"`
+	MaxPlayers  int      `json:"maxPlayers"`
 }
 
 type player struct {
