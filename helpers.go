@@ -14,6 +14,20 @@ func removePlayer(players []player, username string) []player {
 	return append(players[:indexOf], players[indexOf+1:]...)
 }
 
+// removes the game with the given ID from the given list of games
+func removeGame(games []game, id int) []game {
+	var indexOf int
+
+	for i, g := range games {
+		if id == g.ID {
+			indexOf = i
+			break
+		}
+	}
+
+	return append(games[:indexOf], games[indexOf+1:]...)
+}
+
 // returns whether the game with the given ID exists in the given list of games
 func gameExists(games []game, gameId int) bool {
 	for _, g := range games {

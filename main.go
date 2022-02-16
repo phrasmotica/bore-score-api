@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -100,6 +101,7 @@ func main() {
 	router.Use(cors.Default())
 
 	router.GET("/games", getGames)
+	router.DELETE("/games/:id", deleteGame)
 
 	router.GET("/players", getPlayers)
 	router.POST("/players", postPlayer)
@@ -113,6 +115,23 @@ func main() {
 
 func getGames(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, games)
+}
+
+func deleteGame(c *gin.Context) {
+	gameId, err := strconv.Atoi(c.Param("id"))
+
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "invalid game id"})
+		return
+	}
+
+	if !gameExists(games, gameId) {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("game %d does not exist", gameId)})
+		return
+	}
+
+	games = removeGame(games, gameId)
+	c.IndentedJSON(http.StatusNoContent, gin.H{})
 }
 
 func getPlayers(c *gin.Context) {
