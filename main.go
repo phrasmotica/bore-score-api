@@ -10,15 +10,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var gameTypes = []GameType{
-	Score,
+var winMethods = []WinMethod{
+	IndividualScore,
 }
 
 var games = []game{
 	{
 		ID:       1,
 		Name:     "Village Green",
-		GameType: Score,
 		Synopsis: "A game of pretty gardens and petty grudges.",
 
 		Description: `It's the first day of spring, and there's only one thing on everyone's mind — the Village Green of the Year competition! In just a few months, the judges of this prestigious contest will be visiting, and the village council have finally put you in charge of the preparations. With your newfound authority, you can show those snobs from Lower Aynesmore just what a properly orchestrated floral arrangement looks like!
@@ -27,22 +26,22 @@ var games = []game{
 
 		MinPlayers: 1,
 		MaxPlayers: 5,
+		WinMethod:  IndividualScore,
 	},
 	{
 		ID:       2,
 		Name:     "Modern Art: The Card Game",
-		GameType: Score,
 		Synopsis: "Assemble the most valuable art collection.",
 
 		Description: "In Modern Art: The Card Game, the players are art critics, collectors and gallery owners. As it is in art galleries the world over, tastes and opinions change constantly in the world of Modern Art. Today’s treasure is tomorrow’s trash, and no one has more influence on the artists’ values than the players in this game. Which players will exert the most influence on the art market? Who will be the best at anticipating the quickly-changing tastes and opinions of buyers, and thus assemble the highest-valued collection of these new masters? Only the most influential collector will come out on top in Modern Art: The Card Game! Same as Master’s Gallery Bookshelf Game.",
 
 		MinPlayers: 2,
 		MaxPlayers: 5,
+		WinMethod:  IndividualScore,
 	},
 	{
 		ID:       3,
 		Name:     "Love Letter",
-		GameType: Score,
 		Synopsis: "Can you get a letter to the princess or remove all your rivals? You win either way!",
 
 		Description: `Will your love letter woo the Princess and win her heart? Utilize the characters in the castle to secretly carry your message to the Princess, earning her affection.
@@ -51,6 +50,7 @@ var games = []game{
 
 		MinPlayers: 2,
 		MaxPlayers: 4,
+		WinMethod:  IndividualScore,
 	},
 }
 
@@ -123,7 +123,7 @@ func main() {
 	router.GET("/games", getGames)
 	router.DELETE("/games/:id", deleteGame)
 
-	router.GET("/gameTypes", getGameTypes)
+	router.GET("/winMethods", getWinMethods)
 
 	router.GET("/players", getPlayers)
 	router.POST("/players", postPlayer)
@@ -156,8 +156,8 @@ func deleteGame(c *gin.Context) {
 	c.IndentedJSON(http.StatusNoContent, gin.H{})
 }
 
-func getGameTypes(c *gin.Context) {
-	c.IndentedJSON(http.StatusOK, gameTypes)
+func getWinMethods(c *gin.Context) {
+	c.IndentedJSON(http.StatusOK, winMethods)
 }
 
 func getPlayers(c *gin.Context) {
