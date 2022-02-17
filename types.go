@@ -3,7 +3,8 @@ package main
 type WinMethod string
 
 const (
-	IndividualScore WinMethod = "Individual Score"
+	IndividualScore  WinMethod = "Individual Score"
+	IndividualWinner WinMethod = "Individual Winner"
 )
 
 type game struct {

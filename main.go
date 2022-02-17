@@ -12,6 +12,7 @@ import (
 
 var winMethods = []WinMethod{
 	IndividualScore,
+	IndividualWinner,
 }
 
 var games = []game{
