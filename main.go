@@ -53,6 +53,19 @@ var games = []game{
 		MaxPlayers: 4,
 		WinMethod:  IndividualScore,
 	},
+	{
+		ID:       4,
+		Name:     "Coup",
+		Synopsis: "Bluff (and call bluffs!) to victory in this card game with no third chances.",
+
+		Description: `You are head of a family in an Italian city-state, a city run by a weak and corrupt court. You need to manipulate, bluff and bribe your way to power. Your object is to destroy the influence of all the other families, forcing them into exile. Only one family will survive…
+
+		In Coup, you want to be the last player with influence in the game, with influence being represented by face-down character cards in your playing area.`,
+
+		MinPlayers: 2,
+		MaxPlayers: 6,
+		WinMethod:  IndividualWinner,
+	},
 }
 
 var players = []player{
