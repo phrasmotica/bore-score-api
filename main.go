@@ -79,6 +79,16 @@ var players = []player{
 		Username:    "julianl",
 		DisplayName: "Julian",
 	},
+	{
+		ID:          3,
+		Username:    "efrimm",
+		DisplayName: "Efrim",
+	},
+	{
+		ID:          4,
+		Username:    "billyj",
+		DisplayName: "Billy",
+	},
 }
 
 var results = []result{
