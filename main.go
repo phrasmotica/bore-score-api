@@ -10,6 +10,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+var gameTypes = []GameType{
+	Score,
+}
+
 var games = []game{
 	{
 		ID:       1,
@@ -119,6 +123,8 @@ func main() {
 	router.GET("/games", getGames)
 	router.DELETE("/games/:id", deleteGame)
 
+	router.GET("/gameTypes", getGameTypes)
+
 	router.GET("/players", getPlayers)
 	router.POST("/players", postPlayer)
 	router.DELETE("/players/:username", deletePlayer)
@@ -148,6 +154,10 @@ func deleteGame(c *gin.Context) {
 
 	games = removeGame(games, gameId)
 	c.IndentedJSON(http.StatusNoContent, gin.H{})
+}
+
+func getGameTypes(c *gin.Context) {
+	c.IndentedJSON(http.StatusOK, gameTypes)
 }
 
 func getPlayers(c *gin.Context) {
