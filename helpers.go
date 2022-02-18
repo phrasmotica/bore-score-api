@@ -86,3 +86,16 @@ func getMaxPlayerId(players []player) int {
 
 	return maxId
 }
+
+// returns the highest ID in the given list of games
+func getMaxGameId(games []game) int {
+	var maxId int
+
+	for i, e := range games {
+		if i == 0 || e.ID > maxId {
+			maxId = e.ID
+		}
+	}
+
+	return maxId
+}

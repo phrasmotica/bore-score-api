@@ -180,6 +180,7 @@ func main() {
 	router.Use(cors.Default())
 
 	router.GET("/games", getGames)
+	router.POST("/games", postGame)
 	router.DELETE("/games/:id", deleteGame)
 
 	router.GET("/winMethods", getWinMethods)
@@ -196,6 +197,25 @@ func main() {
 
 func getGames(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, games)
+}
+
+func postGame(c *gin.Context) {
+	var newGame game
+
+	if err := c.BindJSON(&newGame); err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "invalid body format"})
+		return
+	}
+
+	if gameExists(games, newGame.ID) {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("game %d already exists", newGame.ID)})
+		return
+	}
+
+	newGame.ID = getMaxGameId(games) + 1
+
+	games = append(games, newGame)
+	c.IndentedJSON(http.StatusCreated, newGame)
 }
 
 func deleteGame(c *gin.Context) {
