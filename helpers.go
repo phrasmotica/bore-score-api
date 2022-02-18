@@ -28,6 +28,19 @@ func removeGame(games []game, id int) []game {
 	return append(games[:indexOf], games[indexOf+1:]...)
 }
 
+// removes all results with the given game ID from the given list of results
+func removeResultsOfGame(results []result, gameId int) []result {
+	remaining := []result{}
+
+	for i := range results {
+		if results[i].GameID != gameId {
+			remaining = append(remaining, results[i])
+		}
+	}
+
+	return remaining
+}
+
 // returns whether the game with the given ID exists in the given list of games
 func gameExists(games []game, gameId int) bool {
 	for _, g := range games {

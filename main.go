@@ -242,6 +242,7 @@ func deleteGame(c *gin.Context) {
 		return
 	}
 
+	results = removeResultsOfGame(results, gameId)
 	games = removeGame(games, gameId)
 	c.IndentedJSON(http.StatusNoContent, gin.H{})
 }
