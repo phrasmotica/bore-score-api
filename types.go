@@ -26,9 +26,9 @@ type player struct {
 }
 
 type playerScore struct {
-	PlayerID int  `json:"playerId"`
-	Score    int  `json:"score"`
-	IsWinner bool `json:"isWinner"`
+	Username string `json:"username"`
+	Score    int    `json:"score"`
+	IsWinner bool   `json:"isWinner"`
 }
 
 type result struct {

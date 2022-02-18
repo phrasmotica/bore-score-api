@@ -52,19 +52,8 @@ func gameExists(games []game, gameId int) bool {
 	return false
 }
 
-// returns whether the player with the given ID exists in the given list of players
-func playerExists(players []player, playerId int) bool {
-	for _, p := range players {
-		if p.ID == playerId {
-			return true
-		}
-	}
-
-	return false
-}
-
 // returns whether the player with the given username exists in the given list of players
-func playerExistsByUsername(players []player, username string) bool {
+func playerExists(players []player, username string) bool {
 	for _, p := range players {
 		if p.Username == username {
 			return true

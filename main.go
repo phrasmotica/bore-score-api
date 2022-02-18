@@ -108,11 +108,11 @@ var results = []result{
 		Timestamp: time.Date(2022, time.January, 22, 10, 34, 0, 0, time.UTC).Unix(),
 		Scores: []playerScore{
 			{
-				PlayerID: 1,
+				Username: "johannam",
 				Score:    25,
 			},
 			{
-				PlayerID: 2,
+				Username: "julianl",
 				Score:    23,
 			},
 		},
@@ -123,11 +123,11 @@ var results = []result{
 		Timestamp: time.Date(2022, time.January, 23, 17, 12, 0, 0, time.UTC).Unix(),
 		Scores: []playerScore{
 			{
-				PlayerID: 1,
+				Username: "johannam",
 				Score:    32,
 			},
 			{
-				PlayerID: 2,
+				Username: "julianl",
 				Score:    34,
 			},
 		},
@@ -138,11 +138,11 @@ var results = []result{
 		Timestamp: time.Date(2022, time.February, 13, 14, 56, 0, 0, time.UTC).Unix(),
 		Scores: []playerScore{
 			{
-				PlayerID: 1,
+				Username: "johannam",
 				Score:    116,
 			},
 			{
-				PlayerID: 2,
+				Username: "julianl",
 				Score:    140,
 			},
 		},
@@ -153,11 +153,11 @@ var results = []result{
 		Timestamp: time.Date(2022, time.February, 15, 22, 02, 0, 0, time.UTC).Unix(),
 		Scores: []playerScore{
 			{
-				PlayerID: 1,
+				Username: "johannam",
 				Score:    7,
 			},
 			{
-				PlayerID: 2,
+				Username: "julianl",
 				Score:    5,
 			},
 		},
@@ -168,17 +168,17 @@ var results = []result{
 		Timestamp: time.Now().UTC().Unix(),
 		Scores: []playerScore{
 			{
-				PlayerID: 1,
+				Username: "johannam",
 				IsWinner: true,
 			},
 			{
-				PlayerID: 2,
+				Username: "julianl",
 			},
 			{
-				PlayerID: 3,
+				Username: "efrimm",
 			},
 			{
-				PlayerID: 4,
+				Username: "billyj",
 			},
 		},
 	},
@@ -263,7 +263,7 @@ func postPlayer(c *gin.Context) {
 		return
 	}
 
-	if playerExistsByUsername(players, newPlayer.Username) {
+	if playerExists(players, newPlayer.Username) {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("player %s already exists", newPlayer.Username)})
 		return
 	}
@@ -278,7 +278,7 @@ func postPlayer(c *gin.Context) {
 func deletePlayer(c *gin.Context) {
 	username := c.Param("username")
 
-	if !playerExistsByUsername(players, username) {
+	if !playerExists(players, username) {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("player %s does not exist", username)})
 		return
 	}
@@ -305,8 +305,8 @@ func postResult(c *gin.Context) {
 	}
 
 	for _, score := range newResult.Scores {
-		if !playerExists(players, score.PlayerID) {
-			c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("player %d does not exist", score.PlayerID)})
+		if !playerExists(players, score.Username) {
+			c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("player %s does not exist", score.Username)})
 			return
 		}
 	}
