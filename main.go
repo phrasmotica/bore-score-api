@@ -137,6 +137,41 @@ var results = []result{
 			},
 		},
 	},
+	{
+		ID:        4,
+		GameID:    3,
+		Timestamp: time.Date(2022, time.February, 15, 22, 02, 0, 0, time.UTC).Unix(),
+		Scores: []playerScore{
+			{
+				PlayerID: 1,
+				Score:    7,
+			},
+			{
+				PlayerID: 2,
+				Score:    5,
+			},
+		},
+	},
+	{
+		ID:        5,
+		GameID:    4,
+		Timestamp: time.Now().UTC().Unix(),
+		Scores: []playerScore{
+			{
+				PlayerID: 1,
+				IsWinner: true,
+			},
+			{
+				PlayerID: 2,
+			},
+			{
+				PlayerID: 3,
+			},
+			{
+				PlayerID: 4,
+			},
+		},
+	},
 }
 
 func main() {
