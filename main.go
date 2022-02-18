@@ -77,21 +77,25 @@ var games = []game{
 var players = []player{
 	{
 		ID:          1,
+		TimeCreated: now,
 		Username:    "johannam",
 		DisplayName: "Johanna",
 	},
 	{
 		ID:          2,
+		TimeCreated: now,
 		Username:    "julianl",
 		DisplayName: "Julian",
 	},
 	{
 		ID:          3,
+		TimeCreated: now,
 		Username:    "efrimm",
 		DisplayName: "Efrim",
 	},
 	{
 		ID:          4,
+		TimeCreated: now,
 		Username:    "billyj",
 		DisplayName: "Billy",
 	},
@@ -264,6 +268,7 @@ func postPlayer(c *gin.Context) {
 	}
 
 	newPlayer.ID = getMaxPlayerId(players) + 1
+	newPlayer.TimeCreated = time.Now().UTC().Unix()
 
 	players = append(players, newPlayer)
 	c.IndentedJSON(http.StatusCreated, newPlayer)

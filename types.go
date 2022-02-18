@@ -20,6 +20,7 @@ type game struct {
 
 type player struct {
 	ID          int    `json:"id"`
+	TimeCreated int64  `json:"timeCreated"`
 	Username    string `json:"username"`
 	DisplayName string `json:"displayName"`
 }
