@@ -182,6 +182,17 @@ var results = []result{
 			},
 		},
 	},
+	{
+		ID:        6,
+		GameID:    1,
+		Timestamp: time.Now().UTC().Unix(),
+		Scores: []playerScore{
+			{
+				Username: "johannam",
+				Score:    25,
+			},
+		},
+	},
 }
 
 func main() {
@@ -283,6 +294,7 @@ func deletePlayer(c *gin.Context) {
 		return
 	}
 
+	results = removeResultsOfPlayer(results, username)
 	players = removePlayer(players, username)
 	c.IndentedJSON(http.StatusNoContent, gin.H{})
 }

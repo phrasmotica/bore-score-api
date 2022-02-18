@@ -41,6 +41,38 @@ func removeResultsOfGame(results []result, gameId int) []result {
 	return remaining
 }
 
+// removes all results involving exclusively the player with the given username from the given list of results
+func removeResultsOfPlayer(results []result, username string) []result {
+	remaining := []result{}
+
+	for i := range results {
+		r := results[i]
+		scores := r.Scores
+
+		if len(scores) != 1 || scores[0].Username != username {
+			// also scrub player's username from results involving other players
+			for j := range r.Scores {
+				s := r.Scores[j]
+				if s.Username == username {
+					r.Scores[j] = scrubUsernameFromScore(s)
+				}
+			}
+
+			remaining = append(remaining, r)
+		}
+	}
+
+	return remaining
+}
+
+func scrubUsernameFromScore(s playerScore) playerScore {
+	return playerScore{
+		Username: "",
+		Score:    s.Score,
+		IsWinner: s.IsWinner,
+	}
+}
+
 // returns whether the game with the given ID exists in the given list of games
 func gameExists(games []game, gameId int) bool {
 	for _, g := range games {
