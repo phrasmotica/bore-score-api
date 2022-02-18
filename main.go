@@ -15,11 +15,14 @@ var winMethods = []WinMethod{
 	IndividualWinner,
 }
 
+var now = time.Now().UTC().Unix()
+
 var games = []game{
 	{
-		ID:       1,
-		Name:     "Village Green",
-		Synopsis: "A game of pretty gardens and petty grudges.",
+		ID:          1,
+		TimeCreated: now,
+		Name:        "Village Green",
+		Synopsis:    "A game of pretty gardens and petty grudges.",
 
 		Description: `It's the first day of spring, and there's only one thing on everyone's mind — the Village Green of the Year competition! In just a few months, the judges of this prestigious contest will be visiting, and the village council have finally put you in charge of the preparations. With your newfound authority, you can show those snobs from Lower Aynesmore just what a properly orchestrated floral arrangement looks like!
 
@@ -30,9 +33,10 @@ var games = []game{
 		WinMethod:  IndividualScore,
 	},
 	{
-		ID:       2,
-		Name:     "Modern Art: The Card Game",
-		Synopsis: "Assemble the most valuable art collection.",
+		ID:          2,
+		TimeCreated: now,
+		Name:        "Modern Art: The Card Game",
+		Synopsis:    "Assemble the most valuable art collection.",
 
 		Description: "In Modern Art: The Card Game, the players are art critics, collectors and gallery owners. As it is in art galleries the world over, tastes and opinions change constantly in the world of Modern Art. Today’s treasure is tomorrow’s trash, and no one has more influence on the artists’ values than the players in this game. Which players will exert the most influence on the art market? Who will be the best at anticipating the quickly-changing tastes and opinions of buyers, and thus assemble the highest-valued collection of these new masters? Only the most influential collector will come out on top in Modern Art: The Card Game! Same as Master’s Gallery Bookshelf Game.",
 
@@ -41,9 +45,10 @@ var games = []game{
 		WinMethod:  IndividualScore,
 	},
 	{
-		ID:       3,
-		Name:     "Love Letter",
-		Synopsis: "Can you get a letter to the princess or remove all your rivals? You win either way!",
+		ID:          3,
+		TimeCreated: now,
+		Name:        "Love Letter",
+		Synopsis:    "Can you get a letter to the princess or remove all your rivals? You win either way!",
 
 		Description: `Will your love letter woo the Princess and win her heart? Utilize the characters in the castle to secretly carry your message to the Princess, earning her affection.
 
@@ -54,9 +59,10 @@ var games = []game{
 		WinMethod:  IndividualScore,
 	},
 	{
-		ID:       4,
-		Name:     "Coup",
-		Synopsis: "Bluff (and call bluffs!) to victory in this card game with no third chances.",
+		ID:          4,
+		TimeCreated: now,
+		Name:        "Coup",
+		Synopsis:    "Bluff (and call bluffs!) to victory in this card game with no third chances.",
 
 		Description: `You are head of a family in an Italian city-state, a city run by a weak and corrupt court. You need to manipulate, bluff and bribe your way to power. Your object is to destroy the influence of all the other families, forcing them into exile. Only one family will survive…
 
@@ -213,6 +219,7 @@ func postGame(c *gin.Context) {
 	}
 
 	newGame.ID = getMaxGameId(games) + 1
+	newGame.TimeCreated = time.Now().UTC().Unix()
 
 	games = append(games, newGame)
 	c.IndentedJSON(http.StatusCreated, newGame)

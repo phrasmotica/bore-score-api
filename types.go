@@ -9,6 +9,7 @@ const (
 
 type game struct {
 	ID          int       `json:"id"`
+	TimeCreated int64     `json:"timeCreated"`
 	Name        string    `json:"name"`
 	Synopsis    string    `json:"synopsis"`
 	Description string    `json:"description"`
