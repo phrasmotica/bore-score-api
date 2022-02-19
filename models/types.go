@@ -25,9 +25,10 @@ var LinkTypes = []LinkType{
 }
 
 type Game struct {
-	ID          int       `json:"id" bson:"id"`
-	TimeCreated int64     `json:"timeCreated" bson:"timeCreated"`
+	ID          string    `json:"id" bson:"id"`
 	Name        string    `json:"name" bson:"name"`
+	TimeCreated int64     `json:"timeCreated" bson:"timeCreated"`
+	DisplayName string    `json:"displayName" bson:"displayName"`
 	Synopsis    string    `json:"synopsis" bson:"synopsis"`
 	Description string    `json:"description" bson:"description"`
 	MinPlayers  int       `json:"minPlayers" bson:"minPlayers"`
@@ -42,9 +43,9 @@ type Link struct {
 }
 
 type Player struct {
-	ID          int    `json:"id" bson:"id"`
-	TimeCreated int64  `json:"timeCreated" bson:"timeCreated"`
+	ID          string `json:"id" bson:"id"`
 	Username    string `json:"username" bson:"username"`
+	TimeCreated int64  `json:"timeCreated" bson:"timeCreated"`
 	DisplayName string `json:"displayName" bson:"displayName"`
 }
 
@@ -55,8 +56,8 @@ type PlayerScore struct {
 }
 
 type Result struct {
-	ID        int           `json:"id" bson:"id"`
-	GameID    int           `json:"gameId" bson:"gameId"`
+	ID        string        `json:"id" bson:"id"`
+	GameName  string        `json:"gameName" bson:"gameName"`
 	Timestamp int64         `json:"timestamp" bson:"timestamp"`
 	Scores    []PlayerScore `json:"scores" bson:"scores"`
 }

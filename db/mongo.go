@@ -6,7 +6,9 @@ import (
 	"log"
 	"os"
 	"phrasmotica/bore-score-api/models"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -57,25 +59,28 @@ func GetAllGames(ctx context.Context) []models.Game {
 	return games
 }
 
-func GameExists(ctx context.Context, id int) bool {
-	filter := bson.D{{"id", bson.D{{"$eq", id}}}}
+func GameExists(ctx context.Context, name string) bool {
+	filter := bson.D{{"name", bson.D{{"$eq", name}}}}
 	result := GetDatabase().Collection("Games").FindOne(ctx, filter)
 	return result.Err() == nil
 }
 
-func AddGame(ctx context.Context, newGame models.Game) (models.Game, error) {
+func AddGame(ctx context.Context, newGame *models.Game) error {
+	newGame.ID = uuid.NewString()
+	newGame.TimeCreated = time.Now().UTC().Unix()
+
 	_, err := GetDatabase().Collection("Games").InsertOne(ctx, newGame)
 
 	if err != nil {
 		log.Println(err)
-		return models.Game{}, err
+		return err
 	}
 
-	return newGame, nil
+	return nil
 }
 
-func DeleteGame(ctx context.Context, gameId int) (bool, error) {
-	filter := bson.D{{"id", bson.D{{"$eq", gameId}}}}
+func DeleteGame(ctx context.Context, name string) (bool, error) {
+	filter := bson.D{{"name", bson.D{{"$eq", name}}}}
 	_, err := GetDatabase().Collection("Games").DeleteOne(ctx, filter)
 
 	if err != nil {
@@ -108,15 +113,18 @@ func PlayerExists(ctx context.Context, username string) bool {
 	return result.Err() == nil
 }
 
-func AddPlayer(ctx context.Context, newPlayer models.Player) (models.Player, error) {
+func AddPlayer(ctx context.Context, newPlayer *models.Player) error {
+	newPlayer.ID = uuid.NewString()
+	newPlayer.TimeCreated = time.Now().UTC().Unix()
+
 	_, err := GetDatabase().Collection("Players").InsertOne(ctx, newPlayer)
 
 	if err != nil {
 		log.Println(err)
-		return models.Player{}, err
+		return err
 	}
 
-	return newPlayer, nil
+	return nil
 }
 
 func DeletePlayer(ctx context.Context, username string) (bool, error) {
@@ -147,18 +155,19 @@ func GetAllResults(ctx context.Context) []models.Result {
 	return results
 }
 
-func AddResult(ctx context.Context, newResult models.Result) (models.Result, error) {
+func AddResult(ctx context.Context, newResult *models.Result) error {
+	newResult.ID = uuid.NewString()
 	_, err := GetDatabase().Collection("Results").InsertOne(ctx, newResult)
 
 	if err != nil {
 		log.Println(err)
-		return models.Result{}, err
+		return err
 	}
 
-	return newResult, nil
+	return nil
 }
 
-func DeleteResultsWithGameId(ctx context.Context, gameId int) (int64, error) {
+func DeleteResultsWithGameId(ctx context.Context, gameId string) (int64, error) {
 	filter := bson.D{{"gameId", bson.D{{"$eq", gameId}}}}
 	deleteResult, err := GetDatabase().Collection("Results").DeleteMany(ctx, filter)
 

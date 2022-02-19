@@ -7,8 +7,6 @@ import (
 	"net/http"
 	"phrasmotica/bore-score-api/db"
 	"phrasmotica/bore-score-api/models"
-	"strconv"
-	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -53,18 +51,12 @@ func postGame(c *gin.Context) {
 		return
 	}
 
-	if db.GameExists(ctx, newGame.ID) {
+	if db.GameExists(ctx, newGame.Name) {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("game %d already exists", newGame.ID)})
 		return
 	}
 
-	// TODO: remove numeric IDs
-	games := db.GetAllGames(ctx)
-	newGame.ID = getMaxGameId(games) + 1
-
-	newGame.TimeCreated = time.Now().UTC().Unix()
-
-	_, err := db.AddGame(ctx, newGame)
+	err := db.AddGame(ctx, &newGame)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -75,33 +67,28 @@ func postGame(c *gin.Context) {
 }
 
 func deleteGame(c *gin.Context) {
-	gameId, err := strconv.Atoi(c.Param("id"))
-
-	if err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "invalid game id"})
-		return
-	}
+	name := c.Param("name")
 
 	ctx := context.TODO()
 
-	if !db.GameExists(ctx, gameId) {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("game %d does not exist", gameId)})
+	if !db.GameExists(ctx, name) {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("game %s does not exist", name)})
 		return
 	}
 
-	deletedCount, err := db.DeleteResultsWithGameId(ctx, gameId)
+	deletedCount, err := db.DeleteResultsWithGameId(ctx, name)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("Deleted %d results for game %d\n", deletedCount, gameId)
+	fmt.Printf("Deleted %d results for game %s\n", deletedCount, name)
 
-	_, err = db.DeleteGame(ctx, gameId)
+	_, err = db.DeleteGame(ctx, name)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("Deleted game %d\n", gameId)
+	fmt.Printf("Deleted game %s\n", name)
 
 	c.IndentedJSON(http.StatusNoContent, gin.H{})
 }
@@ -135,13 +122,7 @@ func postPlayer(c *gin.Context) {
 		return
 	}
 
-	// TODO: remove numeric IDs
-	players := db.GetAllPlayers(ctx)
-	newPlayer.ID = getMaxPlayerId(players) + 1
-
-	newPlayer.TimeCreated = time.Now().UTC().Unix()
-
-	_, err := db.AddPlayer(ctx, newPlayer)
+	err := db.AddPlayer(ctx, &newPlayer)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -196,8 +177,8 @@ func postResult(c *gin.Context) {
 		return
 	}
 
-	if !db.GameExists(ctx, newResult.GameID) {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("game %d does not exist", newResult.GameID)})
+	if !db.GameExists(ctx, newResult.GameName) {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("game %d does not exist", newResult.GameName)})
 		return
 	}
 
@@ -208,16 +189,12 @@ func postResult(c *gin.Context) {
 		}
 	}
 
-	// TODO: remove numeric IDs
-	results := db.GetAllResults(ctx)
-	newResult.ID = getMaxResultId(results) + 1
-
-	_, err := db.AddResult(ctx, newResult)
+	err := db.AddResult(ctx, &newResult)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("Added result for game %d\n", newResult.GameID)
+	fmt.Printf("Added result for game %s\n", newResult.GameName)
 
 	c.IndentedJSON(http.StatusCreated, newResult)
 }
