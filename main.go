@@ -31,6 +31,16 @@ var games = []game{
 		MinPlayers: 1,
 		MaxPlayers: 5,
 		WinMethod:  IndividualScore,
+		Links: []Link{
+			{
+				Type: OfficialWebsite,
+				Link: "https://ospreypublishing.com/store/osprey-games/board-card-games/village-green",
+			},
+			{
+				Type: BoardGameGeek,
+				Link: "https://boardgamegeek.com/boardgame/300583/village-green",
+			},
+		},
 	},
 	{
 		ID:          2,
@@ -43,6 +53,16 @@ var games = []game{
 		MinPlayers: 2,
 		MaxPlayers: 5,
 		WinMethod:  IndividualScore,
+		Links: []Link{
+			{
+				Type: OfficialWebsite,
+				Link: "https://ospreypublishing.com/store/osprey-games/board-card-games/village-green",
+			},
+			{
+				Type: BoardGameGeek,
+				Link: "https://boardgamegeek.com/boardgame/300583/village-green",
+			},
+		},
 	},
 	{
 		ID:          3,
@@ -57,6 +77,16 @@ var games = []game{
 		MinPlayers: 2,
 		MaxPlayers: 4,
 		WinMethod:  IndividualScore,
+		Links: []Link{
+			{
+				Type: OfficialWebsite,
+				Link: "https://www.zmangames.com/en/games/love-letter/",
+			},
+			{
+				Type: BoardGameGeek,
+				Link: "https://boardgamegeek.com/boardgame/129622/love-letter",
+			},
+		},
 	},
 	{
 		ID:          4,
@@ -71,6 +101,16 @@ var games = []game{
 		MinPlayers: 2,
 		MaxPlayers: 6,
 		WinMethod:  IndividualWinner,
+		Links: []Link{
+			{
+				Type: OfficialWebsite,
+				Link: "http://indieboardsandcards.com/index.php/our-games/coup/",
+			},
+			{
+				Type: BoardGameGeek,
+				Link: "https://boardgamegeek.com/boardgame/131357/coup",
+			},
+		},
 	},
 }
 

@@ -7,6 +7,13 @@ const (
 	IndividualWinner WinMethod = "Individual Winner"
 )
 
+type LinkType string
+
+const (
+	OfficialWebsite LinkType = "Official Website"
+	BoardGameGeek   LinkType = "BoardGameGeek"
+)
+
 type game struct {
 	ID          int       `json:"id"`
 	TimeCreated int64     `json:"timeCreated"`
@@ -16,6 +23,12 @@ type game struct {
 	MinPlayers  int       `json:"minPlayers"`
 	MaxPlayers  int       `json:"maxPlayers"`
 	WinMethod   WinMethod `json:"winMethod"`
+	Links       []Link    `json:"links"`
+}
+
+type Link struct {
+	Type LinkType `json:"type"`
+	Link string   `json:"link"`
 }
 
 type player struct {
