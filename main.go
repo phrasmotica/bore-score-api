@@ -1,239 +1,18 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"log"
 	"net/http"
+	"phrasmotica/bore-score-api/db"
+	"phrasmotica/bore-score-api/models"
 	"strconv"
 	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
-
-var winMethods = []WinMethod{
-	IndividualScore,
-	IndividualWinner,
-}
-
-var now = time.Now().UTC().Unix()
-
-var games = []game{
-	{
-		ID:          1,
-		TimeCreated: now,
-		Name:        "Village Green",
-		Synopsis:    "A game of pretty gardens and petty grudges.",
-
-		Description: `It's the first day of spring, and there's only one thing on everyone's mind — the Village Green of the Year competition! In just a few months, the judges of this prestigious contest will be visiting, and the village council have finally put you in charge of the preparations. With your newfound authority, you can show those snobs from Lower Aynesmore just what a properly orchestrated floral arrangement looks like!
-
-		In Village Green, you are rival gardeners, tasked by your respective communities with arranging flowers, planting trees, commissioning statues, and building ponds. You must place each element carefully as time is tight and the stakes couldn't be higher! Split your days between acquiring and installing new features for your green and nominating it for one of the competition's many awards. Will your village green become the local laughing stock, or make the neighboring villages green with envy?`,
-
-		MinPlayers: 1,
-		MaxPlayers: 5,
-		WinMethod:  IndividualScore,
-		Links: []Link{
-			{
-				Type: OfficialWebsite,
-				Link: "https://ospreypublishing.com/store/osprey-games/board-card-games/village-green",
-			},
-			{
-				Type: BoardGameGeek,
-				Link: "https://boardgamegeek.com/boardgame/300583/village-green",
-			},
-		},
-	},
-	{
-		ID:          2,
-		TimeCreated: now,
-		Name:        "Modern Art: The Card Game",
-		Synopsis:    "Assemble the most valuable art collection.",
-
-		Description: "In Modern Art: The Card Game, the players are art critics, collectors and gallery owners. As it is in art galleries the world over, tastes and opinions change constantly in the world of Modern Art. Today’s treasure is tomorrow’s trash, and no one has more influence on the artists’ values than the players in this game. Which players will exert the most influence on the art market? Who will be the best at anticipating the quickly-changing tastes and opinions of buyers, and thus assemble the highest-valued collection of these new masters? Only the most influential collector will come out on top in Modern Art: The Card Game! Same as Master’s Gallery Bookshelf Game.",
-
-		MinPlayers: 2,
-		MaxPlayers: 5,
-		WinMethod:  IndividualScore,
-		Links: []Link{
-			{
-				Type: OfficialWebsite,
-				Link: "https://ospreypublishing.com/store/osprey-games/board-card-games/village-green",
-			},
-			{
-				Type: BoardGameGeek,
-				Link: "https://boardgamegeek.com/boardgame/300583/village-green",
-			},
-		},
-	},
-	{
-		ID:          3,
-		TimeCreated: now,
-		Name:        "Love Letter",
-		Synopsis:    "Can you get a letter to the princess or remove all your rivals? You win either way!",
-
-		Description: `Will your love letter woo the Princess and win her heart? Utilize the characters in the castle to secretly carry your message to the Princess, earning her affection.
-
-		Love Letter is a game of risk, deduction, and luck. Designed by Seiji Kanai, the game features simple rules that create dynamic and fun player interactions. Players attempt to deliver their love letter into the Princess’s hands while keeping other players’ letters away. Powerful cards lead to early gains, but make you a target. Rely on weaker cards for too long and your letter may be tossed in the fire!`,
-
-		MinPlayers: 2,
-		MaxPlayers: 4,
-		WinMethod:  IndividualScore,
-		Links: []Link{
-			{
-				Type: OfficialWebsite,
-				Link: "https://www.zmangames.com/en/games/love-letter/",
-			},
-			{
-				Type: BoardGameGeek,
-				Link: "https://boardgamegeek.com/boardgame/129622/love-letter",
-			},
-		},
-	},
-	{
-		ID:          4,
-		TimeCreated: now,
-		Name:        "Coup",
-		Synopsis:    "Bluff (and call bluffs!) to victory in this card game with no third chances.",
-
-		Description: `You are head of a family in an Italian city-state, a city run by a weak and corrupt court. You need to manipulate, bluff and bribe your way to power. Your object is to destroy the influence of all the other families, forcing them into exile. Only one family will survive…
-
-		In Coup, you want to be the last player with influence in the game, with influence being represented by face-down character cards in your playing area.`,
-
-		MinPlayers: 2,
-		MaxPlayers: 6,
-		WinMethod:  IndividualWinner,
-		Links: []Link{
-			{
-				Type: OfficialWebsite,
-				Link: "http://indieboardsandcards.com/index.php/our-games/coup/",
-			},
-			{
-				Type: BoardGameGeek,
-				Link: "https://boardgamegeek.com/boardgame/131357/coup",
-			},
-		},
-	},
-}
-
-var players = []player{
-	{
-		ID:          1,
-		TimeCreated: now,
-		Username:    "johannam",
-		DisplayName: "Johanna",
-	},
-	{
-		ID:          2,
-		TimeCreated: now,
-		Username:    "julianl",
-		DisplayName: "Julian",
-	},
-	{
-		ID:          3,
-		TimeCreated: now,
-		Username:    "efrimm",
-		DisplayName: "Efrim",
-	},
-	{
-		ID:          4,
-		TimeCreated: now,
-		Username:    "billyj",
-		DisplayName: "Billy",
-	},
-}
-
-var results = []result{
-	{
-		ID:        1,
-		GameID:    1,
-		Timestamp: time.Date(2022, time.January, 22, 10, 34, 0, 0, time.UTC).Unix(),
-		Scores: []playerScore{
-			{
-				Username: "johannam",
-				Score:    25,
-			},
-			{
-				Username: "julianl",
-				Score:    23,
-			},
-		},
-	},
-	{
-		ID:        2,
-		GameID:    1,
-		Timestamp: time.Date(2022, time.January, 23, 17, 12, 0, 0, time.UTC).Unix(),
-		Scores: []playerScore{
-			{
-				Username: "johannam",
-				Score:    32,
-			},
-			{
-				Username: "julianl",
-				Score:    34,
-			},
-		},
-	},
-	{
-		ID:        3,
-		GameID:    2,
-		Timestamp: time.Date(2022, time.February, 13, 14, 56, 0, 0, time.UTC).Unix(),
-		Scores: []playerScore{
-			{
-				Username: "johannam",
-				Score:    116,
-			},
-			{
-				Username: "julianl",
-				Score:    140,
-			},
-		},
-	},
-	{
-		ID:        4,
-		GameID:    3,
-		Timestamp: time.Date(2022, time.February, 15, 22, 02, 0, 0, time.UTC).Unix(),
-		Scores: []playerScore{
-			{
-				Username: "johannam",
-				Score:    7,
-			},
-			{
-				Username: "julianl",
-				Score:    5,
-			},
-		},
-	},
-	{
-		ID:        5,
-		GameID:    4,
-		Timestamp: time.Now().UTC().Unix(),
-		Scores: []playerScore{
-			{
-				Username: "johannam",
-				IsWinner: true,
-			},
-			{
-				Username: "julianl",
-			},
-			{
-				Username: "efrimm",
-			},
-			{
-				Username: "billyj",
-			},
-		},
-	},
-	{
-		ID:        6,
-		GameID:    1,
-		Timestamp: time.Now().UTC().Unix(),
-		Scores: []playerScore{
-			{
-				Username: "johannam",
-				Score:    25,
-			},
-		},
-	},
-}
 
 func main() {
 	router := gin.Default()
@@ -257,26 +36,41 @@ func main() {
 }
 
 func getGames(c *gin.Context) {
+	games := db.GetAllGames(context.TODO())
+
+	fmt.Printf("Found %d games\n", len(games))
+
 	c.IndentedJSON(http.StatusOK, games)
 }
 
 func postGame(c *gin.Context) {
-	var newGame game
+	var newGame models.Game
+
+	ctx := context.TODO()
 
 	if err := c.BindJSON(&newGame); err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "invalid body format"})
 		return
 	}
 
-	if gameExists(games, newGame.ID) {
+	if db.GameExists(ctx, newGame.ID) {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("game %d already exists", newGame.ID)})
 		return
 	}
 
+	// TODO: remove numeric IDs
+	games := db.GetAllGames(ctx)
 	newGame.ID = getMaxGameId(games) + 1
+
 	newGame.TimeCreated = time.Now().UTC().Unix()
 
-	games = append(games, newGame)
+	_, err := db.AddGame(ctx, newGame)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("Added game %s\n", newGame.Name)
+
 	c.IndentedJSON(http.StatusCreated, newGame)
 }
 
@@ -288,83 +82,142 @@ func deleteGame(c *gin.Context) {
 		return
 	}
 
-	if !gameExists(games, gameId) {
+	ctx := context.TODO()
+
+	if !db.GameExists(ctx, gameId) {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("game %d does not exist", gameId)})
 		return
 	}
 
-	results = removeResultsOfGame(results, gameId)
-	games = removeGame(games, gameId)
+	deletedCount, err := db.DeleteResultsWithGameId(ctx, gameId)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("Deleted %d results for game %d\n", deletedCount, gameId)
+
+	_, err = db.DeleteGame(ctx, gameId)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("Deleted game %d\n", gameId)
+
 	c.IndentedJSON(http.StatusNoContent, gin.H{})
 }
 
 func getWinMethods(c *gin.Context) {
-	c.IndentedJSON(http.StatusOK, winMethods)
+	fmt.Printf("Found %d win methods\n", len(models.WinMethods))
+
+	c.IndentedJSON(http.StatusOK, models.WinMethods)
 }
 
 func getPlayers(c *gin.Context) {
+	players := db.GetAllPlayers(context.TODO())
+
+	fmt.Printf("Found %d players\n", len(players))
+
 	c.IndentedJSON(http.StatusOK, players)
 }
 
 func postPlayer(c *gin.Context) {
-	var newPlayer player
+	var newPlayer models.Player
+
+	ctx := context.TODO()
 
 	if err := c.BindJSON(&newPlayer); err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "invalid body format"})
 		return
 	}
 
-	if playerExists(players, newPlayer.Username) {
+	if db.PlayerExists(ctx, newPlayer.Username) {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("player %s already exists", newPlayer.Username)})
 		return
 	}
 
+	// TODO: remove numeric IDs
+	players := db.GetAllPlayers(ctx)
 	newPlayer.ID = getMaxPlayerId(players) + 1
+
 	newPlayer.TimeCreated = time.Now().UTC().Unix()
 
-	players = append(players, newPlayer)
+	_, err := db.AddPlayer(ctx, newPlayer)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("Added player %s\n", newPlayer.Username)
+
 	c.IndentedJSON(http.StatusCreated, newPlayer)
 }
 
 func deletePlayer(c *gin.Context) {
 	username := c.Param("username")
 
-	if !playerExists(players, username) {
+	ctx := context.TODO()
+
+	if !db.PlayerExists(ctx, username) {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("player %s does not exist", username)})
 		return
 	}
 
-	results = removeResultsOfPlayer(results, username)
-	players = removePlayer(players, username)
+	scrubbedCount, err := db.ScrubResultsWithPlayer(ctx, username)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("Scrubbed player %s from %d results\n", username, scrubbedCount)
+
+	_, err = db.DeletePlayer(ctx, username)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("Deleted player %s\n", username)
+
 	c.IndentedJSON(http.StatusNoContent, gin.H{})
 }
 
 func getResults(c *gin.Context) {
+	results := db.GetAllResults(context.TODO())
+
+	fmt.Printf("Found %d results\n", len(results))
+
 	c.IndentedJSON(http.StatusOK, results)
 }
 
 func postResult(c *gin.Context) {
-	var newResult result
+	var newResult models.Result
+
+	ctx := context.TODO()
 
 	if err := c.BindJSON(&newResult); err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "invalid body format"})
 		return
 	}
 
-	if !gameExists(games, newResult.GameID) {
+	if !db.GameExists(ctx, newResult.GameID) {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("game %d does not exist", newResult.GameID)})
 		return
 	}
 
 	for _, score := range newResult.Scores {
-		if !playerExists(players, score.Username) {
+		if !db.PlayerExists(ctx, score.Username) {
 			c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("player %s does not exist", score.Username)})
 			return
 		}
 	}
 
+	// TODO: remove numeric IDs
+	results := db.GetAllResults(ctx)
 	newResult.ID = getMaxResultId(results) + 1
 
-	results = append(results, newResult)
+	_, err := db.AddResult(ctx, newResult)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("Added result for game %d\n", newResult.GameID)
+
 	c.IndentedJSON(http.StatusCreated, newResult)
 }
