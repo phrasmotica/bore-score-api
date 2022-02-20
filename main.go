@@ -52,7 +52,7 @@ func postGame(c *gin.Context) {
 	}
 
 	if db.GameExists(ctx, newGame.Name) {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("game %d already exists", newGame.ID)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("game %s already exists", newGame.Name)})
 		return
 	}
 
@@ -178,7 +178,7 @@ func postResult(c *gin.Context) {
 	}
 
 	if !db.GameExists(ctx, newResult.GameName) {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("game %d does not exist", newResult.GameName)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("game %s does not exist", newResult.GameName)})
 		return
 	}
 

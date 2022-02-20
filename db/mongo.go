@@ -204,7 +204,7 @@ func ScrubResultsWithPlayer(ctx context.Context, username string) (int, error) {
 			log.Fatal(err)
 		}
 
-		fmt.Printf("Scrubbed player %s from result %d\n", username, r.ID)
+		fmt.Printf("Scrubbed player %s from result %s\n", username, r.ID)
 		scrubbedCount += 1
 	}
 
