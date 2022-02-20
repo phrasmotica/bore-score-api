@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"phrasmotica/bore-score-api/models"
@@ -180,39 +179,7 @@ func DeleteResultsWithGameId(ctx context.Context, gameId string) (int64, error) 
 	return deleteResult.DeletedCount, nil
 }
 
-func ScrubResultsWithPlayer(ctx context.Context, username string) (int, error) {
-	// TODO: do this method via a single collection.Update(...) operation
-	results, err := getResultsWithPlayer(ctx, username)
-	if err != nil {
-		log.Println(err)
-		return 0, err
-	}
-
-	scrubbedCount := 0
-
-	for i := range results {
-		r := results[i]
-		for j := range r.Scores {
-			s := r.Scores[j]
-			if s.Username == username {
-				r.Scores[j] = scrubUsernameFromScore(s)
-				break
-			}
-		}
-
-		_, err := GetDatabase().Collection("Results").ReplaceOne(ctx, bson.D{{"id", r.ID}}, r)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		fmt.Printf("Scrubbed player %s from result %s\n", username, r.ID)
-		scrubbedCount += 1
-	}
-
-	return scrubbedCount, nil
-}
-
-func getResultsWithPlayer(ctx context.Context, username string) ([]models.Result, error) {
+func ScrubResultsWithPlayer(ctx context.Context, username string) (int64, error) {
 	// filters to results where the given player took part
 	filter := bson.D{
 		{
@@ -228,29 +195,23 @@ func getResultsWithPlayer(ctx context.Context, username string) ([]models.Result
 		},
 	}
 
-	cursor, err := GetDatabase().Collection("Results").Find(ctx, filter)
+	// updates by setting the username field of the player's score object to an empty string
+	update := bson.D{
+		{
+			"$set", bson.D{
+				{
+					"scores.$.username", "",
+				},
+			},
+		},
+	}
+
+	result, err := GetDatabase().Collection("Results").UpdateMany(ctx, filter, update)
 
 	if err != nil {
 		log.Println(err)
-		return []models.Result{}, err
+		return 0, err
 	}
 
-	var results []models.Result
-
-	err = cursor.All(ctx, &results)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Printf("Got %d results with player %s\n", len(results), username)
-
-	return results, nil
-}
-
-func scrubUsernameFromScore(s models.PlayerScore) models.PlayerScore {
-	return models.PlayerScore{
-		Username: "",
-		Score:    s.Score,
-		IsWinner: s.IsWinner,
-	}
+	return result.ModifiedCount, nil
 }
