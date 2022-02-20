@@ -67,6 +67,7 @@ func GameExists(ctx context.Context, name string) bool {
 
 func AddGame(ctx context.Context, newGame *models.Game) error {
 	newGame.ID = uuid.NewString()
+	newGame.Name = computeName(newGame.DisplayName)
 	newGame.TimeCreated = time.Now().UTC().Unix()
 
 	_, err := GetDatabase().Collection("Games").InsertOne(ctx, newGame)
