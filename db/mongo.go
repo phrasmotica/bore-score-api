@@ -216,6 +216,22 @@ func ScrubResultsWithPlayer(ctx context.Context, username string) (int64, error)
 	return result.ModifiedCount, nil
 }
 
+func GetAllLinkTypes(ctx context.Context) []models.LinkType {
+	cursor, err := GetDatabase().Collection("LinkTypes").Find(ctx, bson.D{})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var linkTypes []models.LinkType
+
+	err = cursor.All(ctx, &linkTypes)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return linkTypes
+}
+
 func GetAllWinMethods(ctx context.Context) []models.WinMethod {
 	cursor, err := GetDatabase().Collection("WinMethods").Find(ctx, bson.D{})
 	if err != nil {

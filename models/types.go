@@ -1,17 +1,5 @@
 package models
 
-type LinkType string
-
-const (
-	OfficialWebsite LinkType = "Official Website"
-	BoardGameGeek   LinkType = "BoardGameGeek"
-)
-
-var LinkTypes = []LinkType{
-	OfficialWebsite,
-	BoardGameGeek,
-}
-
 type Game struct {
 	ID          string `json:"id" bson:"id"`
 	Name        string `json:"name" bson:"name"`
@@ -26,9 +14,23 @@ type Game struct {
 }
 
 type Link struct {
-	Type LinkType `json:"type" bson:"type"`
-	Link string   `json:"link" bson:"link"`
+	Type LinkTypeName `json:"type" bson:"type"`
+	Link string       `json:"link" bson:"link"`
 }
+
+type LinkType struct {
+	ID          string       `json:"id" bson:"id"`
+	Name        LinkTypeName `json:"name" bson:"name"`
+	TimeCreated int64        `json:"timeCreated" bson:"timeCreated"`
+	DisplayName string       `json:"displayName" bson:"displayName"`
+}
+
+type LinkTypeName string
+
+const (
+	OfficialWebsite LinkTypeName = "official-website"
+	BoardGameGeek   LinkTypeName = "board-game-geek"
+)
 
 type Player struct {
 	ID          string `json:"id" bson:"id"`

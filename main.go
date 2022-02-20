@@ -21,6 +21,8 @@ func main() {
 	router.POST("/games", postGame)
 	router.DELETE("/games/:id", deleteGame)
 
+	router.GET("/linkTypes", getLinkTypes)
+
 	router.GET("/winMethods", getWinMethods)
 
 	router.GET("/players", getPlayers)
@@ -99,6 +101,14 @@ func getWinMethods(c *gin.Context) {
 	fmt.Printf("Found %d win methods\n", len(winMethods))
 
 	c.IndentedJSON(http.StatusOK, winMethods)
+}
+
+func getLinkTypes(c *gin.Context) {
+	linkTypes := db.GetAllLinkTypes(context.TODO())
+
+	fmt.Printf("Found %d link types\n", len(linkTypes))
+
+	c.IndentedJSON(http.StatusOK, linkTypes)
 }
 
 func getPlayers(c *gin.Context) {
