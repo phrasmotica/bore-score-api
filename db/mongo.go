@@ -215,3 +215,19 @@ func ScrubResultsWithPlayer(ctx context.Context, username string) (int64, error)
 
 	return result.ModifiedCount, nil
 }
+
+func GetAllWinMethods(ctx context.Context) []models.WinMethod {
+	cursor, err := GetDatabase().Collection("WinMethods").Find(ctx, bson.D{})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var winMethods []models.WinMethod
+
+	err = cursor.All(ctx, &winMethods)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return winMethods
+}

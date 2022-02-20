@@ -1,17 +1,5 @@
 package models
 
-type WinMethod string
-
-const (
-	IndividualScore  WinMethod = "Individual Score"
-	IndividualWinner WinMethod = "Individual Winner"
-)
-
-var WinMethods = []WinMethod{
-	IndividualScore,
-	IndividualWinner,
-}
-
 type LinkType string
 
 const (
@@ -25,16 +13,16 @@ var LinkTypes = []LinkType{
 }
 
 type Game struct {
-	ID          string    `json:"id" bson:"id"`
-	Name        string    `json:"name" bson:"name"`
-	TimeCreated int64     `json:"timeCreated" bson:"timeCreated"`
-	DisplayName string    `json:"displayName" bson:"displayName"`
-	Synopsis    string    `json:"synopsis" bson:"synopsis"`
-	Description string    `json:"description" bson:"description"`
-	MinPlayers  int       `json:"minPlayers" bson:"minPlayers"`
-	MaxPlayers  int       `json:"maxPlayers" bson:"maxPlayers"`
-	WinMethod   WinMethod `json:"winMethod" bson:"winMethod"`
-	Links       []Link    `json:"links" bson:"links"`
+	ID          string `json:"id" bson:"id"`
+	Name        string `json:"name" bson:"name"`
+	TimeCreated int64  `json:"timeCreated" bson:"timeCreated"`
+	DisplayName string `json:"displayName" bson:"displayName"`
+	Synopsis    string `json:"synopsis" bson:"synopsis"`
+	Description string `json:"description" bson:"description"`
+	MinPlayers  int    `json:"minPlayers" bson:"minPlayers"`
+	MaxPlayers  int    `json:"maxPlayers" bson:"maxPlayers"`
+	WinMethod   string `json:"winMethod" bson:"winMethod"`
+	Links       []Link `json:"links" bson:"links"`
 }
 
 type Link struct {
@@ -61,3 +49,17 @@ type Result struct {
 	Timestamp int64         `json:"timestamp" bson:"timestamp"`
 	Scores    []PlayerScore `json:"scores" bson:"scores"`
 }
+
+type WinMethod struct {
+	ID          string        `json:"id" bson:"id"`
+	Name        WinMethodName `json:"name" bson:"name"`
+	TimeCreated int64         `json:"timeCreated" bson:"timeCreated"`
+	DisplayName string        `json:"displayName" bson:"displayName"`
+}
+
+type WinMethodName string
+
+const (
+	IndividualScore  WinMethodName = "individual-score"
+	IndividualWinner WinMethodName = "individual-winner"
+)

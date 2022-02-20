@@ -94,9 +94,11 @@ func deleteGame(c *gin.Context) {
 }
 
 func getWinMethods(c *gin.Context) {
-	fmt.Printf("Found %d win methods\n", len(models.WinMethods))
+	winMethods := db.GetAllWinMethods(context.TODO())
 
-	c.IndentedJSON(http.StatusOK, models.WinMethods)
+	fmt.Printf("Found %d win methods\n", len(winMethods))
+
+	c.IndentedJSON(http.StatusOK, winMethods)
 }
 
 func getPlayers(c *gin.Context) {
