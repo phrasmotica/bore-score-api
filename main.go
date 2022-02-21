@@ -19,7 +19,7 @@ func main() {
 
 	router.GET("/games", getGames)
 	router.POST("/games", postGame)
-	router.DELETE("/games/:id", deleteGame)
+	router.DELETE("/games/:name", deleteGame)
 
 	router.GET("/linkTypes", getLinkTypes)
 
@@ -78,7 +78,7 @@ func deleteGame(c *gin.Context) {
 		return
 	}
 
-	deletedCount, err := db.DeleteResultsWithGameId(ctx, name)
+	deletedCount, err := db.DeleteResultsWithGame(ctx, name)
 	if err != nil {
 		log.Fatal(err)
 	}

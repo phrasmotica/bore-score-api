@@ -167,8 +167,9 @@ func AddResult(ctx context.Context, newResult *models.Result) error {
 	return nil
 }
 
-func DeleteResultsWithGameId(ctx context.Context, gameId string) (int64, error) {
-	filter := bson.D{{"gameId", bson.D{{"$eq", gameId}}}}
+// TODO: delete results with game name instead
+func DeleteResultsWithGame(ctx context.Context, gameName string) (int64, error) {
+	filter := bson.D{{"gameName", bson.D{{"$eq", gameName}}}}
 	deleteResult, err := GetDatabase().Collection("Results").DeleteMany(ctx, filter)
 
 	if err != nil {
