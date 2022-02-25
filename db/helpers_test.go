@@ -12,6 +12,7 @@ func TestComputeName(t *testing.T) {
 		{"Odin's Ravens", "odins-ravens"},
 		{"Uno: The Sequel", "uno-the-sequel"},
 		{"Ganz Schön Clever", "ganz-schon-clever"},
+		{"Sushi Go!", "sushi-go"},
 	}
 
 	for _, table := range tables {

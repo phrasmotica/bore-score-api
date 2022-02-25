@@ -25,6 +25,9 @@ func computeName(displayName string) string {
 	reg := regexp.MustCompile(`[^a-zA-Z0-9 ]+`)
 	name = reg.ReplaceAllString(name, " ")
 
+	// trim leading/trailing whitespace
+	name = strings.Trim(name, " ")
+
 	// replace each block of spaces with a hyphen
 	reg = regexp.MustCompile(`\s+`)
 	name = reg.ReplaceAllString(name, "-")
