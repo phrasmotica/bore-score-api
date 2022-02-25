@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -53,6 +54,11 @@ func postGame(c *gin.Context) {
 		return
 	}
 
+	if err := validateNewGame(&newGame); err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
 	if db.GameExists(ctx, newGame.Name) {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("game %s already exists", newGame.Name)})
 		return
@@ -66,6 +72,26 @@ func postGame(c *gin.Context) {
 	fmt.Printf("Added game %s\n", newGame.Name)
 
 	c.IndentedJSON(http.StatusCreated, newGame)
+}
+
+func validateNewGame(game *models.Game) error {
+	if len(game.DisplayName) <= 0 {
+		return errors.New("game display name is missing")
+	}
+
+	if game.MinPlayers <= 0 {
+		return errors.New("game min players must be at least 1")
+	}
+
+	if game.MaxPlayers < game.MinPlayers {
+		return errors.New("game max players must be at least equal to its min players")
+	}
+
+	if len(game.WinMethod) <= 0 {
+		return errors.New("game display name is missing")
+	}
+
+	return nil
 }
 
 func deleteGame(c *gin.Context) {
@@ -129,6 +155,11 @@ func postPlayer(c *gin.Context) {
 		return
 	}
 
+	if err := validateNewPlayer(&newPlayer); err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
 	if db.PlayerExists(ctx, newPlayer.Username) {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("player %s already exists", newPlayer.Username)})
 		return
@@ -142,6 +173,18 @@ func postPlayer(c *gin.Context) {
 	fmt.Printf("Added player %s\n", newPlayer.Username)
 
 	c.IndentedJSON(http.StatusCreated, newPlayer)
+}
+
+func validateNewPlayer(player *models.Player) error {
+	if len(player.Username) <= 0 {
+		return errors.New("player username is missing")
+	}
+
+	if len(player.DisplayName) <= 0 {
+		return errors.New("player display name is missing")
+	}
+
+	return nil
 }
 
 func deletePlayer(c *gin.Context) {
@@ -182,12 +225,17 @@ func getResults(c *gin.Context) {
 func postResult(c *gin.Context) {
 	var newResult models.Result
 
-	ctx := context.TODO()
-
 	if err := c.BindJSON(&newResult); err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "invalid body format"})
 		return
 	}
+
+	if err := validateNewResult(&newResult); err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	ctx := context.TODO()
 
 	if !db.GameExists(ctx, newResult.GameName) {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("game %s does not exist", newResult.GameName)})
@@ -209,4 +257,16 @@ func postResult(c *gin.Context) {
 	fmt.Printf("Added result for game %s\n", newResult.GameName)
 
 	c.IndentedJSON(http.StatusCreated, newResult)
+}
+
+func validateNewResult(result *models.Result) error {
+	if len(result.Scores) <= 0 {
+		return errors.New("result is missing player scores")
+	}
+
+	if !hasUniquePlayerScores(result) {
+		return errors.New("result has duplicated player scores")
+	}
+
+	return nil
 }
