@@ -18,6 +18,8 @@ func main() {
 
 	router.Use(cors.Default())
 
+	router.GET("/summary", getSummary)
+
 	router.GET("/games", getGames)
 	router.POST("/games", postGame)
 	router.DELETE("/games/:name", deleteGame)
@@ -34,6 +36,12 @@ func main() {
 	router.POST("/results", postResult)
 
 	router.Run("localhost:8000")
+}
+
+func getSummary(c *gin.Context) {
+	summary := db.GetSummary(context.TODO())
+
+	c.IndentedJSON(http.StatusOK, summary)
 }
 
 func getGames(c *gin.Context) {

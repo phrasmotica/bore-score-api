@@ -42,6 +42,29 @@ func GetDatabase() *mongo.Database {
 	return database
 }
 
+func GetSummary(ctx context.Context) Summary {
+	gameCount, err := GetDatabase().Collection("Games").CountDocuments(ctx, bson.D{})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	playerCount, err := GetDatabase().Collection("Players").CountDocuments(ctx, bson.D{})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	resultCount, err := GetDatabase().Collection("Results").CountDocuments(ctx, bson.D{})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return Summary{
+		GameCount:   gameCount,
+		PlayerCount: playerCount,
+		ResultCount: resultCount,
+	}
+}
+
 func GetAllGames(ctx context.Context) []models.Game {
 	cursor, err := GetDatabase().Collection("Games").Find(ctx, bson.D{})
 	if err != nil {
