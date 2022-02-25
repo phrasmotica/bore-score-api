@@ -10,6 +10,7 @@ type Game struct {
 	MinPlayers  int    `json:"minPlayers" bson:"minPlayers"`
 	MaxPlayers  int    `json:"maxPlayers" bson:"maxPlayers"`
 	WinMethod   string `json:"winMethod" bson:"winMethod"`
+	ImageLink   string `json:"imageLink" bson:"imageLink"`
 	Links       []Link `json:"links" bson:"links"`
 }
 
