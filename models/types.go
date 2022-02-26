@@ -47,10 +47,11 @@ type PlayerScore struct {
 }
 
 type Result struct {
-	ID        string        `json:"id" bson:"id"`
-	GameName  string        `json:"gameName" bson:"gameName"`
-	Timestamp int64         `json:"timestamp" bson:"timestamp"`
-	Scores    []PlayerScore `json:"scores" bson:"scores"`
+	ID               string        `json:"id" bson:"id"`
+	GameName         string        `json:"gameName" bson:"gameName"`
+	Timestamp        int64         `json:"timestamp" bson:"timestamp"`
+	CooperativeScore int           `json:"cooperativeScore" bson:"cooperativeScore"`
+	Scores           []PlayerScore `json:"scores" bson:"scores"`
 }
 
 type WinMethod struct {
