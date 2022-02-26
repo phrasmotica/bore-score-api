@@ -81,10 +81,29 @@ func GetAllGames(ctx context.Context) []models.Game {
 	return games
 }
 
+func GetGame(ctx context.Context, name string) models.Game {
+	result := findGame(ctx, name)
+	if err := result.Err(); err != nil {
+		log.Fatal(err)
+	}
+
+	var game models.Game
+
+	if err := result.Decode(&game); err != nil {
+		log.Fatal(err)
+	}
+
+	return game
+}
+
 func GameExists(ctx context.Context, name string) bool {
-	filter := bson.D{{"name", bson.D{{"$eq", name}}}}
-	result := GetDatabase().Collection("Games").FindOne(ctx, filter)
+	result := findGame(ctx, name)
 	return result.Err() == nil
+}
+
+func findGame(ctx context.Context, name string) *mongo.SingleResult {
+	filter := bson.D{{"name", bson.D{{"$eq", name}}}}
+	return GetDatabase().Collection("Games").FindOne(ctx, filter)
 }
 
 func AddGame(ctx context.Context, newGame *models.Game) error {

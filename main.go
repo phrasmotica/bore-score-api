@@ -21,6 +21,7 @@ func main() {
 	router.GET("/summary", getSummary)
 
 	router.GET("/games", getGames)
+	router.GET("/games/:name", getGame)
 	router.POST("/games", postGame)
 	router.DELETE("/games/:name", deleteGame)
 
@@ -50,6 +51,16 @@ func getGames(c *gin.Context) {
 	fmt.Printf("Found %d games\n", len(games))
 
 	c.IndentedJSON(http.StatusOK, games)
+}
+
+func getGame(c *gin.Context) {
+	name := c.Param("name")
+
+	game := db.GetGame(context.TODO(), name)
+
+	fmt.Printf("Found game %s\n", name)
+
+	c.IndentedJSON(http.StatusOK, game)
 }
 
 func postGame(c *gin.Context) {
