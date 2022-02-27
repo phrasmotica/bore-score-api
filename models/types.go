@@ -50,6 +50,7 @@ type Result struct {
 	ID               string        `json:"id" bson:"id"`
 	GameName         string        `json:"gameName" bson:"gameName"`
 	Timestamp        int64         `json:"timestamp" bson:"timestamp"`
+	Notes            string        `json:"notes" bson:"notes"`
 	CooperativeScore int           `json:"cooperativeScore" bson:"cooperativeScore"`
 	CooperativeWin   bool          `json:"cooperativeWin" bson:"cooperativeWin"`
 	Scores           []PlayerScore `json:"scores" bson:"scores"`
