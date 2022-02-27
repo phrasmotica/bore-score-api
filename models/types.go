@@ -66,7 +66,7 @@ type WinMethodName string
 
 const (
 	IndividualScore  WinMethodName = "individual-score"
-	IndividualWinner WinMethodName = "individual-winner"
+	IndividualWin    WinMethodName = "individual-win"
 	CooperativeScore WinMethodName = "cooperative-score"
 	CooperativeWin   WinMethodName = "cooperative-win"
 )
