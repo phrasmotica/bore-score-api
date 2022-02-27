@@ -51,6 +51,7 @@ type Result struct {
 	GameName         string        `json:"gameName" bson:"gameName"`
 	Timestamp        int64         `json:"timestamp" bson:"timestamp"`
 	CooperativeScore int           `json:"cooperativeScore" bson:"cooperativeScore"`
+	CooperativeWin   bool          `json:"cooperativeWin" bson:"cooperativeWin"`
 	Scores           []PlayerScore `json:"scores" bson:"scores"`
 }
 
@@ -66,4 +67,6 @@ type WinMethodName string
 const (
 	IndividualScore  WinMethodName = "individual-score"
 	IndividualWinner WinMethodName = "individual-winner"
+	CooperativeScore WinMethodName = "cooperative-score"
+	CooperativeWin   WinMethodName = "cooperative-win"
 )
