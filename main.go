@@ -29,6 +29,9 @@ func main() {
 
 	router.GET("/winMethods", getWinMethods)
 
+	router.GET("/groups", getGroups)
+	router.GET("/groups/:name", getGroup)
+
 	router.GET("/players", getPlayers)
 	router.POST("/players", postPlayer)
 	router.DELETE("/players/:username", deletePlayer)
@@ -154,6 +157,24 @@ func getLinkTypes(c *gin.Context) {
 	fmt.Printf("Found %d link types\n", len(linkTypes))
 
 	c.IndentedJSON(http.StatusOK, linkTypes)
+}
+
+func getGroups(c *gin.Context) {
+	groups := db.GetAllGroups(context.TODO())
+
+	fmt.Printf("Found %d groups\n", len(groups))
+
+	c.IndentedJSON(http.StatusOK, groups)
+}
+
+func getGroup(c *gin.Context) {
+	name := c.Param("name")
+
+	group := db.GetGroup(context.TODO(), name)
+
+	fmt.Printf("Found group %s\n", name)
+
+	c.IndentedJSON(http.StatusOK, group)
 }
 
 func getPlayers(c *gin.Context) {
