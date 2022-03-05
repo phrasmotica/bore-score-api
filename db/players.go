@@ -29,7 +29,7 @@ func GetAllPlayers(ctx context.Context) ([]models.Player, bool) {
 }
 
 func PlayerExists(ctx context.Context, username string) bool {
-	filter := bson.D{{"username", bson.D{{"$eq", username}}}}
+	filter := bson.D{{"username", username}}
 	result := GetDatabase().Collection("Players").FindOne(ctx, filter)
 	return result.Err() == nil
 }
@@ -49,7 +49,7 @@ func AddPlayer(ctx context.Context, newPlayer *models.Player) bool {
 }
 
 func DeletePlayer(ctx context.Context, username string) bool {
-	filter := bson.D{{"username", bson.D{{"$eq", username}}}}
+	filter := bson.D{{"username", username}}
 	_, err := GetDatabase().Collection("Players").DeleteOne(ctx, filter)
 
 	if err != nil {

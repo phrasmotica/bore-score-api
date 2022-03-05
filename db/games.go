@@ -52,7 +52,7 @@ func GameExists(ctx context.Context, name string) bool {
 }
 
 func findGame(ctx context.Context, name string) *mongo.SingleResult {
-	filter := bson.D{{"name", bson.D{{"$eq", name}}}}
+	filter := bson.D{{"name", name}}
 	return GetDatabase().Collection("Games").FindOne(ctx, filter)
 }
 
@@ -72,7 +72,7 @@ func AddGame(ctx context.Context, newGame *models.Game) bool {
 }
 
 func DeleteGame(ctx context.Context, name string) bool {
-	filter := bson.D{{"name", bson.D{{"$eq", name}}}}
+	filter := bson.D{{"name", name}}
 	_, err := GetDatabase().Collection("Games").DeleteOne(ctx, filter)
 
 	if err != nil {

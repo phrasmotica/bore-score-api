@@ -47,7 +47,7 @@ func AddResult(ctx context.Context, newResult *models.Result) bool {
 }
 
 func DeleteResultsWithGame(ctx context.Context, gameName string) (int64, bool) {
-	filter := bson.D{{"gameName", bson.D{{"$eq", gameName}}}}
+	filter := bson.D{{"gameName", gameName}}
 	deleteResult, err := GetDatabase().Collection("Results").DeleteMany(ctx, filter)
 
 	if err != nil {

@@ -96,6 +96,6 @@ func findGroups(ctx context.Context, filter interface{}) (*mongo.Cursor, error) 
 }
 
 func findGroup(ctx context.Context, name string) *mongo.SingleResult {
-	filter := bson.D{{"name", bson.D{{"$eq", name}}}}
+	filter := bson.D{{"name", name}}
 	return GetDatabase().Collection("Groups").FindOne(ctx, filter)
 }
