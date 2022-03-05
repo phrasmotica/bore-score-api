@@ -49,6 +49,7 @@ type PlayerScore struct {
 type Result struct {
 	ID               string        `json:"id" bson:"id"`
 	GameName         string        `json:"gameName" bson:"gameName"`
+	GroupName        string        `json:"groupName" bson:"groupName"`
 	Timestamp        int64         `json:"timestamp" bson:"timestamp"`
 	Notes            string        `json:"notes" bson:"notes"`
 	CooperativeScore int           `json:"cooperativeScore" bson:"cooperativeScore"`
