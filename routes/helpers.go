@@ -1,4 +1,4 @@
-package main
+package routes
 
 import "phrasmotica/bore-score-api/models"
 
