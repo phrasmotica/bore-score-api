@@ -162,7 +162,7 @@ func getLinkTypes(c *gin.Context) {
 func getGroups(c *gin.Context) {
 	groups := db.GetAllGroups(context.TODO())
 
-	fmt.Printf("Found %d groups\n", len(groups))
+	fmt.Printf("Found %d groups\n", len(*groups))
 
 	c.IndentedJSON(http.StatusOK, groups)
 }
@@ -170,10 +170,21 @@ func getGroups(c *gin.Context) {
 func getGroup(c *gin.Context) {
 	name := c.Param("name")
 
-	group := db.GetGroup(context.TODO(), name)
+	group, result := db.GetGroup(context.TODO(), name)
+
+	if result == db.Failure {
+		fmt.Printf("Group %s not found\n", name)
+		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "group not found"})
+		return
+	}
+
+	if result == db.Unauthorised {
+		fmt.Printf("Group %s is private\n", name)
+		c.IndentedJSON(http.StatusUnauthorized, gin.H{"message": "group is private"})
+		return
+	}
 
 	fmt.Printf("Found group %s\n", name)
-
 	c.IndentedJSON(http.StatusOK, group)
 }
 
