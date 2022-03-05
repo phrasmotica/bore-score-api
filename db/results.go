@@ -29,6 +29,13 @@ func GetAllResults(ctx context.Context) ([]models.Result, bool) {
 
 func AddResult(ctx context.Context, newResult *models.Result) bool {
 	newResult.ID = uuid.NewString()
+
+	if len(newResult.GroupName) <= 0 {
+		// results are assigned attached to the global group "all" by default
+		log.Printf("Assigning new result %s to group all\n", newResult.ID)
+		newResult.GroupName = "all"
+	}
+
 	_, err := GetDatabase().Collection("Results").InsertOne(ctx, newResult)
 
 	if err != nil {
