@@ -9,8 +9,22 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func GetGroups(c *gin.Context) {
+func GetAllGroups(c *gin.Context) {
 	groups, success := db.GetAllGroups(context.TODO())
+
+	if !success {
+		fmt.Println("Could not get all groups")
+		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
+		return
+	}
+
+	fmt.Printf("Got %d groups\n", len(groups))
+
+	c.IndentedJSON(http.StatusOK, groups)
+}
+
+func GetGroups(c *gin.Context) {
+	groups, success := db.GetGroups(context.TODO())
 
 	if !success {
 		fmt.Println("Could not get groups")

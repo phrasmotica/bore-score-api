@@ -45,6 +45,26 @@ func GetAllGroups(ctx context.Context) ([]models.Group, bool) {
 	return groups, true
 }
 
+func GetGroups(ctx context.Context) ([]models.Group, bool) {
+	filter := bson.D{{"type", "public"}}
+
+	cursor, err := findGroups(ctx, filter)
+	if err != nil {
+		log.Println(err)
+		return nil, false
+	}
+
+	var groups []models.Group
+
+	err = cursor.All(ctx, &groups)
+	if err != nil {
+		log.Println(err)
+		return nil, false
+	}
+
+	return groups, true
+}
+
 func GetGroup(ctx context.Context, name string) (*models.Group, RetrieveGroupResult) {
 	result := findGroup(ctx, name)
 	if err := result.Err(); err != nil {
