@@ -66,6 +66,11 @@ func GetGroup(ctx context.Context, name string) (*models.Group, RetrieveGroupRes
 	return &group, Success
 }
 
+func GroupExists(ctx context.Context, name string) bool {
+	result := findGroup(ctx, name)
+	return result.Err() == nil
+}
+
 func findGroups(ctx context.Context, filter interface{}) (*mongo.Cursor, error) {
 	return GetDatabase().Collection("Groups").Find(ctx, filter)
 }

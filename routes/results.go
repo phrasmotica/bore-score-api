@@ -45,6 +45,11 @@ func PostResult(c *gin.Context) {
 		return
 	}
 
+	if len(newResult.GroupName) > 0 && !db.GroupExists(ctx, newResult.GroupName) {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("result is attached to non-existent group %s", newResult.GroupName)})
+		return
+	}
+
 	for _, score := range newResult.Scores {
 		if !db.PlayerExists(ctx, score.Username) {
 			c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("player %s does not exist", score.Username)})
@@ -52,8 +57,7 @@ func PostResult(c *gin.Context) {
 		}
 	}
 
-	success := db.AddResult(ctx, &newResult)
-	if !success {
+	if success := db.AddResult(ctx, &newResult); !success {
 		log.Println("Could not add result")
 		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
 		return
