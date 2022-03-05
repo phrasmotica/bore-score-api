@@ -17,7 +17,7 @@ const (
 	Unauthorised RetrieveGroupResult = 2
 )
 
-func GetAllGroups(ctx context.Context) *[]models.Group {
+func GetAllGroups(ctx context.Context) ([]models.Group, bool) {
 	filter := bson.D{
 		{
 			"type", bson.D{
@@ -31,7 +31,7 @@ func GetAllGroups(ctx context.Context) *[]models.Group {
 	cursor, err := findGroups(ctx, filter)
 	if err != nil {
 		log.Println(err)
-		return &[]models.Group{}
+		return nil, false
 	}
 
 	var groups []models.Group
@@ -39,10 +39,10 @@ func GetAllGroups(ctx context.Context) *[]models.Group {
 	err = cursor.All(ctx, &groups)
 	if err != nil {
 		log.Println(err)
-		return &[]models.Group{}
+		return nil, false
 	}
 
-	return &groups
+	return groups, true
 }
 
 func GetGroup(ctx context.Context, name string) (*models.Group, RetrieveGroupResult) {

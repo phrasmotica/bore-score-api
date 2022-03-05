@@ -43,15 +43,27 @@ func main() {
 }
 
 func getSummary(c *gin.Context) {
-	summary := db.GetSummary(context.TODO())
+	summary, success := db.GetSummary(context.TODO())
+
+	if !success {
+		fmt.Println("Could not get summary")
+		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
+		return
+	}
 
 	c.IndentedJSON(http.StatusOK, summary)
 }
 
 func getGames(c *gin.Context) {
-	games := db.GetAllGames(context.TODO())
+	games, success := db.GetAllGames(context.TODO())
 
-	fmt.Printf("Found %d games\n", len(games))
+	if !success {
+		fmt.Println("Could not get games")
+		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
+		return
+	}
+
+	fmt.Printf("Got %d games\n", len(games))
 
 	c.IndentedJSON(http.StatusOK, games)
 }
@@ -59,9 +71,15 @@ func getGames(c *gin.Context) {
 func getGame(c *gin.Context) {
 	name := c.Param("name")
 
-	game := db.GetGame(context.TODO(), name)
+	game, success := db.GetGame(context.TODO(), name)
 
-	fmt.Printf("Found game %s\n", name)
+	if !success {
+		fmt.Printf("Could not get game %s\n", name)
+		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
+		return
+	}
+
+	fmt.Printf("Got game %s\n", name)
 
 	c.IndentedJSON(http.StatusOK, game)
 }
@@ -76,8 +94,8 @@ func postGame(c *gin.Context) {
 		return
 	}
 
-	if err := validateNewGame(&newGame); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+	if success, err := validateNewGame(&newGame); !success {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": err})
 		return
 	}
 
@@ -86,9 +104,10 @@ func postGame(c *gin.Context) {
 		return
 	}
 
-	err := db.AddGame(ctx, &newGame)
-	if err != nil {
-		log.Fatal(err)
+	if success := db.AddGame(ctx, &newGame); !success {
+		log.Printf("Could not add game %s\n", newGame.Name)
+		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
+		return
 	}
 
 	fmt.Printf("Added game %s\n", newGame.Name)
@@ -96,24 +115,24 @@ func postGame(c *gin.Context) {
 	c.IndentedJSON(http.StatusCreated, newGame)
 }
 
-func validateNewGame(game *models.Game) error {
+func validateNewGame(game *models.Game) (bool, string) {
 	if len(game.DisplayName) <= 0 {
-		return errors.New("game display name is missing")
+		return false, "game display name is missing"
 	}
 
 	if game.MinPlayers <= 0 {
-		return errors.New("game min players must be at least 1")
+		return false, "game min players must be at least 1"
 	}
 
 	if game.MaxPlayers < game.MinPlayers {
-		return errors.New("game max players must be at least equal to its min players")
+		return false, "game max players must be at least equal to its min players"
 	}
 
 	if len(game.WinMethod) <= 0 {
-		return errors.New("game display name is missing")
+		return false, "game display name is missing"
 	}
 
-	return nil
+	return true, ""
 }
 
 func deleteGame(c *gin.Context) {
@@ -126,16 +145,19 @@ func deleteGame(c *gin.Context) {
 		return
 	}
 
-	deletedCount, err := db.DeleteResultsWithGame(ctx, name)
-	if err != nil {
-		log.Fatal(err)
+	deletedCount, success := db.DeleteResultsWithGame(ctx, name)
+	if !success {
+		log.Printf("Could not delete results for game %s\n", name)
+		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
+		return
 	}
 
 	fmt.Printf("Deleted %d results for game %s\n", deletedCount, name)
 
-	_, err = db.DeleteGame(ctx, name)
-	if err != nil {
-		log.Fatal(err)
+	if success := db.DeleteGame(ctx, name); !success {
+		log.Printf("Could not delete game %s\n", name)
+		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
+		return
 	}
 
 	fmt.Printf("Deleted game %s\n", name)
@@ -144,25 +166,43 @@ func deleteGame(c *gin.Context) {
 }
 
 func getWinMethods(c *gin.Context) {
-	winMethods := db.GetAllWinMethods(context.TODO())
+	winMethods, success := db.GetAllWinMethods(context.TODO())
 
-	fmt.Printf("Found %d win methods\n", len(winMethods))
+	if !success {
+		fmt.Println("Could not get win methods")
+		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
+		return
+	}
+
+	fmt.Printf("Got %d win methods\n", len(winMethods))
 
 	c.IndentedJSON(http.StatusOK, winMethods)
 }
 
 func getLinkTypes(c *gin.Context) {
-	linkTypes := db.GetAllLinkTypes(context.TODO())
+	linkTypes, success := db.GetAllLinkTypes(context.TODO())
 
-	fmt.Printf("Found %d link types\n", len(linkTypes))
+	if !success {
+		fmt.Println("Could not get link types")
+		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
+		return
+	}
+
+	fmt.Printf("Got %d link types\n", len(linkTypes))
 
 	c.IndentedJSON(http.StatusOK, linkTypes)
 }
 
 func getGroups(c *gin.Context) {
-	groups := db.GetAllGroups(context.TODO())
+	groups, success := db.GetAllGroups(context.TODO())
 
-	fmt.Printf("Found %d groups\n", len(*groups))
+	if !success {
+		fmt.Println("Could not get groups")
+		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
+		return
+	}
+
+	fmt.Printf("Got %d groups\n", len(groups))
 
 	c.IndentedJSON(http.StatusOK, groups)
 }
@@ -184,14 +224,20 @@ func getGroup(c *gin.Context) {
 		return
 	}
 
-	fmt.Printf("Found group %s\n", name)
+	fmt.Printf("Got group %s\n", name)
 	c.IndentedJSON(http.StatusOK, group)
 }
 
 func getPlayers(c *gin.Context) {
-	players := db.GetAllPlayers(context.TODO())
+	players, success := db.GetAllPlayers(context.TODO())
 
-	fmt.Printf("Found %d players\n", len(players))
+	if !success {
+		fmt.Println("Could not get players")
+		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
+		return
+	}
+
+	fmt.Printf("Got %d players\n", len(players))
 
 	c.IndentedJSON(http.StatusOK, players)
 }
@@ -216,9 +262,11 @@ func postPlayer(c *gin.Context) {
 		return
 	}
 
-	err := db.AddPlayer(ctx, &newPlayer)
-	if err != nil {
-		log.Fatal(err)
+	success := db.AddPlayer(ctx, &newPlayer)
+	if !success {
+		log.Printf("Could not add player %s\n", newPlayer.Username)
+		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
+		return
 	}
 
 	fmt.Printf("Added player %s\n", newPlayer.Username)
@@ -248,16 +296,19 @@ func deletePlayer(c *gin.Context) {
 		return
 	}
 
-	scrubbedCount, err := db.ScrubResultsWithPlayer(ctx, username)
-	if err != nil {
-		log.Fatal(err)
+	scrubbedCount, success := db.ScrubResultsWithPlayer(ctx, username)
+	if !success {
+		log.Printf("Could not scrub player %s from results\n", username)
+		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
+		return
 	}
 
 	fmt.Printf("Scrubbed player %s from %d results\n", username, scrubbedCount)
 
-	_, err = db.DeletePlayer(ctx, username)
-	if err != nil {
-		log.Fatal(err)
+	if success := db.DeletePlayer(ctx, username); !success {
+		log.Printf("Could not delete player %s\n", username)
+		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
+		return
 	}
 
 	fmt.Printf("Deleted player %s\n", username)
@@ -266,9 +317,15 @@ func deletePlayer(c *gin.Context) {
 }
 
 func getResults(c *gin.Context) {
-	results := db.GetAllResults(context.TODO())
+	results, success := db.GetAllResults(context.TODO())
 
-	fmt.Printf("Found %d results\n", len(results))
+	if !success {
+		fmt.Println("Could not get results")
+		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
+		return
+	}
+
+	fmt.Printf("Got %d results\n", len(results))
 
 	c.IndentedJSON(http.StatusOK, results)
 }
@@ -300,9 +357,11 @@ func postResult(c *gin.Context) {
 		}
 	}
 
-	err := db.AddResult(ctx, &newResult)
-	if err != nil {
-		log.Fatal(err)
+	success := db.AddResult(ctx, &newResult)
+	if !success {
+		log.Println("Could not add result")
+		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
+		return
 	}
 
 	fmt.Printf("Added result for game %s\n", newResult.GameName)

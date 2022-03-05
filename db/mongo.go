@@ -42,58 +42,65 @@ func GetDatabase() *mongo.Database {
 	return database
 }
 
-func GetSummary(ctx context.Context) Summary {
+func GetSummary(ctx context.Context) (*Summary, bool) {
 	gameCount, err := GetDatabase().Collection("Games").CountDocuments(ctx, bson.D{})
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return nil, false
 	}
 
 	playerCount, err := GetDatabase().Collection("Players").CountDocuments(ctx, bson.D{})
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return nil, false
 	}
 
 	resultCount, err := GetDatabase().Collection("Results").CountDocuments(ctx, bson.D{})
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return nil, false
 	}
 
-	return Summary{
+	return &Summary{
 		GameCount:   gameCount,
 		PlayerCount: playerCount,
 		ResultCount: resultCount,
-	}
+	}, true
 }
 
-func GetAllGames(ctx context.Context) []models.Game {
+func GetAllGames(ctx context.Context) ([]models.Game, bool) {
 	cursor, err := GetDatabase().Collection("Games").Find(ctx, bson.D{})
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return nil, false
 	}
 
 	var games []models.Game
 
 	err = cursor.All(ctx, &games)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return nil, false
 	}
 
-	return games
+	return games, true
 }
 
-func GetGame(ctx context.Context, name string) models.Game {
+func GetGame(ctx context.Context, name string) (*models.Game, bool) {
 	result := findGame(ctx, name)
 	if err := result.Err(); err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return nil, false
 	}
 
 	var game models.Game
 
 	if err := result.Decode(&game); err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return nil, false
 	}
 
-	return game
+	return &game, true
 }
 
 func GameExists(ctx context.Context, name string) bool {
@@ -106,7 +113,7 @@ func findGame(ctx context.Context, name string) *mongo.SingleResult {
 	return GetDatabase().Collection("Games").FindOne(ctx, filter)
 }
 
-func AddGame(ctx context.Context, newGame *models.Game) error {
+func AddGame(ctx context.Context, newGame *models.Game) bool {
 	newGame.ID = uuid.NewString()
 	newGame.Name = computeName(newGame.DisplayName)
 	newGame.TimeCreated = time.Now().UTC().Unix()
@@ -115,38 +122,40 @@ func AddGame(ctx context.Context, newGame *models.Game) error {
 
 	if err != nil {
 		log.Println(err)
-		return err
+		return false
 	}
 
-	return nil
+	return true
 }
 
-func DeleteGame(ctx context.Context, name string) (bool, error) {
+func DeleteGame(ctx context.Context, name string) bool {
 	filter := bson.D{{"name", bson.D{{"$eq", name}}}}
 	_, err := GetDatabase().Collection("Games").DeleteOne(ctx, filter)
 
 	if err != nil {
 		log.Println(err)
-		return false, err
+		return false
 	}
 
-	return true, nil
+	return true
 }
 
-func GetAllPlayers(ctx context.Context) []models.Player {
+func GetAllPlayers(ctx context.Context) ([]models.Player, bool) {
 	cursor, err := GetDatabase().Collection("Players").Find(ctx, bson.D{})
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return nil, false
 	}
 
 	var players []models.Player
 
 	err = cursor.All(ctx, &players)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return nil, false
 	}
 
-	return players
+	return players, true
 }
 
 func PlayerExists(ctx context.Context, username string) bool {
@@ -155,7 +164,7 @@ func PlayerExists(ctx context.Context, username string) bool {
 	return result.Err() == nil
 }
 
-func AddPlayer(ctx context.Context, newPlayer *models.Player) error {
+func AddPlayer(ctx context.Context, newPlayer *models.Player) bool {
 	newPlayer.ID = uuid.NewString()
 	newPlayer.TimeCreated = time.Now().UTC().Unix()
 
@@ -163,66 +172,67 @@ func AddPlayer(ctx context.Context, newPlayer *models.Player) error {
 
 	if err != nil {
 		log.Println(err)
-		return err
+		return false
 	}
 
-	return nil
+	return true
 }
 
-func DeletePlayer(ctx context.Context, username string) (bool, error) {
+func DeletePlayer(ctx context.Context, username string) bool {
 	filter := bson.D{{"username", bson.D{{"$eq", username}}}}
 	_, err := GetDatabase().Collection("Players").DeleteOne(ctx, filter)
 
 	if err != nil {
 		log.Println(err)
-		return false, err
+		return false
 	}
 
-	return true, nil
+	return true
 }
 
-func GetAllResults(ctx context.Context) []models.Result {
+func GetAllResults(ctx context.Context) ([]models.Result, bool) {
 	cursor, err := GetDatabase().Collection("Results").Find(ctx, bson.D{})
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return nil, false
 	}
 
 	var results []models.Result
 
 	err = cursor.All(ctx, &results)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return nil, false
 	}
 
-	return results
+	return results, true
 }
 
-func AddResult(ctx context.Context, newResult *models.Result) error {
+func AddResult(ctx context.Context, newResult *models.Result) bool {
 	newResult.ID = uuid.NewString()
 	_, err := GetDatabase().Collection("Results").InsertOne(ctx, newResult)
 
 	if err != nil {
 		log.Println(err)
-		return err
+		return false
 	}
 
-	return nil
+	return true
 }
 
-// TODO: delete results with game name instead
-func DeleteResultsWithGame(ctx context.Context, gameName string) (int64, error) {
+func DeleteResultsWithGame(ctx context.Context, gameName string) (int64, bool) {
 	filter := bson.D{{"gameName", bson.D{{"$eq", gameName}}}}
 	deleteResult, err := GetDatabase().Collection("Results").DeleteMany(ctx, filter)
 
 	if err != nil {
 		log.Println(err)
-		return 0, err
+		return 0, false
 	}
 
-	return deleteResult.DeletedCount, nil
+	return deleteResult.DeletedCount, true
 }
 
-func ScrubResultsWithPlayer(ctx context.Context, username string) (int64, error) {
+func ScrubResultsWithPlayer(ctx context.Context, username string) (int64, bool) {
 	// filters to results where the given player took part
 	filter := bson.D{
 		{
@@ -253,40 +263,44 @@ func ScrubResultsWithPlayer(ctx context.Context, username string) (int64, error)
 
 	if err != nil {
 		log.Println(err)
-		return 0, err
+		return 0, false
 	}
 
-	return result.ModifiedCount, nil
+	return result.ModifiedCount, true
 }
 
-func GetAllLinkTypes(ctx context.Context) []models.LinkType {
+func GetAllLinkTypes(ctx context.Context) ([]models.LinkType, bool) {
 	cursor, err := GetDatabase().Collection("LinkTypes").Find(ctx, bson.D{})
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return nil, false
 	}
 
 	var linkTypes []models.LinkType
 
 	err = cursor.All(ctx, &linkTypes)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return nil, false
 	}
 
-	return linkTypes
+	return linkTypes, true
 }
 
-func GetAllWinMethods(ctx context.Context) []models.WinMethod {
+func GetAllWinMethods(ctx context.Context) ([]models.WinMethod, bool) {
 	cursor, err := GetDatabase().Collection("WinMethods").Find(ctx, bson.D{})
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return nil, false
 	}
 
 	var winMethods []models.WinMethod
 
 	err = cursor.All(ctx, &winMethods)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return nil, false
 	}
 
-	return winMethods
+	return winMethods, true
 }
