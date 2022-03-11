@@ -26,7 +26,7 @@ func main() {
 	router.DELETE("/games/:name", routes.DeleteGame)
 
 	router.GET("/groups", routes.GetGroups)
-	router.GET("/groups/all", routes.GetAllGroups)
+	router.GET("/groups-all", routes.GetAllGroups)
 	router.GET("/groups/:name", routes.GetGroup)
 
 	router.GET("/players", routes.GetPlayers)
