@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"phrasmotica/bore-score-api/models"
+	"time"
 
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
@@ -29,6 +30,7 @@ func GetAllResults(ctx context.Context) ([]models.Result, bool) {
 
 func AddResult(ctx context.Context, newResult *models.Result) bool {
 	newResult.ID = uuid.NewString()
+	newResult.TimeCreated = time.Now().UTC().Unix()
 
 	if len(newResult.GroupName) <= 0 {
 		// results are assigned attached to the global group "all" by default
