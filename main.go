@@ -30,6 +30,7 @@ func main() {
 	router.GET("/groups/:name", routes.GetGroup)
 
 	router.GET("/players", routes.GetPlayers)
+	router.GET("/players/:username", routes.GetPlayer)
 	router.POST("/players", routes.PostPlayer)
 	router.DELETE("/players/:username", routes.DeletePlayer)
 

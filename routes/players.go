@@ -25,6 +25,22 @@ func GetPlayers(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, players)
 }
 
+func GetPlayer(c *gin.Context) {
+	username := c.Param("username")
+
+	player, success := db.GetPlayer(context.TODO(), username)
+
+	if !success {
+		fmt.Printf("Could not get player %s\n", username)
+		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
+		return
+	}
+
+	fmt.Printf("Got player %s\n", username)
+
+	c.IndentedJSON(http.StatusOK, player)
+}
+
 func PostPlayer(c *gin.Context) {
 	var newPlayer models.Player
 

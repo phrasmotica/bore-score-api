@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func GetAllPlayers(ctx context.Context) ([]models.Player, bool) {
@@ -28,10 +29,31 @@ func GetAllPlayers(ctx context.Context) ([]models.Player, bool) {
 	return players, true
 }
 
+func GetPlayer(ctx context.Context, username string) (*models.Player, bool) {
+	result := findPlayer(ctx, username)
+	if err := result.Err(); err != nil {
+		log.Println(err)
+		return nil, false
+	}
+
+	var player models.Player
+
+	if err := result.Decode(&player); err != nil {
+		log.Println(err)
+		return nil, false
+	}
+
+	return &player, true
+}
+
 func PlayerExists(ctx context.Context, username string) bool {
-	filter := bson.D{{"username", username}}
-	result := GetDatabase().Collection("Players").FindOne(ctx, filter)
+	result := findPlayer(ctx, username)
 	return result.Err() == nil
+}
+
+func findPlayer(ctx context.Context, username string) *mongo.SingleResult {
+	filter := bson.D{{"username", username}}
+	return GetDatabase().Collection("Players").FindOne(ctx, filter)
 }
 
 func AddPlayer(ctx context.Context, newPlayer *models.Player) bool {
