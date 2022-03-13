@@ -47,6 +47,12 @@ func GetSummary(ctx context.Context) (*Summary, bool) {
 		return nil, false
 	}
 
+	groupCount, err := GetDatabase().Collection("Groups").CountDocuments(ctx, bson.D{})
+	if err != nil {
+		log.Println(err)
+		return nil, false
+	}
+
 	playerCount, err := GetDatabase().Collection("Players").CountDocuments(ctx, bson.D{})
 	if err != nil {
 		log.Println(err)
@@ -61,6 +67,7 @@ func GetSummary(ctx context.Context) (*Summary, bool) {
 
 	return &Summary{
 		GameCount:   gameCount,
+		GroupCount:  groupCount,
 		PlayerCount: playerCount,
 		ResultCount: resultCount,
 	}, true
