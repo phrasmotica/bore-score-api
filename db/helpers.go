@@ -10,7 +10,7 @@ import (
 	"golang.org/x/text/unicode/norm"
 )
 
-func computeName(displayName string) string {
+func ComputeName(displayName string) string {
 	// remove diacritic marks
 	t := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
 	name, _, _ := transform.String(t, displayName)
