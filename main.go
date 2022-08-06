@@ -39,7 +39,7 @@ func main() {
 
 	router.GET("/admin/game-name/:displayName", routes.GetGameName)
 
-	router.Run("localhost:8000")
+	router.Run(":8000")
 }
 
 func getSummary(c *gin.Context) {
