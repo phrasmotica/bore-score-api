@@ -16,7 +16,7 @@ func TestComputeName(t *testing.T) {
 	}
 
 	for _, table := range tables {
-		actual := computeName(table.displayName)
+		actual := ComputeName(table.displayName)
 		if actual != table.expected {
 			t.Errorf("Computed name was incorrect! Actual: %s, expected: %s", actual, table.expected)
 		}
