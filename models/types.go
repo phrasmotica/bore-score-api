@@ -34,10 +34,11 @@ const (
 )
 
 type Player struct {
-	ID          string `json:"id" bson:"id"`
-	Username    string `json:"username" bson:"username"`
-	TimeCreated int64  `json:"timeCreated" bson:"timeCreated"`
-	DisplayName string `json:"displayName" bson:"displayName"`
+	ID             string `json:"id" bson:"id"`
+	Username       string `json:"username" bson:"username"`
+	TimeCreated    int64  `json:"timeCreated" bson:"timeCreated"`
+	DisplayName    string `json:"displayName" bson:"displayName"`
+	ProfilePicture string `json:"profilePicture" bson:"profilePicture"`
 }
 
 type PlayerScore struct {

@@ -11,8 +11,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+func players() *mongo.Collection {
+	return GetDatabase().Collection("Players")
+}
+
 func GetAllPlayers(ctx context.Context) ([]models.Player, bool) {
-	cursor, err := GetDatabase().Collection("Players").Find(ctx, bson.D{})
+	cursor, err := players().Find(ctx, bson.D{})
 	if err != nil {
 		log.Println(err)
 		return nil, false
@@ -53,14 +57,14 @@ func PlayerExists(ctx context.Context, username string) bool {
 
 func findPlayer(ctx context.Context, username string) *mongo.SingleResult {
 	filter := bson.D{{"username", username}}
-	return GetDatabase().Collection("Players").FindOne(ctx, filter)
+	return players().FindOne(ctx, filter)
 }
 
 func AddPlayer(ctx context.Context, newPlayer *models.Player) bool {
 	newPlayer.ID = uuid.NewString()
 	newPlayer.TimeCreated = time.Now().UTC().Unix()
 
-	_, err := GetDatabase().Collection("Players").InsertOne(ctx, newPlayer)
+	_, err := players().InsertOne(ctx, newPlayer)
 
 	if err != nil {
 		log.Println(err)
@@ -72,7 +76,7 @@ func AddPlayer(ctx context.Context, newPlayer *models.Player) bool {
 
 func DeletePlayer(ctx context.Context, username string) bool {
 	filter := bson.D{{"username", username}}
-	_, err := GetDatabase().Collection("Players").DeleteOne(ctx, filter)
+	_, err := players().DeleteOne(ctx, filter)
 
 	if err != nil {
 		log.Println(err)
