@@ -37,8 +37,6 @@ func main() {
 	router.GET("/results", routes.GetResults)
 	router.POST("/results", routes.PostResult)
 
-	router.GET("/admin/game-name/:displayName", routes.GetGameName)
-
 	router.Run(":8000")
 }
 

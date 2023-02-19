@@ -58,7 +58,6 @@ func findGame(ctx context.Context, name string) *mongo.SingleResult {
 
 func AddGame(ctx context.Context, newGame *models.Game) bool {
 	newGame.ID = uuid.NewString()
-	newGame.Name = ComputeName(newGame.DisplayName)
 	newGame.TimeCreated = time.Now().UTC().Unix()
 
 	_, err := GetDatabase().Collection("Games").InsertOne(ctx, newGame)
