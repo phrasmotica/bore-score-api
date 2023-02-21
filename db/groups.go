@@ -4,7 +4,9 @@ import (
 	"context"
 	"log"
 	"phrasmotica/bore-score-api/models"
+	"time"
 
+	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -98,4 +100,30 @@ func findGroups(ctx context.Context, filter interface{}) (*mongo.Cursor, error) 
 func findGroup(ctx context.Context, name string) *mongo.SingleResult {
 	filter := bson.D{{"name", name}}
 	return GetDatabase().Collection("Groups").FindOne(ctx, filter)
+}
+
+func AddGroup(ctx context.Context, newGroup *models.Group) bool {
+	newGroup.ID = uuid.NewString()
+	newGroup.TimeCreated = time.Now().UTC().Unix()
+
+	_, err := GetDatabase().Collection("Groups").InsertOne(ctx, newGroup)
+
+	if err != nil {
+		log.Println(err)
+		return false
+	}
+
+	return true
+}
+
+func DeleteGroup(ctx context.Context, name string) bool {
+	filter := bson.D{{"name", name}}
+	_, err := GetDatabase().Collection("Groups").DeleteOne(ctx, filter)
+
+	if err != nil {
+		log.Println(err)
+		return false
+	}
+
+	return true
 }

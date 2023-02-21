@@ -28,6 +28,8 @@ func main() {
 	router.GET("/groups", routes.GetGroups)
 	router.GET("/groups-all", routes.GetAllGroups)
 	router.GET("/groups/:name", routes.GetGroup)
+	router.POST("/groups", routes.PostGroup)
+	router.DELETE("/groups/:name", routes.DeleteGroup)
 
 	router.GET("/players", routes.GetPlayers)
 	router.GET("/players/:username", routes.GetPlayer)
