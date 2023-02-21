@@ -22,7 +22,7 @@ const (
 func GetAllGroups(ctx context.Context) ([]models.Group, bool) {
 	filter := bson.D{
 		{
-			"type", bson.D{
+			"visibility", bson.D{
 				{
 					"$in", bson.A{"public", "global"},
 				},
@@ -48,7 +48,7 @@ func GetAllGroups(ctx context.Context) ([]models.Group, bool) {
 }
 
 func GetGroups(ctx context.Context) ([]models.Group, bool) {
-	filter := bson.D{{"type", "public"}}
+	filter := bson.D{{"visibility", "public"}}
 
 	cursor, err := findGroups(ctx, filter)
 	if err != nil {
@@ -81,7 +81,7 @@ func GetGroup(ctx context.Context, name string) (*models.Group, RetrieveGroupRes
 		return nil, Failure
 	}
 
-	if group.Type == models.Private {
+	if group.Visibility == models.Private {
 		return nil, Unauthorised
 	}
 
