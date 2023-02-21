@@ -73,6 +73,10 @@ func PostGame(c *gin.Context) {
 }
 
 func validateNewGame(game *models.Game) (bool, string) {
+	if len(game.Name) <= 0 {
+		return false, "game name is missing"
+	}
+
 	if len(game.DisplayName) <= 0 {
 		return false, "game display name is missing"
 	}
