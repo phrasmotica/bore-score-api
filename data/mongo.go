@@ -1,4 +1,4 @@
-package db
+package data
 
 import (
 	"context"
@@ -12,9 +12,11 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var database *mongo.Database
+type MongoDatabase struct {
+	Database *mongo.Database
+}
 
-func connect() *mongo.Database {
+func CreateMongoDatabase() *mongo.Database {
 	if err := godotenv.Load(".env.local"); err != nil {
 		log.Println("No .env.local file found")
 	}
@@ -32,52 +34,44 @@ func connect() *mongo.Database {
 	return client.Database("BoreScore")
 }
 
-func GetDatabase() *mongo.Database {
-	if database == nil {
-		database = connect()
-	}
-
-	return database
-}
-
-func GetSummary(ctx context.Context) (*Summary, bool) {
-	gameCount, err := GetDatabase().Collection("Games").CountDocuments(ctx, bson.D{})
+func (d *MongoDatabase) GetSummary(ctx context.Context) (bool, *Summary) {
+	gameCount, err := d.Database.Collection("Games").CountDocuments(ctx, bson.D{})
 	if err != nil {
 		log.Println(err)
-		return nil, false
+		return false, nil
 	}
 
-	groupCount, err := GetDatabase().Collection("Groups").CountDocuments(ctx, bson.D{})
+	groupCount, err := d.Database.Collection("Groups").CountDocuments(ctx, bson.D{})
 	if err != nil {
 		log.Println(err)
-		return nil, false
+		return false, nil
 	}
 
-	playerCount, err := GetDatabase().Collection("Players").CountDocuments(ctx, bson.D{})
+	playerCount, err := d.Database.Collection("Players").CountDocuments(ctx, bson.D{})
 	if err != nil {
 		log.Println(err)
-		return nil, false
+		return false, nil
 	}
 
-	resultCount, err := GetDatabase().Collection("Results").CountDocuments(ctx, bson.D{})
+	resultCount, err := d.Database.Collection("Results").CountDocuments(ctx, bson.D{})
 	if err != nil {
 		log.Println(err)
-		return nil, false
+		return false, nil
 	}
 
-	return &Summary{
+	return true, &Summary{
 		GameCount:   gameCount,
 		GroupCount:  groupCount,
 		PlayerCount: playerCount,
 		ResultCount: resultCount,
-	}, true
+	}
 }
 
-func GetAllLinkTypes(ctx context.Context) ([]models.LinkType, bool) {
-	cursor, err := GetDatabase().Collection("LinkTypes").Find(ctx, bson.D{})
+func (d *MongoDatabase) GetAllLinkTypes(ctx context.Context) (bool, []models.LinkType) {
+	cursor, err := d.Database.Collection("LinkTypes").Find(ctx, bson.D{})
 	if err != nil {
 		log.Println(err)
-		return nil, false
+		return false, nil
 	}
 
 	var linkTypes []models.LinkType
@@ -85,17 +79,17 @@ func GetAllLinkTypes(ctx context.Context) ([]models.LinkType, bool) {
 	err = cursor.All(ctx, &linkTypes)
 	if err != nil {
 		log.Println(err)
-		return nil, false
+		return false, nil
 	}
 
-	return linkTypes, true
+	return true, linkTypes
 }
 
-func GetAllWinMethods(ctx context.Context) ([]models.WinMethod, bool) {
-	cursor, err := GetDatabase().Collection("WinMethods").Find(ctx, bson.D{})
+func (d *MongoDatabase) GetAllWinMethods(ctx context.Context) (bool, []models.WinMethod) {
+	cursor, err := d.Database.Collection("WinMethods").Find(ctx, bson.D{})
 	if err != nil {
 		log.Println(err)
-		return nil, false
+		return false, nil
 	}
 
 	var winMethods []models.WinMethod
@@ -103,8 +97,8 @@ func GetAllWinMethods(ctx context.Context) ([]models.WinMethod, bool) {
 	err = cursor.All(ctx, &winMethods)
 	if err != nil {
 		log.Println(err)
-		return nil, false
+		return false, nil
 	}
 
-	return winMethods, true
+	return true, winMethods
 }

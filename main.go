@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"phrasmotica/bore-score-api/db"
+	"phrasmotica/bore-score-api/data"
 	"phrasmotica/bore-score-api/routes"
 
 	"github.com/gin-contrib/cors"
@@ -42,8 +42,16 @@ func main() {
 	router.Run(":8000")
 }
 
+func createDatabase() data.IDatabase {
+	return &data.MongoDatabase{
+		Database: data.CreateMongoDatabase(),
+	}
+}
+
+var db = createDatabase()
+
 func getSummary(c *gin.Context) {
-	summary, success := db.GetSummary(context.TODO())
+	success, summary := db.GetSummary(context.TODO())
 
 	if !success {
 		fmt.Println("Could not get summary")
@@ -55,7 +63,7 @@ func getSummary(c *gin.Context) {
 }
 
 func getLinkTypes(c *gin.Context) {
-	linkTypes, success := db.GetAllLinkTypes(context.TODO())
+	success, linkTypes := db.GetAllLinkTypes(context.TODO())
 
 	if !success {
 		fmt.Println("Could not get link types")
@@ -69,7 +77,7 @@ func getLinkTypes(c *gin.Context) {
 }
 
 func getWinMethods(c *gin.Context) {
-	winMethods, success := db.GetAllWinMethods(context.TODO())
+	success, winMethods := db.GetAllWinMethods(context.TODO())
 
 	if !success {
 		fmt.Println("Could not get win methods")

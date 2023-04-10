@@ -5,14 +5,13 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"phrasmotica/bore-score-api/db"
 	"phrasmotica/bore-score-api/models"
 
 	"github.com/gin-gonic/gin"
 )
 
 func GetPlayers(c *gin.Context) {
-	players, success := db.GetAllPlayers(context.TODO())
+	success, players := db.GetAllPlayers(context.TODO())
 
 	if !success {
 		fmt.Println("Could not get players")
@@ -28,7 +27,7 @@ func GetPlayers(c *gin.Context) {
 func GetPlayer(c *gin.Context) {
 	username := c.Param("username")
 
-	player, success := db.GetPlayer(context.TODO(), username)
+	success, player := db.GetPlayer(context.TODO(), username)
 
 	if !success {
 		fmt.Printf("Could not get player %s\n", username)
@@ -95,7 +94,7 @@ func DeletePlayer(c *gin.Context) {
 		return
 	}
 
-	scrubbedCount, success := db.ScrubResultsWithPlayer(ctx, username)
+	success, scrubbedCount := db.ScrubResultsWithPlayer(ctx, username)
 	if !success {
 		log.Printf("Could not scrub player %s from results\n", username)
 		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})

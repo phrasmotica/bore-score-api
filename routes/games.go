@@ -5,14 +5,22 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"phrasmotica/bore-score-api/db"
+	"phrasmotica/bore-score-api/data"
 	"phrasmotica/bore-score-api/models"
 
 	"github.com/gin-gonic/gin"
 )
 
+func createDb() data.IDatabase {
+	return &data.MongoDatabase{
+		Database: data.CreateMongoDatabase(),
+	}
+}
+
+var db = createDb()
+
 func GetGames(c *gin.Context) {
-	games, success := db.GetAllGames(context.TODO())
+	success, games := db.GetAllGames(context.TODO())
 
 	if !success {
 		fmt.Println("Could not get games")
@@ -28,7 +36,7 @@ func GetGames(c *gin.Context) {
 func GetGame(c *gin.Context) {
 	name := c.Param("name")
 
-	game, success := db.GetGame(context.TODO(), name)
+	success, game := db.GetGame(context.TODO(), name)
 
 	if !success {
 		fmt.Printf("Could not get game %s\n", name)
@@ -106,7 +114,7 @@ func DeleteGame(c *gin.Context) {
 		return
 	}
 
-	deletedCount, success := db.DeleteResultsWithGame(ctx, name)
+	success, deletedCount := db.DeleteResultsWithGame(ctx, name)
 	if !success {
 		log.Printf("Could not delete results for game %s\n", name)
 		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
