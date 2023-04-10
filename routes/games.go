@@ -27,9 +27,14 @@ func loadEnv() {
 func createDb() data.IDatabase {
 	loadEnv()
 
-	return &data.MongoDatabase{
-		Database: data.CreateMongoDatabase(),
+	mongoUri := os.Getenv("MONGODB_URI")
+	if mongoUri != "" {
+		return &data.MongoDatabase{
+			Database: data.CreateMongoDatabase(mongoUri),
+		}
 	}
+
+	panic("No MONGODB_URI environment variable found!")
 }
 
 var db = createDb()

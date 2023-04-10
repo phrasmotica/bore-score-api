@@ -3,7 +3,6 @@ package data
 import (
 	"context"
 	"log"
-	"os"
 	"phrasmotica/bore-score-api/models"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -15,12 +14,7 @@ type MongoDatabase struct {
 	Database *mongo.Database
 }
 
-func CreateMongoDatabase() *mongo.Database {
-	uri := os.Getenv("MONGODB_URI")
-	if uri == "" {
-		log.Fatal("No MONGODB_URI environment variable found!")
-	}
-
+func CreateMongoDatabase(uri string) *mongo.Database {
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
 	if err != nil {
 		panic(err)
