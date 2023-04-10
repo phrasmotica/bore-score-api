@@ -23,6 +23,7 @@ func loadEnv() {
 	godotenv.Load()
 }
 
+// TODO: put this in a more central place, or inject it as a dependency?
 func createDb() data.IDatabase {
 	loadEnv()
 
