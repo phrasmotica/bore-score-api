@@ -4,14 +4,22 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 	"phrasmotica/bore-score-api/data"
 	"phrasmotica/bore-score-api/routes"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
+var db data.IDatabase
+
 func main() {
+	loadEnv()
+
+	db = createDatabase()
+
 	router := gin.Default()
 
 	router.Use(cors.Default())
@@ -42,13 +50,21 @@ func main() {
 	router.Run(":8000")
 }
 
+func loadEnv() {
+	env := os.Getenv("BORESCORE_ENV")
+	if "" == env {
+		env = "development"
+	}
+
+	godotenv.Load(".env." + env + ".local")
+	godotenv.Load()
+}
+
 func createDatabase() data.IDatabase {
 	return &data.MongoDatabase{
 		Database: data.CreateMongoDatabase(),
 	}
 }
-
-var db = createDatabase()
 
 func getSummary(c *gin.Context) {
 	success, summary := db.GetSummary(context.TODO())

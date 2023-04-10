@@ -5,13 +5,27 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"phrasmotica/bore-score-api/data"
 	"phrasmotica/bore-score-api/models"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
+func loadEnv() {
+	env := os.Getenv("BORESCORE_ENV")
+	if "" == env {
+		env = "development"
+	}
+
+	godotenv.Load(".env." + env + ".local")
+	godotenv.Load()
+}
+
 func createDb() data.IDatabase {
+	loadEnv()
+
 	return &data.MongoDatabase{
 		Database: data.CreateMongoDatabase(),
 	}

@@ -6,7 +6,6 @@ import (
 	"os"
 	"phrasmotica/bore-score-api/models"
 
-	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -17,10 +16,6 @@ type MongoDatabase struct {
 }
 
 func CreateMongoDatabase() *mongo.Database {
-	if err := godotenv.Load(".env.local"); err != nil {
-		log.Println("No .env.local file found")
-	}
-
 	uri := os.Getenv("MONGODB_URI")
 	if uri == "" {
 		log.Fatal("No MONGODB_URI environment variable found!")
