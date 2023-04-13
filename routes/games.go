@@ -27,14 +27,14 @@ func loadEnv() {
 func createDb() data.IDatabase {
 	loadEnv()
 
-	mongoUri := os.Getenv("MONGODB_URI")
-	if mongoUri != "" {
-		return &data.MongoDatabase{
-			Database: data.CreateMongoDatabase(mongoUri),
+	azureTablesConnStr := os.Getenv("AZURE_TABLES_CONNECTION_STRING")
+	if azureTablesConnStr != "" {
+		return &data.TableStorageDatabase{
+			Client: data.CreateTableStorageClient(azureTablesConnStr),
 		}
 	}
 
-	panic("No MONGODB_URI environment variable found!")
+	panic("No AZURE_TABLES_CONNECTION_STRING environment variable found!")
 }
 
 var db = createDb()
