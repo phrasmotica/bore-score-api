@@ -19,7 +19,10 @@ func loadEnv() {
 		env = "development"
 	}
 
-	godotenv.Load(".env." + env + ".local")
+	if env == "development" {
+		godotenv.Load(".env.development.local")
+	}
+
 	godotenv.Load()
 }
 
