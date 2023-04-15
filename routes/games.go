@@ -32,12 +32,23 @@ func createDb() data.IDatabase {
 
 	azureTablesConnStr := os.Getenv("AZURE_TABLES_CONNECTION_STRING")
 	if azureTablesConnStr != "" {
+		log.Println("Using data backend: Azure Table Storage")
+
 		return &data.TableStorageDatabase{
 			Client: data.CreateTableStorageClient(azureTablesConnStr),
 		}
 	}
 
-	panic("No AZURE_TABLES_CONNECTION_STRING environment variable found!")
+	mongoDbUri := os.Getenv("MONGODB_URI")
+	if mongoDbUri != "" {
+		log.Println("Using data backend: MongoDB")
+
+		return &data.MongoDatabase{
+			Database: data.CreateMongoDatabase(mongoDbUri),
+		}
+	}
+
+	panic("No AZURE_TABLES_CONNECTION_STRING or MONGODB_URI environment variable found!")
 }
 
 var db = createDb()
