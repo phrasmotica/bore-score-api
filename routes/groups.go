@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"phrasmotica/bore-score-api/db"
+	"phrasmotica/bore-score-api/data"
 	"phrasmotica/bore-score-api/models"
 
 	"github.com/gin-gonic/gin"
 )
 
 func GetAllGroups(c *gin.Context) {
-	groups, success := db.GetAllGroups(context.TODO())
+	success, groups := db.GetAllGroups(context.TODO())
 
 	if !success {
 		fmt.Println("Could not get all groups")
@@ -26,7 +26,7 @@ func GetAllGroups(c *gin.Context) {
 }
 
 func GetGroups(c *gin.Context) {
-	groups, success := db.GetGroups(context.TODO())
+	success, groups := db.GetGroups(context.TODO())
 
 	if !success {
 		fmt.Println("Could not get groups")
@@ -42,15 +42,15 @@ func GetGroups(c *gin.Context) {
 func GetGroup(c *gin.Context) {
 	name := c.Param("name")
 
-	group, result := db.GetGroup(context.TODO(), name)
+	result, group := db.GetGroup(context.TODO(), name)
 
-	if result == db.Failure {
+	if result == data.Failure {
 		fmt.Printf("Group %s not found\n", name)
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "group not found"})
 		return
 	}
 
-	if result == db.Unauthorised {
+	if result == data.Unauthorised {
 		fmt.Printf("Group %s is private\n", name)
 		c.IndentedJSON(http.StatusUnauthorized, gin.H{"message": "group is private"})
 		return

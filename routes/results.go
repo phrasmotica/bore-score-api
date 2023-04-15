@@ -5,14 +5,13 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"phrasmotica/bore-score-api/db"
 	"phrasmotica/bore-score-api/models"
 
 	"github.com/gin-gonic/gin"
 )
 
 func GetResults(c *gin.Context) {
-	results, success := db.GetAllResults(context.TODO())
+	success, results := db.GetAllResults(context.TODO())
 
 	if !success {
 		fmt.Println("Could not get results")

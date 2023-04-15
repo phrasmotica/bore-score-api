@@ -1,0 +1,10 @@
+.azurite/
+.git/
+
+.dockerignore
+.gitignore
+Dockerfile
+README.md
+
+*.exe
+*.ps1

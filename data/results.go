@@ -1,4 +1,4 @@
-package db
+package data
 
 import (
 	"context"
@@ -10,11 +10,11 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-func GetAllResults(ctx context.Context) ([]models.Result, bool) {
-	cursor, err := GetDatabase().Collection("Results").Find(ctx, bson.D{})
+func (d *MongoDatabase) GetAllResults(ctx context.Context) (bool, []models.Result) {
+	cursor, err := d.Database.Collection("Results").Find(ctx, bson.D{})
 	if err != nil {
 		log.Println(err)
-		return nil, false
+		return false, nil
 	}
 
 	var results []models.Result
@@ -22,13 +22,13 @@ func GetAllResults(ctx context.Context) ([]models.Result, bool) {
 	err = cursor.All(ctx, &results)
 	if err != nil {
 		log.Println(err)
-		return nil, false
+		return false, nil
 	}
 
-	return results, true
+	return true, results
 }
 
-func AddResult(ctx context.Context, newResult *models.Result) bool {
+func (d *MongoDatabase) AddResult(ctx context.Context, newResult *models.Result) bool {
 	newResult.ID = uuid.NewString()
 	newResult.TimeCreated = time.Now().UTC().Unix()
 
@@ -38,7 +38,7 @@ func AddResult(ctx context.Context, newResult *models.Result) bool {
 		newResult.GroupName = "all"
 	}
 
-	_, err := GetDatabase().Collection("Results").InsertOne(ctx, newResult)
+	_, err := d.Database.Collection("Results").InsertOne(ctx, newResult)
 
 	if err != nil {
 		log.Println(err)
@@ -48,19 +48,19 @@ func AddResult(ctx context.Context, newResult *models.Result) bool {
 	return true
 }
 
-func DeleteResultsWithGame(ctx context.Context, gameName string) (int64, bool) {
+func (d *MongoDatabase) DeleteResultsWithGame(ctx context.Context, gameName string) (bool, int64) {
 	filter := bson.D{{"gameName", gameName}}
-	deleteResult, err := GetDatabase().Collection("Results").DeleteMany(ctx, filter)
+	deleteResult, err := d.Database.Collection("Results").DeleteMany(ctx, filter)
 
 	if err != nil {
 		log.Println(err)
-		return 0, false
+		return false, 0
 	}
 
-	return deleteResult.DeletedCount, true
+	return true, deleteResult.DeletedCount
 }
 
-func ScrubResultsWithPlayer(ctx context.Context, username string) (int64, bool) {
+func (d *MongoDatabase) ScrubResultsWithPlayer(ctx context.Context, username string) (bool, int64) {
 	// filters to results where the given player took part
 	filter := bson.D{
 		{
@@ -87,12 +87,12 @@ func ScrubResultsWithPlayer(ctx context.Context, username string) (int64, bool) 
 		},
 	}
 
-	result, err := GetDatabase().Collection("Results").UpdateMany(ctx, filter, update)
+	result, err := d.Database.Collection("Results").UpdateMany(ctx, filter, update)
 
 	if err != nil {
 		log.Println(err)
-		return 0, false
+		return false, 0
 	}
 
-	return result.ModifiedCount, true
+	return true, result.ModifiedCount
 }
