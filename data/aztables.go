@@ -521,15 +521,11 @@ func listEntities(ctx context.Context, client *aztables.Client, options *aztable
 
 	pager := client.NewListEntitiesPager(options)
 
-	pageCount := 0
 	for pager.More() {
 		response, err := pager.NextPage(ctx)
 		if err != nil {
 			log.Fatal(err)
 		}
-
-		fmt.Printf("There are %d entities in page #%d\n", len(response.Entities), pageCount)
-		pageCount += 1
 
 		for _, e := range response.Entities {
 			entity := unmarshal(e)
