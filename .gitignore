@@ -22,4 +22,4 @@ go.work
 
 .azurite
 .env
-.env*
+.env.*.local

@@ -3,6 +3,8 @@
 
 .dockerignore
 .gitignore
+Deployment.md
+docker-compose.yml
 Dockerfile
 README.md
 
