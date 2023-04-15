@@ -10,26 +10,10 @@ import (
 	"phrasmotica/bore-score-api/models"
 
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 )
-
-func loadEnv() {
-	env := os.Getenv("BORESCORE_ENV")
-	if "" == env {
-		env = "development"
-	}
-
-	if env == "development" {
-		godotenv.Load(".env.development.local")
-	}
-
-	godotenv.Load()
-}
 
 // TODO: put this in a more central place, or inject it as a dependency?
 func createDb() data.IDatabase {
-	loadEnv()
-
 	azureTablesConnStr := os.Getenv("AZURE_TABLES_CONNECTION_STRING")
 	if azureTablesConnStr != "" {
 		log.Println("Using data backend: Azure Table Storage")

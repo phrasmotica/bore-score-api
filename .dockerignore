@@ -8,5 +8,7 @@ docker-compose.yml
 Dockerfile
 README.md
 
+.env*
+
 *.exe
 *.ps1
