@@ -10,7 +10,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/data/aztables"
-	"github.com/google/uuid"
 )
 
 type TableStorageDatabase struct {
@@ -62,7 +61,7 @@ func (d *TableStorageDatabase) AddGame(ctx context.Context, newGame *models.Game
 	entity := aztables.EDMEntity{
 		Entity: aztables.Entity{
 			PartitionKey: "Games",
-			RowKey:       uuid.NewString(), // TODO: let the client generate this
+			RowKey:       newGame.ID,
 		},
 		Properties: map[string]interface{}{
 			"Name":        newGame.Name,
@@ -154,7 +153,7 @@ func (d *TableStorageDatabase) AddGroup(ctx context.Context, newGroup *models.Gr
 	entity := aztables.EDMEntity{
 		Entity: aztables.Entity{
 			PartitionKey: "Groups",
-			RowKey:       uuid.NewString(), // TODO: let the client generate this
+			RowKey:       newGroup.ID,
 		},
 		Properties: map[string]interface{}{
 			"Name":           newGroup.Name,
@@ -230,7 +229,7 @@ func (d *TableStorageDatabase) AddPlayer(ctx context.Context, newPlayer *models.
 	entity := aztables.EDMEntity{
 		Entity: aztables.Entity{
 			PartitionKey: "Players",
-			RowKey:       uuid.NewString(), // TODO: let the client generate this
+			RowKey:       newPlayer.ID,
 		},
 		Properties: map[string]interface{}{
 			"Username":       newPlayer.Username,
@@ -288,7 +287,7 @@ func (d *TableStorageDatabase) AddResult(ctx context.Context, newResult *models.
 	entity := aztables.EDMEntity{
 		Entity: aztables.Entity{
 			PartitionKey: "Results",
-			RowKey:       uuid.NewString(), // TODO: let the client generate this
+			RowKey:       newResult.ID,
 		},
 		Properties: map[string]interface{}{
 			"GameName":         newResult.GameName,
