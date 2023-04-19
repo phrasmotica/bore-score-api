@@ -2,7 +2,6 @@ package data
 
 import (
 	"context"
-	"log"
 	"phrasmotica/bore-score-api/models"
 	"time"
 
@@ -32,7 +31,7 @@ func (d *MongoDatabase) GetAllGroups(ctx context.Context) (bool, []models.Group)
 
 	cursor, err := d.findGroups(ctx, filter)
 	if err != nil {
-		log.Println(err)
+		Error.Println(err)
 		return false, nil
 	}
 
@@ -40,7 +39,7 @@ func (d *MongoDatabase) GetAllGroups(ctx context.Context) (bool, []models.Group)
 
 	err = cursor.All(ctx, &groups)
 	if err != nil {
-		log.Println(err)
+		Error.Println(err)
 		return false, nil
 	}
 
@@ -52,7 +51,7 @@ func (d *MongoDatabase) GetGroups(ctx context.Context) (bool, []models.Group) {
 
 	cursor, err := d.findGroups(ctx, filter)
 	if err != nil {
-		log.Println(err)
+		Error.Println(err)
 		return false, nil
 	}
 
@@ -60,7 +59,7 @@ func (d *MongoDatabase) GetGroups(ctx context.Context) (bool, []models.Group) {
 
 	err = cursor.All(ctx, &groups)
 	if err != nil {
-		log.Println(err)
+		Error.Println(err)
 		return false, nil
 	}
 
@@ -70,14 +69,14 @@ func (d *MongoDatabase) GetGroups(ctx context.Context) (bool, []models.Group) {
 func (d *MongoDatabase) GetGroup(ctx context.Context, name string) (RetrieveGroupResult, *models.Group) {
 	result := d.findGroup(ctx, name)
 	if err := result.Err(); err != nil {
-		log.Println(err)
+		Error.Println(err)
 		return Failure, nil
 	}
 
 	var group models.Group
 
 	if err := result.Decode(&group); err != nil {
-		log.Println(err)
+		Error.Println(err)
 		return Failure, nil
 	}
 
@@ -109,7 +108,7 @@ func (d *MongoDatabase) AddGroup(ctx context.Context, newGroup *models.Group) bo
 	_, err := d.Database.Collection("Groups").InsertOne(ctx, newGroup)
 
 	if err != nil {
-		log.Println(err)
+		Error.Println(err)
 		return false
 	}
 
@@ -121,7 +120,7 @@ func (d *MongoDatabase) DeleteGroup(ctx context.Context, name string) bool {
 	_, err := d.Database.Collection("Groups").DeleteOne(ctx, filter)
 
 	if err != nil {
-		log.Println(err)
+		Error.Println(err)
 		return false
 	}
 

@@ -2,7 +2,6 @@ package data
 
 import (
 	"context"
-	"log"
 	"phrasmotica/bore-score-api/models"
 	"time"
 
@@ -13,7 +12,7 @@ import (
 func (d *MongoDatabase) GetAllResults(ctx context.Context) (bool, []models.Result) {
 	cursor, err := d.Database.Collection("Results").Find(ctx, bson.D{})
 	if err != nil {
-		log.Println(err)
+		Error.Println(err)
 		return false, nil
 	}
 
@@ -21,7 +20,7 @@ func (d *MongoDatabase) GetAllResults(ctx context.Context) (bool, []models.Resul
 
 	err = cursor.All(ctx, &results)
 	if err != nil {
-		log.Println(err)
+		Error.Println(err)
 		return false, nil
 	}
 
@@ -34,14 +33,14 @@ func (d *MongoDatabase) AddResult(ctx context.Context, newResult *models.Result)
 
 	if len(newResult.GroupName) <= 0 {
 		// results are assigned attached to the global group "all" by default
-		log.Printf("Assigning new result %s to group all\n", newResult.ID)
+		Error.Printf("Assigning new result %s to group all\n", newResult.ID)
 		newResult.GroupName = "all"
 	}
 
 	_, err := d.Database.Collection("Results").InsertOne(ctx, newResult)
 
 	if err != nil {
-		log.Println(err)
+		Error.Println(err)
 		return false
 	}
 
@@ -53,7 +52,7 @@ func (d *MongoDatabase) DeleteResultsWithGame(ctx context.Context, gameName stri
 	deleteResult, err := d.Database.Collection("Results").DeleteMany(ctx, filter)
 
 	if err != nil {
-		log.Println(err)
+		Error.Println(err)
 		return false, 0
 	}
 
@@ -90,7 +89,7 @@ func (d *MongoDatabase) ScrubResultsWithPlayer(ctx context.Context, username str
 	result, err := d.Database.Collection("Results").UpdateMany(ctx, filter, update)
 
 	if err != nil {
-		log.Println(err)
+		Error.Println(err)
 		return false, 0
 	}
 

@@ -3,7 +3,6 @@ package routes
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"phrasmotica/bore-score-api/models"
 
@@ -14,12 +13,12 @@ func GetPlayers(c *gin.Context) {
 	success, players := db.GetAllPlayers(context.TODO())
 
 	if !success {
-		fmt.Println("Could not get players")
+		Error.Println("Could not get players")
 		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
 		return
 	}
 
-	fmt.Printf("Got %d players\n", len(players))
+	Info.Printf("Got %d players\n", len(players))
 
 	c.IndentedJSON(http.StatusOK, players)
 }
@@ -30,12 +29,12 @@ func GetPlayer(c *gin.Context) {
 	success, player := db.GetPlayer(context.TODO(), username)
 
 	if !success {
-		fmt.Printf("Could not get player %s\n", username)
+		Error.Printf("Could not get player %s\n", username)
 		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
 		return
 	}
 
-	fmt.Printf("Got player %s\n", username)
+	Info.Printf("Got player %s\n", username)
 
 	c.IndentedJSON(http.StatusOK, player)
 }
@@ -62,12 +61,12 @@ func PostPlayer(c *gin.Context) {
 
 	success := db.AddPlayer(ctx, &newPlayer)
 	if !success {
-		log.Printf("Could not add player %s\n", newPlayer.Username)
+		Error.Printf("Could not add player %s\n", newPlayer.Username)
 		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
 		return
 	}
 
-	fmt.Printf("Added player %s\n", newPlayer.Username)
+	Info.Printf("Added player %s\n", newPlayer.Username)
 
 	c.IndentedJSON(http.StatusCreated, newPlayer)
 }
@@ -96,20 +95,20 @@ func DeletePlayer(c *gin.Context) {
 
 	success, scrubbedCount := db.ScrubResultsWithPlayer(ctx, username)
 	if !success {
-		log.Printf("Could not scrub player %s from results\n", username)
+		Error.Printf("Could not scrub player %s from results\n", username)
 		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
 		return
 	}
 
-	fmt.Printf("Scrubbed player %s from %d results\n", username, scrubbedCount)
+	Info.Printf("Scrubbed player %s from %d results\n", username, scrubbedCount)
 
 	if success := db.DeletePlayer(ctx, username); !success {
-		log.Printf("Could not delete player %s\n", username)
+		Error.Printf("Could not delete player %s\n", username)
 		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
 		return
 	}
 
-	fmt.Printf("Deleted player %s\n", username)
+	Info.Printf("Deleted player %s\n", username)
 
 	c.IndentedJSON(http.StatusNoContent, gin.H{})
 }

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"phrasmotica/bore-score-api/models"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
@@ -16,13 +17,19 @@ type TableStorageDatabase struct {
 	Client *aztables.ServiceClient
 }
 
+// TODO: put this in a more central place, or inject it as a dependency
+var (
+	Error *log.Logger = log.New(os.Stdout, "ERROR: ", log.LstdFlags|log.Lshortfile)
+)
+
 func CreateTableStorageClient(connStr string) *aztables.ServiceClient {
 	client, err := aztables.NewServiceClientFromConnectionString(connStr, &aztables.ClientOptions{
 		ClientOptions: policy.ClientOptions{},
 	})
 
 	if err != nil {
-		log.Fatal(err)
+		Error.Fatal(err)
+		return nil
 	}
 
 	return client
@@ -54,7 +61,7 @@ func (d *TableStorageDatabase) GameExists(ctx context.Context, name string) bool
 func (d *TableStorageDatabase) AddGame(ctx context.Context, newGame *models.Game) bool {
 	links, linksErr := json.Marshal(newGame.Links)
 	if linksErr != nil {
-		log.Println(linksErr)
+		Error.Println(linksErr)
 		return false
 	}
 
@@ -79,13 +86,13 @@ func (d *TableStorageDatabase) AddGame(ctx context.Context, newGame *models.Game
 
 	marshalled, err := json.Marshal(entity)
 	if err != nil {
-		log.Println(err)
+		Error.Println(err)
 		return false
 	}
 
 	_, addErr := d.Client.NewClient("Games").AddEntity(ctx, marshalled, nil)
 	if addErr != nil {
-		log.Println(addErr)
+		Error.Println(addErr)
 		return false
 	}
 
@@ -101,7 +108,7 @@ func (d *TableStorageDatabase) DeleteGame(ctx context.Context, name string) bool
 
 	_, err := d.Client.NewClient("Games").DeleteEntity(ctx, game.PartitionKey, game.RowKey, nil)
 	if err != nil {
-		log.Println(err)
+		Error.Println(err)
 		return false
 	}
 
@@ -167,13 +174,13 @@ func (d *TableStorageDatabase) AddGroup(ctx context.Context, newGroup *models.Gr
 
 	marshalled, err := json.Marshal(entity)
 	if err != nil {
-		log.Println(err)
+		Error.Println(err)
 		return false
 	}
 
 	_, addErr := d.Client.NewClient("Groups").AddEntity(ctx, marshalled, nil)
 	if addErr != nil {
-		log.Println(addErr)
+		Error.Println(addErr)
 		return false
 	}
 
@@ -189,7 +196,7 @@ func (d *TableStorageDatabase) DeleteGroup(ctx context.Context, name string) boo
 
 	_, err := d.Client.NewClient("Groups").DeleteEntity(ctx, group.PartitionKey, group.RowKey, nil)
 	if err != nil {
-		log.Println(err)
+		Error.Println(err)
 		return false
 	}
 
@@ -241,13 +248,13 @@ func (d *TableStorageDatabase) AddPlayer(ctx context.Context, newPlayer *models.
 
 	marshalled, err := json.Marshal(entity)
 	if err != nil {
-		log.Println(err)
+		Error.Println(err)
 		return false
 	}
 
 	_, addErr := d.Client.NewClient("Players").AddEntity(ctx, marshalled, nil)
 	if addErr != nil {
-		log.Println(addErr)
+		Error.Println(addErr)
 		return false
 	}
 
@@ -263,7 +270,7 @@ func (d *TableStorageDatabase) DeletePlayer(ctx context.Context, username string
 
 	_, err := d.Client.NewClient("Players").DeleteEntity(ctx, player.PartitionKey, player.RowKey, nil)
 	if err != nil {
-		log.Println(err)
+		Error.Println(err)
 		return false
 	}
 
@@ -280,7 +287,7 @@ func (d *TableStorageDatabase) GetAllResults(ctx context.Context) (bool, []model
 func (d *TableStorageDatabase) AddResult(ctx context.Context, newResult *models.Result) bool {
 	scores, scoresErr := json.Marshal(newResult.Scores)
 	if scoresErr != nil {
-		log.Println(scoresErr)
+		Error.Println(scoresErr)
 		return false
 	}
 
@@ -303,13 +310,13 @@ func (d *TableStorageDatabase) AddResult(ctx context.Context, newResult *models.
 
 	marshalled, err := json.Marshal(entity)
 	if err != nil {
-		log.Println(err)
+		Error.Println(err)
 		return false
 	}
 
 	_, addErr := d.Client.NewClient("Results").AddEntity(ctx, marshalled, nil)
 	if addErr != nil {
-		log.Println(addErr)
+		Error.Println(addErr)
 		return false
 	}
 
@@ -338,7 +345,7 @@ func (d *TableStorageDatabase) DeleteResultsWithGame(ctx context.Context, gameNa
 
 		_, err := client.DeleteEntity(ctx, result.PartitionKey, result.RowKey, nil)
 		if err != nil {
-			log.Println(err)
+			Error.Println(err)
 		} else {
 			deleteCount++
 		}
@@ -389,7 +396,7 @@ func (d *TableStorageDatabase) ScrubResultsWithPlayer(ctx context.Context, usern
 
 		marshalledScores, scoresErr := json.Marshal(result.Scores)
 		if scoresErr != nil {
-			log.Println(scoresErr)
+			Error.Println(scoresErr)
 			continue
 		}
 
@@ -406,13 +413,13 @@ func (d *TableStorageDatabase) ScrubResultsWithPlayer(ctx context.Context, usern
 
 		marshalled, err := json.Marshal(entity)
 		if err != nil {
-			log.Println(err)
+			Error.Println(err)
 			continue
 		}
 
 		_, updateErr := client.UpdateEntity(ctx, marshalled, nil)
 		if updateErr != nil {
-			log.Println(updateErr)
+			Error.Println(updateErr)
 		} else {
 			updateCount++
 		}
@@ -430,25 +437,25 @@ func (d *TableStorageDatabase) GetAllWinMethods(ctx context.Context) (bool, []mo
 func (d *TableStorageDatabase) GetSummary(ctx context.Context) (bool, *Summary) {
 	gamesSuccess, games := d.GetAllGames(ctx)
 	if !gamesSuccess {
-		log.Println("Failed to get all games for summary")
+		Error.Println("Failed to get all games for summary")
 		return false, nil
 	}
 
 	groupsSuccess, groups := d.GetAllGroups(ctx)
 	if !groupsSuccess {
-		log.Println("Failed to get all groups for summary")
+		Error.Println("Failed to get all groups for summary")
 		return false, nil
 	}
 
 	playersSuccess, players := d.GetAllPlayers(ctx)
 	if !playersSuccess {
-		log.Println("Failed to get all players for summary")
+		Error.Println("Failed to get all players for summary")
 		return false, nil
 	}
 
 	resultsSuccess, results := d.GetAllResults(ctx)
 	if !resultsSuccess {
-		log.Println("Failed to get all results for summary")
+		Error.Println("Failed to get all results for summary")
 		return false, nil
 	}
 
@@ -523,7 +530,8 @@ func listEntities(ctx context.Context, client *aztables.Client, options *aztable
 	for pager.More() {
 		response, err := pager.NextPage(ctx)
 		if err != nil {
-			log.Fatal(err)
+			Error.Fatal(err)
+			return entities
 		}
 
 		for _, e := range response.Entities {
@@ -540,7 +548,8 @@ func unmarshal(bytes []byte) *aztables.EDMEntity {
 
 	err := json.Unmarshal(bytes, &entity)
 	if err != nil {
-		log.Fatal(err)
+		Error.Fatal(err)
+		return nil
 	}
 
 	return &entity

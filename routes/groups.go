@@ -3,7 +3,6 @@ package routes
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"phrasmotica/bore-score-api/data"
 	"phrasmotica/bore-score-api/models"
@@ -15,12 +14,12 @@ func GetAllGroups(c *gin.Context) {
 	success, groups := db.GetAllGroups(context.TODO())
 
 	if !success {
-		fmt.Println("Could not get all groups")
+		Error.Println("Could not get all groups")
 		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
 		return
 	}
 
-	fmt.Printf("Got %d groups\n", len(groups))
+	Info.Printf("Got %d groups\n", len(groups))
 
 	c.IndentedJSON(http.StatusOK, groups)
 }
@@ -29,12 +28,12 @@ func GetGroups(c *gin.Context) {
 	success, groups := db.GetGroups(context.TODO())
 
 	if !success {
-		fmt.Println("Could not get groups")
+		Error.Println("Could not get groups")
 		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
 		return
 	}
 
-	fmt.Printf("Got %d groups\n", len(groups))
+	Info.Printf("Got %d groups\n", len(groups))
 
 	c.IndentedJSON(http.StatusOK, groups)
 }
@@ -45,18 +44,18 @@ func GetGroup(c *gin.Context) {
 	result, group := db.GetGroup(context.TODO(), name)
 
 	if result == data.Failure {
-		fmt.Printf("Group %s not found\n", name)
+		Error.Printf("Group %s not found\n", name)
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "group not found"})
 		return
 	}
 
 	if result == data.Unauthorised {
-		fmt.Printf("Group %s is private\n", name)
+		Error.Printf("Group %s is private\n", name)
 		c.IndentedJSON(http.StatusUnauthorized, gin.H{"message": "group is private"})
 		return
 	}
 
-	fmt.Printf("Got group %s\n", name)
+	Info.Printf("Got group %s\n", name)
 	c.IndentedJSON(http.StatusOK, group)
 }
 
@@ -81,12 +80,12 @@ func PostGroup(c *gin.Context) {
 	}
 
 	if success := db.AddGroup(ctx, &newGroup); !success {
-		log.Printf("Could not add group %s\n", newGroup.Name)
+		Error.Printf("Could not add group %s\n", newGroup.Name)
 		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
 		return
 	}
 
-	fmt.Printf("Added group %s\n", newGroup.Name)
+	Info.Printf("Added group %s\n", newGroup.Name)
 
 	c.IndentedJSON(http.StatusCreated, newGroup)
 }
@@ -110,12 +109,12 @@ func DeleteGroup(c *gin.Context) {
 	}
 
 	if success := db.DeleteGroup(ctx, name); !success {
-		log.Printf("Could not delete group %s\n", name)
+		Error.Printf("Could not delete group %s\n", name)
 		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
 		return
 	}
 
-	fmt.Printf("Deleted group %s\n", name)
+	Info.Printf("Deleted group %s\n", name)
 
 	c.IndentedJSON(http.StatusNoContent, gin.H{})
 }

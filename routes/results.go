@@ -3,7 +3,6 @@ package routes
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"phrasmotica/bore-score-api/models"
 
@@ -14,12 +13,12 @@ func GetResults(c *gin.Context) {
 	success, results := db.GetAllResults(context.TODO())
 
 	if !success {
-		fmt.Println("Could not get results")
+		Error.Println("Could not get results")
 		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
 		return
 	}
 
-	fmt.Printf("Got %d results\n", len(results))
+	Info.Printf("Got %d results\n", len(results))
 
 	c.IndentedJSON(http.StatusOK, results)
 }
@@ -57,12 +56,12 @@ func PostResult(c *gin.Context) {
 	}
 
 	if success := db.AddResult(ctx, &newResult); !success {
-		log.Println("Could not add result")
+		Error.Println("Could not add result")
 		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
 		return
 	}
 
-	fmt.Printf("Added result for game %s\n", newResult.GameName)
+	Info.Printf("Added result for game %s\n", newResult.GameName)
 
 	c.IndentedJSON(http.StatusCreated, newResult)
 }

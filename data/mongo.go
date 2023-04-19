@@ -2,7 +2,6 @@ package data
 
 import (
 	"context"
-	"log"
 	"phrasmotica/bore-score-api/models"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -17,7 +16,8 @@ type MongoDatabase struct {
 func CreateMongoDatabase(uri string) *mongo.Database {
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
 	if err != nil {
-		panic(err)
+		Error.Fatal(err)
+		return nil
 	}
 
 	return client.Database("BoreScore")
@@ -26,25 +26,25 @@ func CreateMongoDatabase(uri string) *mongo.Database {
 func (d *MongoDatabase) GetSummary(ctx context.Context) (bool, *Summary) {
 	gameCount, err := d.Database.Collection("Games").CountDocuments(ctx, bson.D{})
 	if err != nil {
-		log.Println(err)
+		Error.Println(err)
 		return false, nil
 	}
 
 	groupCount, err := d.Database.Collection("Groups").CountDocuments(ctx, bson.D{})
 	if err != nil {
-		log.Println(err)
+		Error.Println(err)
 		return false, nil
 	}
 
 	playerCount, err := d.Database.Collection("Players").CountDocuments(ctx, bson.D{})
 	if err != nil {
-		log.Println(err)
+		Error.Println(err)
 		return false, nil
 	}
 
 	resultCount, err := d.Database.Collection("Results").CountDocuments(ctx, bson.D{})
 	if err != nil {
-		log.Println(err)
+		Error.Println(err)
 		return false, nil
 	}
 
@@ -59,7 +59,7 @@ func (d *MongoDatabase) GetSummary(ctx context.Context) (bool, *Summary) {
 func (d *MongoDatabase) GetAllLinkTypes(ctx context.Context) (bool, []models.LinkType) {
 	cursor, err := d.Database.Collection("LinkTypes").Find(ctx, bson.D{})
 	if err != nil {
-		log.Println(err)
+		Error.Println(err)
 		return false, nil
 	}
 
@@ -67,7 +67,7 @@ func (d *MongoDatabase) GetAllLinkTypes(ctx context.Context) (bool, []models.Lin
 
 	err = cursor.All(ctx, &linkTypes)
 	if err != nil {
-		log.Println(err)
+		Error.Println(err)
 		return false, nil
 	}
 
@@ -77,7 +77,7 @@ func (d *MongoDatabase) GetAllLinkTypes(ctx context.Context) (bool, []models.Lin
 func (d *MongoDatabase) GetAllWinMethods(ctx context.Context) (bool, []models.WinMethod) {
 	cursor, err := d.Database.Collection("WinMethods").Find(ctx, bson.D{})
 	if err != nil {
-		log.Println(err)
+		Error.Println(err)
 		return false, nil
 	}
 
@@ -85,7 +85,7 @@ func (d *MongoDatabase) GetAllWinMethods(ctx context.Context) (bool, []models.Wi
 
 	err = cursor.All(ctx, &winMethods)
 	if err != nil {
-		log.Println(err)
+		Error.Println(err)
 		return false, nil
 	}
 

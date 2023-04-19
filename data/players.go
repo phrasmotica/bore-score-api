@@ -2,7 +2,6 @@ package data
 
 import (
 	"context"
-	"log"
 	"phrasmotica/bore-score-api/models"
 	"time"
 
@@ -18,7 +17,7 @@ func (d *MongoDatabase) players() *mongo.Collection {
 func (d *MongoDatabase) GetAllPlayers(ctx context.Context) (bool, []models.Player) {
 	cursor, err := d.players().Find(ctx, bson.D{})
 	if err != nil {
-		log.Println(err)
+		Error.Println(err)
 		return false, nil
 	}
 
@@ -26,7 +25,7 @@ func (d *MongoDatabase) GetAllPlayers(ctx context.Context) (bool, []models.Playe
 
 	err = cursor.All(ctx, &players)
 	if err != nil {
-		log.Println(err)
+		Error.Println(err)
 		return false, nil
 	}
 
@@ -36,14 +35,14 @@ func (d *MongoDatabase) GetAllPlayers(ctx context.Context) (bool, []models.Playe
 func (d *MongoDatabase) GetPlayer(ctx context.Context, username string) (bool, *models.Player) {
 	result := d.findPlayer(ctx, username)
 	if err := result.Err(); err != nil {
-		log.Println(err)
+		Error.Println(err)
 		return false, nil
 	}
 
 	var player models.Player
 
 	if err := result.Decode(&player); err != nil {
-		log.Println(err)
+		Error.Println(err)
 		return false, nil
 	}
 
@@ -67,7 +66,7 @@ func (d *MongoDatabase) AddPlayer(ctx context.Context, newPlayer *models.Player)
 	_, err := d.players().InsertOne(ctx, newPlayer)
 
 	if err != nil {
-		log.Println(err)
+		Error.Println(err)
 		return false
 	}
 
@@ -79,7 +78,7 @@ func (d *MongoDatabase) DeletePlayer(ctx context.Context, username string) bool 
 	_, err := d.players().DeleteOne(ctx, filter)
 
 	if err != nil {
-		log.Println(err)
+		Error.Println(err)
 		return false
 	}
 

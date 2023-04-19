@@ -12,11 +12,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// TODO: put this in a more central place, or inject it as a dependency?
+// TODO: put these in a more central place, or inject them as dependencies
+var (
+	Info  *log.Logger = log.New(os.Stdout, "INFO: ", log.LstdFlags|log.Lshortfile)
+	Error *log.Logger = log.New(os.Stdout, "ERROR: ", log.LstdFlags|log.Lshortfile)
+)
+
+// TODO: put this in a more central place, or inject it as a dependency
 func createDb() data.IDatabase {
 	azureTablesConnStr := os.Getenv("AZURE_TABLES_CONNECTION_STRING")
 	if azureTablesConnStr != "" {
-		log.Println("Using data backend: Azure Table Storage")
+		Info.Println("Using data backend: Azure Table Storage")
 
 		return &data.TableStorageDatabase{
 			Client: data.CreateTableStorageClient(azureTablesConnStr),
@@ -25,7 +31,7 @@ func createDb() data.IDatabase {
 
 	mongoDbUri := os.Getenv("MONGODB_URI")
 	if mongoDbUri != "" {
-		log.Println("Using data backend: MongoDB")
+		Info.Println("Using data backend: MongoDB")
 
 		return &data.MongoDatabase{
 			Database: data.CreateMongoDatabase(mongoDbUri),
@@ -41,12 +47,12 @@ func GetGames(c *gin.Context) {
 	success, games := db.GetAllGames(context.TODO())
 
 	if !success {
-		fmt.Println("Could not get games")
+		Error.Println("Could not get games")
 		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
 		return
 	}
 
-	fmt.Printf("Got %d games\n", len(games))
+	Info.Printf("Got %d games\n", len(games))
 
 	c.IndentedJSON(http.StatusOK, games)
 }
@@ -57,12 +63,12 @@ func GetGame(c *gin.Context) {
 	success, game := db.GetGame(context.TODO(), name)
 
 	if !success {
-		fmt.Printf("Could not get game %s\n", name)
+		Error.Printf("Could not get game %s\n", name)
 		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
 		return
 	}
 
-	fmt.Printf("Got game %s\n", name)
+	Info.Printf("Got game %s\n", name)
 
 	c.IndentedJSON(http.StatusOK, game)
 }
@@ -88,12 +94,12 @@ func PostGame(c *gin.Context) {
 	}
 
 	if success := db.AddGame(ctx, &newGame); !success {
-		log.Printf("Could not add game %s\n", newGame.Name)
+		Error.Printf("Could not add game %s\n", newGame.Name)
 		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
 		return
 	}
 
-	fmt.Printf("Added game %s\n", newGame.Name)
+	Info.Printf("Added game %s\n", newGame.Name)
 
 	c.IndentedJSON(http.StatusCreated, newGame)
 }
@@ -134,20 +140,20 @@ func DeleteGame(c *gin.Context) {
 
 	success, deletedCount := db.DeleteResultsWithGame(ctx, name)
 	if !success {
-		log.Printf("Could not delete results for game %s\n", name)
+		Error.Printf("Could not delete results for game %s\n", name)
 		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
 		return
 	}
 
-	fmt.Printf("Deleted %d results for game %s\n", deletedCount, name)
+	Info.Printf("Deleted %d results for game %s\n", deletedCount, name)
 
 	if success := db.DeleteGame(ctx, name); !success {
-		log.Printf("Could not delete game %s\n", name)
+		Error.Printf("Could not delete game %s\n", name)
 		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
 		return
 	}
 
-	fmt.Printf("Deleted game %s\n", name)
+	Info.Printf("Deleted game %s\n", name)
 
 	c.IndentedJSON(http.StatusNoContent, gin.H{})
 }
