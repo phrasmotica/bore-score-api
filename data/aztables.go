@@ -428,6 +428,52 @@ func (d *TableStorageDatabase) ScrubResultsWithPlayer(ctx context.Context, usern
 	return true, int64(updateCount)
 }
 
+// GetUser implements IDatabase
+func (d *TableStorageDatabase) GetUser(ctx context.Context, email string) (bool, *models.User) {
+	result := d.findUser(ctx, email)
+	if result == nil {
+		return false, nil
+	}
+
+	user := createUser(result)
+	return true, &user
+}
+
+func (d *TableStorageDatabase) AddUser(ctx context.Context, newUser *models.User) bool {
+	entity := aztables.EDMEntity{
+		Entity: aztables.Entity{
+			PartitionKey: "Users",
+			RowKey:       newUser.ID,
+		},
+		Properties: map[string]interface{}{
+			"Username":    newUser.Username,
+			"TimeCreated": aztables.EDMInt64(newUser.TimeCreated),
+			"Email":       newUser.Email,
+			"Password":    newUser.Password,
+		},
+	}
+
+	marshalled, err := json.Marshal(entity)
+	if err != nil {
+		Error.Println(err)
+		return false
+	}
+
+	_, addErr := d.Client.NewClient("Users").AddEntity(ctx, marshalled, nil)
+	if addErr != nil {
+		Error.Println(addErr)
+		return false
+	}
+
+	return true
+}
+
+// UserExists implements IDatabase
+func (d *TableStorageDatabase) UserExists(ctx context.Context, email string) bool {
+	result := d.findUser(ctx, email)
+	return result != nil
+}
+
 func (d *TableStorageDatabase) GetAllWinMethods(ctx context.Context) (bool, []models.WinMethod) {
 	winMethods := list(ctx, d.Client, "WinMethods", createWinMethod, nil)
 	return true, winMethods
@@ -500,6 +546,20 @@ func (d *TableStorageDatabase) findPlayer(ctx context.Context, username string) 
 
 	entities := listEntities(ctx, client, &aztables.ListEntitiesOptions{
 		Filter: to.Ptr(fmt.Sprintf("Username eq '%s'", username)),
+	})
+
+	if len(entities) == 1 {
+		return &entities[0]
+	}
+
+	return nil
+}
+
+func (d *TableStorageDatabase) findUser(ctx context.Context, email string) *aztables.EDMEntity {
+	client := d.Client.NewClient("Users")
+
+	entities := listEntities(ctx, client, &aztables.ListEntitiesOptions{
+		Filter: to.Ptr(fmt.Sprintf("Email eq '%s'", email)),
 	})
 
 	if len(entities) == 1 {
@@ -636,6 +696,17 @@ func createScores(entity *aztables.EDMEntity) []models.PlayerScore {
 	json.Unmarshal([]byte(scoresStr), &data)
 
 	return data
+}
+
+func createUser(entity *aztables.EDMEntity) models.User {
+	// don't transmit password!
+	return models.User{
+		ID:          entity.RowKey,
+		Username:    propString(entity, "Username"),
+		TimeCreated: propInt64(entity, "TimeCreated"),
+		Email:       propString(entity, "Email"),
+		Password:    propString(entity, "Password"),
+	}
 }
 
 func createWinMethod(entity *aztables.EDMEntity) models.WinMethod {

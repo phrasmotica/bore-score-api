@@ -13,6 +13,21 @@ type MongoDatabase struct {
 	Database *mongo.Database
 }
 
+// UserExists implements IDatabase
+func (*MongoDatabase) UserExists(ctx context.Context, email string) bool {
+	panic("unimplemented")
+}
+
+// GetUser implements IDatabase
+func (*MongoDatabase) GetUser(ctx context.Context, email string) (bool, *models.User) {
+	panic("unimplemented")
+}
+
+// AddUser implements IDatabase
+func (*MongoDatabase) AddUser(ctx context.Context, newUser *models.User) bool {
+	panic("unimplemented")
+}
+
 func CreateMongoDatabase(uri string) *mongo.Database {
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
 	if err != nil {
