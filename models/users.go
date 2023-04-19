@@ -11,3 +11,13 @@ type User struct {
 	Email       string `json:"email" bson:"email"`
 	Password    string `json:"password" bson:"password"`
 }
+
+func (user *User) HashPassword(password string) error {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	if err != nil {
+		return err
+	}
+
+	user.Password = string(bytes)
+	return nil
+}
