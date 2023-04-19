@@ -1,6 +1,7 @@
 package main
 
 import (
+	"phrasmotica/bore-score-api/auth"
 	"phrasmotica/bore-score-api/routes"
 
 	"github.com/gin-contrib/cors"
@@ -39,6 +40,11 @@ func main() {
 
 	router.POST("/user/register", routes.RegisterUser)
 	router.POST("/token", routes.GenerateToken)
+
+	secured := router.Group("/secured").Use(auth.Auth())
+	{
+		secured.GET("/ping", routes.Ping)
+	}
 
 	router.Run(":8000")
 }
