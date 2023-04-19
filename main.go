@@ -38,6 +38,7 @@ func main() {
 	router.GET("/winMethods", routes.GetWinMethods)
 
 	router.POST("/user/register", routes.RegisterUser)
+	router.POST("/token", routes.GenerateToken)
 
 	router.Run(":8000")
 }
