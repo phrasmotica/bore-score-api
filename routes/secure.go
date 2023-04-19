@@ -6,6 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Ping(context *gin.Context) {
-	context.IndentedJSON(http.StatusOK, gin.H{"message": "pong"})
+func Ping(c *gin.Context) {
+	c.IndentedJSON(http.StatusOK, gin.H{"message": "pong", "username": c.GetString("username")})
 }

@@ -32,8 +32,7 @@ func GenerateJWT(email string, username string) (tokenString string, err error) 
 	return
 }
 
-func ValidateToken(signedToken string) (err error) {
-	// TODO: return username/email claim so that we can pass it on to the request
+func ValidateToken(signedToken string) (err error, claims *JWTClaim) {
 	token, err := jwt.ParseWithClaims(
 		signedToken,
 		&JWTClaim{},

@@ -3,21 +3,24 @@ package auth
 import "github.com/gin-gonic/gin"
 
 func Auth() gin.HandlerFunc {
-	return func(context *gin.Context) {
-		tokenString := context.GetHeader("Authorization")
+	return func(c *gin.Context) {
+		tokenString := c.GetHeader("Authorization")
 		if tokenString == "" {
-			context.IndentedJSON(401, gin.H{"error": "request does not contain an access token"})
-			context.Abort()
+			c.IndentedJSON(401, gin.H{"error": "request does not contain an access token"})
+			c.Abort()
 			return
 		}
 
-		err := ValidateToken(tokenString)
+		err, claims := ValidateToken(tokenString)
 		if err != nil {
-			context.IndentedJSON(401, gin.H{"error": err.Error()})
-			context.Abort()
+			c.IndentedJSON(401, gin.H{"error": err.Error()})
+			c.Abort()
 			return
 		}
 
-		context.Next()
+		c.Set("username", claims.Username)
+		c.Set("email", claims.Email)
+
+		c.Next()
 	}
 }
