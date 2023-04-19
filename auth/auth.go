@@ -2,13 +2,13 @@ package auth
 
 import (
 	"errors"
+	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt"
 )
 
-// TODO: store outside the code
-var jwtKey = []byte("supersecretkey")
+var jwtKey = []byte(os.Getenv("JWT_SECRET_KEY"))
 
 type JWTClaim struct {
 	Username string `json:"username"`
