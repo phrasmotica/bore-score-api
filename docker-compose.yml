@@ -13,9 +13,11 @@ services:
   backend:
     build:
       context: .
+      dockerfile: Dockerfile.debug
     env_file:
       - .env.docker
     ports:
+      - 4000:4000
       - 8000:8000
     depends_on:
       - azurite
