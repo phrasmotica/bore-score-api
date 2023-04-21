@@ -429,8 +429,19 @@ func (d *TableStorageDatabase) ScrubResultsWithPlayer(ctx context.Context, usern
 }
 
 // GetUser implements IDatabase
-func (d *TableStorageDatabase) GetUser(ctx context.Context, email string) (bool, *models.User) {
-	result := d.findUser(ctx, email)
+func (d *TableStorageDatabase) GetUser(ctx context.Context, username string) (bool, *models.User) {
+	result := d.findUser(ctx, username)
+	if result == nil {
+		return false, nil
+	}
+
+	user := createUser(result)
+	return true, &user
+}
+
+// GetUserByEmail implements IDatabase
+func (d *TableStorageDatabase) GetUserByEmail(ctx context.Context, email string) (bool, *models.User) {
+	result := d.findUserByEmail(ctx, email)
 	if result == nil {
 		return false, nil
 	}
@@ -470,7 +481,7 @@ func (d *TableStorageDatabase) AddUser(ctx context.Context, newUser *models.User
 
 // UserExists implements IDatabase
 func (d *TableStorageDatabase) UserExists(ctx context.Context, email string) bool {
-	result := d.findUser(ctx, email)
+	result := d.findUserByEmail(ctx, email)
 	return result != nil
 }
 
@@ -555,7 +566,21 @@ func (d *TableStorageDatabase) findPlayer(ctx context.Context, username string) 
 	return nil
 }
 
-func (d *TableStorageDatabase) findUser(ctx context.Context, email string) *aztables.EDMEntity {
+func (d *TableStorageDatabase) findUser(ctx context.Context, username string) *aztables.EDMEntity {
+	client := d.Client.NewClient("Users")
+
+	entities := listEntities(ctx, client, &aztables.ListEntitiesOptions{
+		Filter: to.Ptr(fmt.Sprintf("Username eq '%s'", username)),
+	})
+
+	if len(entities) == 1 {
+		return &entities[0]
+	}
+
+	return nil
+}
+
+func (d *TableStorageDatabase) findUserByEmail(ctx context.Context, email string) *aztables.EDMEntity {
 	client := d.Client.NewClient("Users")
 
 	entities := listEntities(ctx, client, &aztables.ListEntitiesOptions{

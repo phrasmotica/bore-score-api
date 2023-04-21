@@ -19,7 +19,12 @@ func (*MongoDatabase) UserExists(ctx context.Context, email string) bool {
 }
 
 // GetUser implements IDatabase
-func (*MongoDatabase) GetUser(ctx context.Context, email string) (bool, *models.User) {
+func (*MongoDatabase) GetUser(ctx context.Context, username string) (bool, *models.User) {
+	panic("unimplemented")
+}
+
+// GetUserByEmail implements IDatabase
+func (*MongoDatabase) GetUserByEmail(ctx context.Context, email string) (bool, *models.User) {
 	panic("unimplemented")
 }
 

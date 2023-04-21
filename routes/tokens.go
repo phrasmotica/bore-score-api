@@ -24,7 +24,7 @@ func GenerateToken(c *gin.Context) {
 	}
 
 	// check if email exists and password is correct
-	success, user := db.GetUser(ctx, request.Email)
+	success, user := db.GetUserByEmail(ctx, request.Email)
 	if !success {
 		Error.Printf("Could not get user with email %s\n", request.Email)
 		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
