@@ -38,10 +38,15 @@ func main() {
 
 	router.GET("/winMethods", routes.GetWinMethods)
 
-	router.POST("/user/register", routes.RegisterUser)
 	router.POST("/token", routes.GenerateToken)
 
-	secured := router.Group("/secured").Use(auth.Auth())
+	users := router.Group("/users")
+	{
+		users.GET("/:username", auth.TokenAuth(true), routes.GetUser)
+		users.POST("", routes.RegisterUser)
+	}
+
+	secured := router.Group("/secured").Use(auth.TokenAuth(false))
 	{
 		secured.GET("/ping", routes.Ping)
 	}

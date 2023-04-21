@@ -9,6 +9,32 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func GetUser(c *gin.Context) {
+	ctx := context.TODO()
+
+	username := c.Param("username")
+
+	success, user := db.GetUser(ctx, username)
+
+	if !success {
+		Error.Printf("Could not get user %s\n", username)
+		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
+		return
+	}
+
+	Info.Printf("Got user %s\n", username)
+
+	user.Password = ""
+
+	// only return this user's email address if the request was made by this user
+	callingUsername := c.GetString("username")
+	if callingUsername != username {
+		user.Email = ""
+	}
+
+	c.IndentedJSON(http.StatusOK, user)
+}
+
 func RegisterUser(c *gin.Context) {
 	ctx := context.TODO()
 
