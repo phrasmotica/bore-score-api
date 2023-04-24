@@ -24,14 +24,13 @@ func main() {
 	groups := router.Group("/groups")
 	{
 		groups.GET("", routes.GetGroups)
-
-		// TODO: use a route param instead of a separate route
-		groups.GET("-all", routes.GetAllGroups)
-
 		groups.GET("/:name", routes.GetGroup)
 		groups.POST("", routes.PostGroup)
 		groups.DELETE("/:name", routes.DeleteGroup)
 	}
+
+	// TODO: use a route param instead of a separate route
+	router.GET("groups-all", routes.GetAllGroups)
 
 	linkTypes := router.Group("/linkTypes")
 	{
