@@ -13,32 +13,56 @@ func main() {
 
 	router.Use(cors.Default())
 
-	router.GET("/games", routes.GetGames)
-	router.GET("/games/:name", routes.GetGame)
-	router.POST("/games", routes.PostGame)
-	router.DELETE("/games/:name", routes.DeleteGame)
+	games := router.Group("/games")
+	{
+		games.GET("", routes.GetGames)
+		games.GET("/:name", routes.GetGame)
+		games.POST("", routes.PostGame)
+		games.DELETE("/:name", routes.DeleteGame)
+	}
 
-	router.GET("/groups", routes.GetGroups)
-	router.GET("/groups-all", routes.GetAllGroups)
-	router.GET("/groups/:name", routes.GetGroup)
-	router.POST("/groups", routes.PostGroup)
-	router.DELETE("/groups/:name", routes.DeleteGroup)
+	groups := router.Group("/groups")
+	{
+		groups.GET("", routes.GetGroups)
 
-	router.GET("/linkTypes", routes.GetLinkTypes)
+		// TODO: use a route param instead of a separate route
+		groups.GET("-all", routes.GetAllGroups)
 
-	router.GET("/players", routes.GetPlayers)
-	router.GET("/players/:username", routes.GetPlayer)
-	router.POST("/players", routes.PostPlayer)
-	router.DELETE("/players/:username", routes.DeletePlayer)
+		groups.GET("/:name", routes.GetGroup)
+		groups.POST("", routes.PostGroup)
+		groups.DELETE("/:name", routes.DeleteGroup)
+	}
+
+	linkTypes := router.Group("/linkTypes")
+	{
+		linkTypes.GET("", routes.GetLinkTypes)
+	}
+
+	players := router.Group("/players")
+	{
+		players.GET("", routes.GetPlayers)
+		players.GET("/:username", routes.GetPlayer)
+		players.POST("", routes.PostPlayer)
+		players.DELETE("/:username", routes.DeletePlayer)
+	}
 
 	router.GET("/summary", routes.GetSummary)
 
-	router.GET("/results", routes.GetResults)
-	router.POST("/results", routes.PostResult)
+	results := router.Group("/results")
+	{
+		results.GET("", routes.GetResults)
+		results.POST("", routes.PostResult)
+	}
 
-	router.GET("/winMethods", routes.GetWinMethods)
+	winMethods := router.Group("/winMethods")
+	{
+		winMethods.GET("", routes.GetWinMethods)
+	}
 
-	router.POST("/token", routes.GenerateToken)
+	token := router.Group("/token")
+	{
+		token.POST("", routes.GenerateToken)
+	}
 
 	users := router.Group("/users")
 	{
