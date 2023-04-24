@@ -9,6 +9,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type UserResponse struct {
+	Username string `json:"username" bson:"username"`
+	Email    string `json:"email" bson:"email"`
+}
+
 func GetUser(c *gin.Context) {
 	ctx := context.TODO()
 
@@ -24,15 +29,17 @@ func GetUser(c *gin.Context) {
 
 	Info.Printf("Got user %s\n", username)
 
-	user.Password = ""
+	res := &UserResponse{
+		Username: username,
+	}
 
 	// only return this user's email address if the request was made by this user
 	callingUsername := c.GetString("username")
-	if callingUsername != username {
-		user.Email = ""
+	if callingUsername == username {
+		res.Email = user.Email
 	}
 
-	c.IndentedJSON(http.StatusOK, user)
+	c.IndentedJSON(http.StatusOK, res)
 }
 
 func RegisterUser(c *gin.Context) {
