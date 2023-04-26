@@ -1,6 +1,10 @@
 package auth
 
-import "github.com/gin-gonic/gin"
+import (
+	"strings"
+
+	"github.com/gin-gonic/gin"
+)
 
 // taken from https://stackoverflow.com/a/29439630
 func CORSMiddleware() gin.HandlerFunc {
@@ -21,8 +25,9 @@ func CORSMiddleware() gin.HandlerFunc {
 
 func TokenAuth(optional bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		tokenString := c.GetHeader("Authorization")
-		if tokenString == "" {
+		success, tokenString := parseToken(c)
+
+		if !success {
 			if optional {
 				c.Next()
 				return
@@ -45,4 +50,15 @@ func TokenAuth(optional bool) gin.HandlerFunc {
 
 		c.Next()
 	}
+}
+
+func parseToken(c *gin.Context) (bool, string) {
+	header := c.GetHeader("Authorization")
+	splitToken := strings.Split(header, "Bearer ")
+
+	if len(splitToken) != 2 {
+		return false, ""
+	}
+
+	return true, splitToken[1]
 }
