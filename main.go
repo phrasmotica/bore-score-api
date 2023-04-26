@@ -4,14 +4,13 @@ import (
 	"phrasmotica/bore-score-api/auth"
 	"phrasmotica/bore-score-api/routes"
 
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
 	router := gin.Default()
 
-	router.Use(cors.Default())
+	router.Use(auth.CORSMiddleware())
 
 	games := router.Group("/games")
 	{
