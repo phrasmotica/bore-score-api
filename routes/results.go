@@ -10,7 +10,16 @@ import (
 )
 
 func GetResults(c *gin.Context) {
-	success, results := db.GetAllResults(context.TODO())
+	username := c.Query("username")
+
+	var success bool
+	var results []models.Result
+
+	if len(username) > 0 {
+		success, results = db.GetResultsWithPlayer(context.TODO(), username)
+	} else {
+		success, results = db.GetAllResults(context.TODO())
+	}
 
 	if !success {
 		Error.Println("Could not get results")

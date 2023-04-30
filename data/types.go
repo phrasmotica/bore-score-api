@@ -35,9 +35,15 @@ type IDatabase interface {
 	DeletePlayer(ctx context.Context, username string) bool
 
 	GetAllResults(ctx context.Context) (bool, []models.Result)
+	GetResultsWithPlayer(ctx context.Context, username string) (bool, []models.Result)
 	AddResult(ctx context.Context, newResult *models.Result) bool
 	DeleteResultsWithGame(ctx context.Context, gameName string) (bool, int64)
 	ScrubResultsWithPlayer(ctx context.Context, username string) (bool, int64)
+
+	GetUser(ctx context.Context, username string) (bool, *models.User)
+	GetUserByEmail(ctx context.Context, email string) (bool, *models.User)
+	AddUser(ctx context.Context, newUser *models.User) bool
+	UserExists(ctx context.Context, email string) bool
 
 	GetAllWinMethods(ctx context.Context) (bool, []models.WinMethod)
 

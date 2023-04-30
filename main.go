@@ -1,41 +1,77 @@
 package main
 
 import (
+	"phrasmotica/bore-score-api/auth"
 	"phrasmotica/bore-score-api/routes"
 
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
 	router := gin.Default()
 
-	router.Use(cors.Default())
+	router.Use(auth.CORSMiddleware())
 
-	router.GET("/games", routes.GetGames)
-	router.GET("/games/:name", routes.GetGame)
-	router.POST("/games", routes.PostGame)
-	router.DELETE("/games/:name", routes.DeleteGame)
+	games := router.Group("/games")
+	{
+		games.GET("", routes.GetGames)
+		games.GET("/:name", routes.GetGame)
+		games.POST("", routes.PostGame)
+		games.DELETE("/:name", routes.DeleteGame)
+	}
 
-	router.GET("/groups", routes.GetGroups)
-	router.GET("/groups-all", routes.GetAllGroups)
-	router.GET("/groups/:name", routes.GetGroup)
-	router.POST("/groups", routes.PostGroup)
-	router.DELETE("/groups/:name", routes.DeleteGroup)
+	groups := router.Group("/groups")
+	{
+		groups.GET("", routes.GetGroups)
+		groups.GET("/:name", routes.GetGroup)
+		groups.POST("", routes.PostGroup)
+		groups.DELETE("/:name", routes.DeleteGroup)
+	}
 
-	router.GET("/linkTypes", routes.GetLinkTypes)
+	// TODO: use a route param instead of a separate route
+	router.GET("groups-all", routes.GetAllGroups)
 
-	router.GET("/players", routes.GetPlayers)
-	router.GET("/players/:username", routes.GetPlayer)
-	router.POST("/players", routes.PostPlayer)
-	router.DELETE("/players/:username", routes.DeletePlayer)
+	linkTypes := router.Group("/linkTypes")
+	{
+		linkTypes.GET("", routes.GetLinkTypes)
+	}
+
+	players := router.Group("/players")
+	{
+		players.GET("", routes.GetPlayers)
+		players.GET("/:username", routes.GetPlayer)
+		players.POST("", routes.PostPlayer)
+		players.DELETE("/:username", routes.DeletePlayer)
+	}
 
 	router.GET("/summary", routes.GetSummary)
 
-	router.GET("/results", routes.GetResults)
-	router.POST("/results", routes.PostResult)
+	results := router.Group("/results")
+	{
+		results.GET("", routes.GetResults)
+		results.POST("", routes.PostResult)
+	}
 
-	router.GET("/winMethods", routes.GetWinMethods)
+	winMethods := router.Group("/winMethods")
+	{
+		winMethods.GET("", routes.GetWinMethods)
+	}
+
+	token := router.Group("/token")
+	{
+		token.POST("", routes.GenerateToken)
+	}
+
+	users := router.Group("/users")
+	{
+		users.GET("/:username", auth.TokenAuth(true), routes.GetUser)
+		users.POST("", routes.RegisterUser)
+	}
+
+	secured := router.Group("/secured").Use(auth.TokenAuth(false))
+	{
+		secured.GET("/ping", routes.Ping)
+	}
 
 	router.Run(":8000")
 }

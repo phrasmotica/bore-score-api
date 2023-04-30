@@ -1,0 +1,19 @@
+# syntax=docker/dockerfile:1
+
+# adapted from https://www.kenaqshal.com/blog/debugging-dockerized-go-applications
+
+FROM golang:1.20-alpine
+
+WORKDIR /app
+
+COPY . ./
+
+RUN go mod download
+
+RUN CGO_ENABLED=0 go install -ldflags "-s -w -extldflags '-static'" github.com/go-delve/delve/cmd/dlv@latest
+
+RUN CGO_ENABLED=0 go build -gcflags "all=-N -l" -o bore-score-api .
+
+EXPOSE 8000 4000
+
+CMD [ "/go/bin/dlv", "--listen=:4000", "--headless=true", "--log=true", "--accept-multiclient", "--api-version=2", "exec", "/app/bore-score-api" ]

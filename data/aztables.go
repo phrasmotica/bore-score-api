@@ -283,6 +283,32 @@ func (d *TableStorageDatabase) GetAllResults(ctx context.Context) (bool, []model
 	return true, results
 }
 
+// GetResultsWithPlayer implements IDatabase
+func (d *TableStorageDatabase) GetResultsWithPlayer(ctx context.Context, username string) (bool, []models.Result) {
+	// TODO: restructure data so that we can find the results containing this player more easily.
+	// filter expressions don't support a string "contains" operator, so we have to fetch
+	// all results and then filter them afterwards...
+
+	success, results := d.GetAllResults(ctx)
+	if !success {
+		return false, []models.Result{}
+	}
+
+	relevantResults := []models.Result{}
+
+	// pick out the results that this player was involved in
+	for i := range results {
+		scores := results[i].Scores
+		for j := range scores {
+			if scores[j].Username == username {
+				relevantResults = append(relevantResults, results[i])
+			}
+		}
+	}
+
+	return true, relevantResults
+}
+
 // AddResult implements IDatabase
 func (d *TableStorageDatabase) AddResult(ctx context.Context, newResult *models.Result) bool {
 	scores, scoresErr := json.Marshal(newResult.Scores)
@@ -356,28 +382,9 @@ func (d *TableStorageDatabase) DeleteResultsWithGame(ctx context.Context, gameNa
 
 // ScrubResultsWithPlayer implements IDatabase
 func (d *TableStorageDatabase) ScrubResultsWithPlayer(ctx context.Context, username string) (bool, int64) {
-	// TODO: restructure data so that we can find the results containing this player more easily.
-	// filter expressions don't support a string "contains" operator, so we have to fetch
-	// all results and then filter them afterwards...
+	success, relevantResults := d.GetResultsWithPlayer(ctx, username)
 
-	success, results := d.GetAllResults(ctx)
 	if !success {
-		return false, 0
-	}
-
-	relevantResults := []models.Result{}
-
-	// pick out the results that this player was involved in
-	for i := range results {
-		scores := results[i].Scores
-		for j := range scores {
-			if scores[j].Username == username {
-				relevantResults = append(relevantResults, results[i])
-			}
-		}
-	}
-
-	if len(relevantResults) <= 0 {
 		return false, 0
 	}
 
@@ -426,6 +433,63 @@ func (d *TableStorageDatabase) ScrubResultsWithPlayer(ctx context.Context, usern
 	}
 
 	return true, int64(updateCount)
+}
+
+// GetUser implements IDatabase
+func (d *TableStorageDatabase) GetUser(ctx context.Context, username string) (bool, *models.User) {
+	result := d.findUser(ctx, username)
+	if result == nil {
+		return false, nil
+	}
+
+	user := createUser(result)
+	return true, &user
+}
+
+// GetUserByEmail implements IDatabase
+func (d *TableStorageDatabase) GetUserByEmail(ctx context.Context, email string) (bool, *models.User) {
+	result := d.findUserByEmail(ctx, email)
+	if result == nil {
+		return false, nil
+	}
+
+	user := createUser(result)
+	return true, &user
+}
+
+func (d *TableStorageDatabase) AddUser(ctx context.Context, newUser *models.User) bool {
+	entity := aztables.EDMEntity{
+		Entity: aztables.Entity{
+			PartitionKey: "Users",
+			RowKey:       newUser.ID,
+		},
+		Properties: map[string]interface{}{
+			"Username":    newUser.Username,
+			"TimeCreated": aztables.EDMInt64(newUser.TimeCreated),
+			"Email":       newUser.Email,
+			"Password":    newUser.Password,
+		},
+	}
+
+	marshalled, err := json.Marshal(entity)
+	if err != nil {
+		Error.Println(err)
+		return false
+	}
+
+	_, addErr := d.Client.NewClient("Users").AddEntity(ctx, marshalled, nil)
+	if addErr != nil {
+		Error.Println(addErr)
+		return false
+	}
+
+	return true
+}
+
+// UserExists implements IDatabase
+func (d *TableStorageDatabase) UserExists(ctx context.Context, email string) bool {
+	result := d.findUserByEmail(ctx, email)
+	return result != nil
 }
 
 func (d *TableStorageDatabase) GetAllWinMethods(ctx context.Context) (bool, []models.WinMethod) {
@@ -500,6 +564,34 @@ func (d *TableStorageDatabase) findPlayer(ctx context.Context, username string) 
 
 	entities := listEntities(ctx, client, &aztables.ListEntitiesOptions{
 		Filter: to.Ptr(fmt.Sprintf("Username eq '%s'", username)),
+	})
+
+	if len(entities) == 1 {
+		return &entities[0]
+	}
+
+	return nil
+}
+
+func (d *TableStorageDatabase) findUser(ctx context.Context, username string) *aztables.EDMEntity {
+	client := d.Client.NewClient("Users")
+
+	entities := listEntities(ctx, client, &aztables.ListEntitiesOptions{
+		Filter: to.Ptr(fmt.Sprintf("Username eq '%s'", username)),
+	})
+
+	if len(entities) == 1 {
+		return &entities[0]
+	}
+
+	return nil
+}
+
+func (d *TableStorageDatabase) findUserByEmail(ctx context.Context, email string) *aztables.EDMEntity {
+	client := d.Client.NewClient("Users")
+
+	entities := listEntities(ctx, client, &aztables.ListEntitiesOptions{
+		Filter: to.Ptr(fmt.Sprintf("Email eq '%s'", email)),
 	})
 
 	if len(entities) == 1 {
@@ -636,6 +728,17 @@ func createScores(entity *aztables.EDMEntity) []models.PlayerScore {
 	json.Unmarshal([]byte(scoresStr), &data)
 
 	return data
+}
+
+func createUser(entity *aztables.EDMEntity) models.User {
+	// don't transmit password!
+	return models.User{
+		ID:          entity.RowKey,
+		Username:    propString(entity, "Username"),
+		TimeCreated: propInt64(entity, "TimeCreated"),
+		Email:       propString(entity, "Email"),
+		Password:    propString(entity, "Password"),
+	}
 }
 
 func createWinMethod(entity *aztables.EDMEntity) models.WinMethod {
