@@ -283,6 +283,32 @@ func (d *TableStorageDatabase) GetAllResults(ctx context.Context) (bool, []model
 	return true, results
 }
 
+// GetResultsWithPlayer implements IDatabase
+func (d *TableStorageDatabase) GetResultsWithPlayer(ctx context.Context, username string) (bool, []models.Result) {
+	// TODO: restructure data so that we can find the results containing this player more easily.
+	// filter expressions don't support a string "contains" operator, so we have to fetch
+	// all results and then filter them afterwards...
+
+	success, results := d.GetAllResults(ctx)
+	if !success {
+		return false, []models.Result{}
+	}
+
+	relevantResults := []models.Result{}
+
+	// pick out the results that this player was involved in
+	for i := range results {
+		scores := results[i].Scores
+		for j := range scores {
+			if scores[j].Username == username {
+				relevantResults = append(relevantResults, results[i])
+			}
+		}
+	}
+
+	return true, relevantResults
+}
+
 // AddResult implements IDatabase
 func (d *TableStorageDatabase) AddResult(ctx context.Context, newResult *models.Result) bool {
 	scores, scoresErr := json.Marshal(newResult.Scores)
@@ -356,28 +382,9 @@ func (d *TableStorageDatabase) DeleteResultsWithGame(ctx context.Context, gameNa
 
 // ScrubResultsWithPlayer implements IDatabase
 func (d *TableStorageDatabase) ScrubResultsWithPlayer(ctx context.Context, username string) (bool, int64) {
-	// TODO: restructure data so that we can find the results containing this player more easily.
-	// filter expressions don't support a string "contains" operator, so we have to fetch
-	// all results and then filter them afterwards...
+	success, relevantResults := d.GetResultsWithPlayer(ctx, username)
 
-	success, results := d.GetAllResults(ctx)
 	if !success {
-		return false, 0
-	}
-
-	relevantResults := []models.Result{}
-
-	// pick out the results that this player was involved in
-	for i := range results {
-		scores := results[i].Scores
-		for j := range scores {
-			if scores[j].Username == username {
-				relevantResults = append(relevantResults, results[i])
-			}
-		}
-	}
-
-	if len(relevantResults) <= 0 {
 		return false, 0
 	}
 

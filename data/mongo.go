@@ -13,6 +13,11 @@ type MongoDatabase struct {
 	Database *mongo.Database
 }
 
+// GetResultsWithPlayer implements IDatabase
+func (*MongoDatabase) GetResultsWithPlayer(ctx context.Context, username string) (bool, []models.Result) {
+	panic("unimplemented")
+}
+
 // UserExists implements IDatabase
 func (*MongoDatabase) UserExists(ctx context.Context, email string) bool {
 	panic("unimplemented")
