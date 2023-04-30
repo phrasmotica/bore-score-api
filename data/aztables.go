@@ -35,6 +35,44 @@ func CreateTableStorageClient(connStr string) *aztables.ServiceClient {
 	return client
 }
 
+// AddApproval implements IDatabase
+func (d *TableStorageDatabase) AddApproval(ctx context.Context, newApproval *models.Approval) bool {
+	entity := aztables.EDMEntity{
+		Entity: aztables.Entity{
+			PartitionKey: newApproval.ResultID,
+			RowKey:       newApproval.ID,
+		},
+		Properties: map[string]interface{}{
+			"ResultID":       newApproval.ResultID,
+			"TimeCreated":    aztables.EDMInt64(newApproval.TimeCreated),
+			"Username":       newApproval.Username,
+			"ApprovalStatus": string(newApproval.ApprovalStatus),
+		},
+	}
+
+	marshalled, err := json.Marshal(entity)
+	if err != nil {
+		Error.Println(err)
+		return false
+	}
+
+	_, addErr := d.Client.NewClient("Approvals").AddEntity(ctx, marshalled, nil)
+	if addErr != nil {
+		Error.Println(addErr)
+		return false
+	}
+
+	return true
+}
+
+// GetApprovals implements IDatabase
+func (d *TableStorageDatabase) GetApprovals(ctx context.Context, resultId string) (bool, []models.Approval) {
+	approvals := list(ctx, d.Client, "Approvals", createApproval, &aztables.ListEntitiesOptions{
+		Filter: to.Ptr(fmt.Sprintf("ResultID eq '%s'", resultId)),
+	})
+	return true, approvals
+}
+
 // GetAllGames implements IDatabase
 func (d *TableStorageDatabase) GetAllGames(ctx context.Context) (bool, []models.Game) {
 	games := list(ctx, d.Client, "Games", createGame, nil)
@@ -309,6 +347,23 @@ func (d *TableStorageDatabase) GetResultsWithPlayer(ctx context.Context, usernam
 	return true, relevantResults
 }
 
+// GetResult implements IDatabase
+func (d *TableStorageDatabase) GetResult(ctx context.Context, id string) (bool, *models.Result) {
+	entity := d.findResult(ctx, id)
+	if entity == nil {
+		return false, nil
+	}
+
+	result := createResult(entity)
+	return true, &result
+}
+
+// ResultExists implements IDatabase
+func (d *TableStorageDatabase) ResultExists(ctx context.Context, id string) bool {
+	entity := d.findResult(ctx, id)
+	return entity != nil
+}
+
 // AddResult implements IDatabase
 func (d *TableStorageDatabase) AddResult(ctx context.Context, newResult *models.Result) bool {
 	scores, scoresErr := json.Marshal(newResult.Scores)
@@ -487,7 +542,13 @@ func (d *TableStorageDatabase) AddUser(ctx context.Context, newUser *models.User
 }
 
 // UserExists implements IDatabase
-func (d *TableStorageDatabase) UserExists(ctx context.Context, email string) bool {
+func (d *TableStorageDatabase) UserExists(ctx context.Context, username string) bool {
+	result := d.findUser(ctx, username)
+	return result != nil
+}
+
+// UserExistsByEmail implements IDatabase
+func (d *TableStorageDatabase) UserExistsByEmail(ctx context.Context, email string) bool {
 	result := d.findUserByEmail(ctx, email)
 	return result != nil
 }
@@ -573,6 +634,20 @@ func (d *TableStorageDatabase) findPlayer(ctx context.Context, username string) 
 	return nil
 }
 
+func (d *TableStorageDatabase) findResult(ctx context.Context, id string) *aztables.EDMEntity {
+	client := d.Client.NewClient("Results")
+
+	entities := listEntities(ctx, client, &aztables.ListEntitiesOptions{
+		Filter: to.Ptr(fmt.Sprintf("RowKey eq '%s'", id)),
+	})
+
+	if len(entities) == 1 {
+		return &entities[0]
+	}
+
+	return nil
+}
+
 func (d *TableStorageDatabase) findUser(ctx context.Context, username string) *aztables.EDMEntity {
 	client := d.Client.NewClient("Users")
 
@@ -645,6 +720,16 @@ func unmarshal(bytes []byte) *aztables.EDMEntity {
 	}
 
 	return &entity
+}
+
+func createApproval(entity *aztables.EDMEntity) models.Approval {
+	return models.Approval{
+		ID:             entity.RowKey,
+		ResultID:       propString(entity, "ResultID"),
+		TimeCreated:    propInt64(entity, "TimeCreated"),
+		Username:       propString(entity, "Username"),
+		ApprovalStatus: models.ApprovalStatus(propString(entity, "ApprovalStatus")),
+	}
 }
 
 func createGame(entity *aztables.EDMEntity) models.Game {

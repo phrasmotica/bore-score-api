@@ -13,6 +13,31 @@ type MongoDatabase struct {
 	Database *mongo.Database
 }
 
+// UserExistsByEmail implements IDatabase
+func (*MongoDatabase) UserExistsByEmail(ctx context.Context, email string) bool {
+	panic("unimplemented")
+}
+
+// GetResult implements IDatabase
+func (*MongoDatabase) GetResult(ctx context.Context, resultId string) (bool, *models.Result) {
+	panic("unimplemented")
+}
+
+// ResultExists implements IDatabase
+func (*MongoDatabase) ResultExists(ctx context.Context, resultId string) bool {
+	panic("unimplemented")
+}
+
+// GetApprovals implements IDatabase
+func (*MongoDatabase) GetApprovals(ctx context.Context, resultId string) (bool, []models.Approval) {
+	panic("unimplemented")
+}
+
+// AddApproval implements IDatabase
+func (*MongoDatabase) AddApproval(ctx context.Context, newApproval *models.Approval) bool {
+	panic("unimplemented")
+}
+
 // GetResultsWithPlayer implements IDatabase
 func (*MongoDatabase) GetResultsWithPlayer(ctx context.Context, username string) (bool, []models.Result) {
 	panic("unimplemented")

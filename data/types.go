@@ -13,6 +13,9 @@ type Summary struct {
 }
 
 type IDatabase interface {
+	AddApproval(ctx context.Context, newApproval *models.Approval) bool
+	GetApprovals(ctx context.Context, resultId string) (bool, []models.Approval)
+
 	GetAllGames(ctx context.Context) (bool, []models.Game)
 	GetGame(ctx context.Context, name string) (bool, *models.Game)
 	GameExists(ctx context.Context, name string) bool
@@ -36,6 +39,8 @@ type IDatabase interface {
 
 	GetAllResults(ctx context.Context) (bool, []models.Result)
 	GetResultsWithPlayer(ctx context.Context, username string) (bool, []models.Result)
+	GetResult(ctx context.Context, resultId string) (bool, *models.Result)
+	ResultExists(ctx context.Context, resultId string) bool
 	AddResult(ctx context.Context, newResult *models.Result) bool
 	DeleteResultsWithGame(ctx context.Context, gameName string) (bool, int64)
 	ScrubResultsWithPlayer(ctx context.Context, username string) (bool, int64)
@@ -43,7 +48,8 @@ type IDatabase interface {
 	GetUser(ctx context.Context, username string) (bool, *models.User)
 	GetUserByEmail(ctx context.Context, email string) (bool, *models.User)
 	AddUser(ctx context.Context, newUser *models.User) bool
-	UserExists(ctx context.Context, email string) bool
+	UserExists(ctx context.Context, username string) bool
+	UserExistsByEmail(ctx context.Context, email string) bool
 
 	GetAllWinMethods(ctx context.Context) (bool, []models.WinMethod)
 
