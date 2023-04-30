@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -33,14 +34,14 @@ func TokenAuth(optional bool) gin.HandlerFunc {
 				return
 			}
 
-			c.IndentedJSON(401, gin.H{"error": "request does not contain an access token"})
+			c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "request does not contain an access token"})
 			c.Abort()
 			return
 		}
 
 		err, claims := ValidateToken(tokenString)
 		if err != nil {
-			c.IndentedJSON(401, gin.H{"error": err.Error()})
+			c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			c.Abort()
 			return
 		}
