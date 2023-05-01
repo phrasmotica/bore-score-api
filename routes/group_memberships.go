@@ -47,12 +47,6 @@ func AddGroupMembership(c *gin.Context) {
 		return
 	}
 
-	if c.GetString("username") != newGroupMembership.Username {
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"message": "cannot join a group on another user's behalf"})
-		c.Abort()
-		return
-	}
-
 	ctx := context.TODO()
 
 	if !db.UserExists(ctx, newGroupMembership.Username) {
@@ -67,12 +61,15 @@ func AddGroupMembership(c *gin.Context) {
 	}
 
 	if group.Visibility == models.Private {
-		// TODO: use token to determine who is adding the user to this group
-		inviterIsInGroup := db.IsInGroup(ctx, newGroupMembership.GroupID, newGroupMembership.InviterUsername)
+		inviterUsername := c.GetString("username")
+
+		inviterIsInGroup := db.IsInGroup(ctx, newGroupMembership.GroupID, inviterUsername)
 		if !inviterIsInGroup {
 			c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("inviter is not in group %s", newGroupMembership.GroupID)})
 			return
 		}
+
+		newGroupMembership.InviterUsername = inviterUsername
 	}
 
 	if success := db.AddGroupMembership(ctx, &newGroupMembership); !success {
@@ -81,7 +78,7 @@ func AddGroupMembership(c *gin.Context) {
 		return
 	}
 
-	Info.Printf("Added membership to group %s for user %s\n", newGroupMembership.GroupID, newGroupMembership.Username)
+	Info.Printf("Added membership to group %s for user %s by inviter %s\n", newGroupMembership.GroupID, newGroupMembership.Username, newGroupMembership.InviterUsername)
 
 	c.IndentedJSON(http.StatusCreated, newGroupMembership)
 }
