@@ -416,10 +416,6 @@ func (d *TableStorageDatabase) DeleteResultsWithGame(ctx context.Context, gameNa
 		Filter: to.Ptr(fmt.Sprintf("GameName eq '%s'", gameName)),
 	})
 
-	if len(entities) <= 0 {
-		return false, 0
-	}
-
 	deleteCount := 0
 	for i := 0; i < len(entities); i++ {
 		result := entities[i]
