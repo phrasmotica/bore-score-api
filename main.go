@@ -12,6 +12,12 @@ func main() {
 
 	router.Use(auth.CORSMiddleware())
 
+	approvals := router.Group("/approvals").Use(auth.TokenAuth(false))
+	{
+		approvals.GET("/:resultId", routes.GetApprovals)
+		approvals.POST("", routes.PostApproval)
+	}
+
 	games := router.Group("/games")
 	{
 		games.GET("", routes.GetGames)

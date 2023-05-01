@@ -58,7 +58,7 @@ func RegisterUser(c *gin.Context) {
 		return
 	}
 
-	if db.UserExists(ctx, newUser.Email) {
+	if db.UserExistsByEmail(ctx, newUser.Email) {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("user %s already exists", newUser.Email)})
 		c.Abort()
 		return
