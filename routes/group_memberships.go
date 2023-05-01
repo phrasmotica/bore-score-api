@@ -72,6 +72,12 @@ func AddGroupMembership(c *gin.Context) {
 		newGroupMembership.InviterUsername = inviterUsername
 	}
 
+	if db.IsInGroup(ctx, group.ID, newGroupMembership.Username) {
+		Info.Printf("User %s is already in group %s\n", newGroupMembership.Username, newGroupMembership.GroupID)
+		c.IndentedJSON(http.StatusNoContent, gin.H{})
+		return
+	}
+
 	if success := db.AddGroupMembership(ctx, &newGroupMembership); !success {
 		Error.Println("Could not add group membership")
 		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
