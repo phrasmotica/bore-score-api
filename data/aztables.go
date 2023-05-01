@@ -155,6 +155,7 @@ func (d *TableStorageDatabase) DeleteGame(ctx context.Context, name string) bool
 
 // GetAllGroups implements IDatabase
 func (d *TableStorageDatabase) GetAllGroups(ctx context.Context) (bool, []models.Group) {
+	// TODO: get private groups that the calling user is a member of
 	groups := list(ctx, d.Client, "Groups", createGroup, &aztables.ListEntitiesOptions{
 		Filter: to.Ptr("Visibility eq 'public' or Visibility eq 'global'"),
 	})
@@ -164,6 +165,7 @@ func (d *TableStorageDatabase) GetAllGroups(ctx context.Context) (bool, []models
 
 // GetGroups implements IDatabase
 func (d *TableStorageDatabase) GetGroups(ctx context.Context) (bool, []models.Group) {
+	// TODO: get private groups that the calling user is a member of
 	groups := list(ctx, d.Client, "Groups", createGroup, &aztables.ListEntitiesOptions{
 		Filter: to.Ptr("Visibility eq 'public'"),
 	})
@@ -172,24 +174,42 @@ func (d *TableStorageDatabase) GetGroups(ctx context.Context) (bool, []models.Gr
 }
 
 // GetGroup implements IDatabase
-func (d *TableStorageDatabase) GetGroup(ctx context.Context, name string) (RetrieveGroupResult, *models.Group) {
-	result := d.findGroup(ctx, name)
-	if result == nil {
+func (d *TableStorageDatabase) GetGroup(ctx context.Context, id string) (RetrieveGroupResult, *models.Group) {
+	entity := d.findGroup(ctx, id)
+	if entity == nil {
 		return Failure, nil
 	}
 
-	group := createGroup(result)
+	group := createGroup(entity)
 
-	if group.Visibility == models.Private {
-		return Unauthorised, nil
+	// TODO: check if user is a member
+	// if group.Visibility == models.Private {
+	// 	return Unauthorised, nil
+	// }
+
+	return Success, &group
+}
+
+// GetGroup implements IDatabase
+func (d *TableStorageDatabase) GetGroupByName(ctx context.Context, name string) (RetrieveGroupResult, *models.Group) {
+	entity := d.findGroupByName(ctx, name)
+	if entity == nil {
+		return Failure, nil
 	}
+
+	group := createGroup(entity)
+
+	// TODO: check if user is a member
+	// if group.Visibility == models.Private {
+	// 	return Unauthorised, nil
+	// }
 
 	return Success, &group
 }
 
 // GroupExists implements IDatabase
 func (d *TableStorageDatabase) GroupExists(ctx context.Context, name string) bool {
-	result := d.findGroup(ctx, name)
+	result := d.findGroupByName(ctx, name)
 	return result != nil
 }
 
@@ -227,7 +247,7 @@ func (d *TableStorageDatabase) AddGroup(ctx context.Context, newGroup *models.Gr
 
 // DeleteGroup implements IDatabase
 func (d *TableStorageDatabase) DeleteGroup(ctx context.Context, name string) bool {
-	group := d.findGroup(ctx, name)
+	group := d.findGroupByName(ctx, name)
 	if group == nil {
 		return false
 	}
@@ -235,6 +255,65 @@ func (d *TableStorageDatabase) DeleteGroup(ctx context.Context, name string) boo
 	_, err := d.Client.NewClient("Groups").DeleteEntity(ctx, group.PartitionKey, group.RowKey, nil)
 	if err != nil {
 		Error.Println(err)
+		return false
+	}
+
+	return true
+}
+
+// GetGroupMemberships implements IDatabase
+func (d *TableStorageDatabase) GetGroupMemberships(ctx context.Context, username string) (bool, []models.GroupMembership) {
+	if !d.UserExists(ctx, username) {
+		return false, []models.GroupMembership{}
+	}
+
+	memberships := list(ctx, d.Client, "GroupMemberships", createGroupMembership, &aztables.ListEntitiesOptions{
+		Filter: to.Ptr(fmt.Sprintf("Username eq '%s'", username)),
+	})
+
+	return true, memberships
+}
+
+// IsInGroup implements IDatabase
+func (d *TableStorageDatabase) IsInGroup(ctx context.Context, groupId string, username string) bool {
+	success, memberships := d.GetGroupMemberships(ctx, username)
+	if !success {
+		return false
+	}
+
+	for _, m := range memberships {
+		if m.GroupID == groupId && m.Username == username {
+			return true
+		}
+	}
+
+	return false
+}
+
+// AddGroupMembership implements IDatabase
+func (d *TableStorageDatabase) AddGroupMembership(ctx context.Context, newGroupMembership *models.GroupMembership) bool {
+	entity := aztables.EDMEntity{
+		Entity: aztables.Entity{
+			PartitionKey: newGroupMembership.GroupID,
+			RowKey:       newGroupMembership.ID,
+		},
+		Properties: map[string]interface{}{
+			"GroupID":         newGroupMembership.GroupID,
+			"TimeCreated":     aztables.EDMInt64(newGroupMembership.TimeCreated),
+			"Username":        newGroupMembership.Username,
+			"InviterUsername": newGroupMembership.InviterUsername,
+		},
+	}
+
+	marshalled, err := json.Marshal(entity)
+	if err != nil {
+		Error.Println(err)
+		return false
+	}
+
+	_, addErr := d.Client.NewClient("GroupMemberships").AddEntity(ctx, marshalled, nil)
+	if addErr != nil {
+		Error.Println(addErr)
 		return false
 	}
 
@@ -602,7 +681,21 @@ func (d *TableStorageDatabase) findGame(ctx context.Context, name string) *aztab
 	return nil
 }
 
-func (d *TableStorageDatabase) findGroup(ctx context.Context, name string) *aztables.EDMEntity {
+func (d *TableStorageDatabase) findGroup(ctx context.Context, id string) *aztables.EDMEntity {
+	client := d.Client.NewClient("Groups")
+
+	entities := listEntities(ctx, client, &aztables.ListEntitiesOptions{
+		Filter: to.Ptr(fmt.Sprintf("RowKey eq '%s'", id)),
+	})
+
+	if len(entities) == 1 {
+		return &entities[0]
+	}
+
+	return nil
+}
+
+func (d *TableStorageDatabase) findGroupByName(ctx context.Context, name string) *aztables.EDMEntity {
 	client := d.Client.NewClient("Groups")
 
 	entities := listEntities(ctx, client, &aztables.ListEntitiesOptions{
@@ -764,6 +857,15 @@ func createGroup(entity *aztables.EDMEntity) models.Group {
 		Description:    propString(entity, "Description"),
 		ProfilePicture: propString(entity, "ProfilePicture"),
 		Visibility:     models.GroupVisibilityName(propString(entity, "Visibility")),
+	}
+}
+
+func createGroupMembership(entity *aztables.EDMEntity) models.GroupMembership {
+	return models.GroupMembership{
+		ID:          entity.RowKey,
+		GroupID:     propString(entity, "GroupID"),
+		TimeCreated: propInt64(entity, "TimeCreated"),
+		Username:    propString(entity, "Username"),
 	}
 }
 

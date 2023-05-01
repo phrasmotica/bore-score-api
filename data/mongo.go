@@ -13,6 +13,21 @@ type MongoDatabase struct {
 	Database *mongo.Database
 }
 
+// IsInGroup implements IDatabase
+func (*MongoDatabase) IsInGroup(ctx context.Context, groupId string, username string) bool {
+	panic("unimplemented")
+}
+
+// AddGroupMembership implements IDatabase
+func (*MongoDatabase) AddGroupMembership(ctx context.Context, newGroupMembership *models.GroupMembership) bool {
+	panic("unimplemented")
+}
+
+// GetGroupMemberships implements IDatabase
+func (*MongoDatabase) GetGroupMemberships(ctx context.Context, username string) (bool, []models.GroupMembership) {
+	panic("unimplemented")
+}
+
 // UserExistsByEmail implements IDatabase
 func (*MongoDatabase) UserExistsByEmail(ctx context.Context, email string) bool {
 	panic("unimplemented")

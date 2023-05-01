@@ -41,7 +41,7 @@ func GetGroups(c *gin.Context) {
 func GetGroup(c *gin.Context) {
 	name := c.Param("name")
 
-	result, group := db.GetGroup(context.TODO(), name)
+	result, group := db.GetGroupByName(context.TODO(), name)
 
 	if result == data.Failure {
 		Error.Printf("Group %s not found\n", name)
