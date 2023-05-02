@@ -174,37 +174,25 @@ func (d *TableStorageDatabase) GetGroups(ctx context.Context) (bool, []models.Gr
 }
 
 // GetGroup implements IDatabase
-func (d *TableStorageDatabase) GetGroup(ctx context.Context, id string) (RetrieveGroupResult, *models.Group) {
+func (d *TableStorageDatabase) GetGroup(ctx context.Context, id string) (bool, *models.Group) {
 	entity := d.findGroup(ctx, id)
 	if entity == nil {
-		return Failure, nil
+		return false, nil
 	}
 
 	group := createGroup(entity)
-
-	// TODO: check if user is a member
-	// if group.Visibility == models.Private {
-	// 	return Unauthorised, nil
-	// }
-
-	return Success, &group
+	return true, &group
 }
 
 // GetGroup implements IDatabase
-func (d *TableStorageDatabase) GetGroupByName(ctx context.Context, name string) (RetrieveGroupResult, *models.Group) {
+func (d *TableStorageDatabase) GetGroupByName(ctx context.Context, name string) (bool, *models.Group) {
 	entity := d.findGroupByName(ctx, name)
 	if entity == nil {
-		return Failure, nil
+		return false, nil
 	}
 
 	group := createGroup(entity)
-
-	// TODO: check if user is a member
-	// if group.Visibility == models.Private {
-	// 	return Unauthorised, nil
-	// }
-
-	return Success, &group
+	return true, &group
 }
 
 // GroupExists implements IDatabase

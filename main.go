@@ -29,7 +29,7 @@ func main() {
 	groups := router.Group("/groups")
 	{
 		groups.GET("", routes.GetGroups)
-		groups.GET("/:name", routes.GetGroup)
+		groups.GET("/:name", auth.TokenAuth(true), routes.GetGroup)
 		groups.POST("", routes.PostGroup)
 		groups.DELETE("/:name", routes.DeleteGroup)
 	}

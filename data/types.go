@@ -24,8 +24,8 @@ type IDatabase interface {
 
 	GetAllGroups(ctx context.Context) (bool, []models.Group)
 	GetGroups(ctx context.Context) (bool, []models.Group)
-	GetGroup(ctx context.Context, id string) (RetrieveGroupResult, *models.Group)
-	GetGroupByName(ctx context.Context, name string) (RetrieveGroupResult, *models.Group)
+	GetGroup(ctx context.Context, id string) (bool, *models.Group)
+	GetGroupByName(ctx context.Context, name string) (bool, *models.Group)
 	GroupExists(ctx context.Context, name string) bool
 	AddGroup(ctx context.Context, newGroup *models.Group) bool
 	DeleteGroup(ctx context.Context, name string) bool

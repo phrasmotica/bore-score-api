@@ -41,18 +41,25 @@ func GetGroups(c *gin.Context) {
 func GetGroup(c *gin.Context) {
 	name := c.Param("name")
 
-	result, group := db.GetGroupByName(context.TODO(), name)
+	ctx := context.TODO()
 
-	if result == data.Failure {
+	success, group := db.GetGroupByName(ctx, name)
+
+	if !success {
 		Error.Printf("Group %s not found\n", name)
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "group not found"})
 		return
 	}
 
-	if result == data.Unauthorised {
-		Error.Printf("Group %s is private\n", name)
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"message": "group is private"})
-		return
+	if group.Visibility == models.Private {
+		callingUsername := c.GetString("username")
+		isInGroup := db.IsInGroup(ctx, group.ID, callingUsername)
+
+		if !isInGroup {
+			Error.Printf("Group %s is private\n", name)
+			c.IndentedJSON(http.StatusUnauthorized, gin.H{"message": "group is private"})
+			return
+		}
 	}
 
 	Info.Printf("Got group %s\n", name)

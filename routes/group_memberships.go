@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"phrasmotica/bore-score-api/data"
 	"phrasmotica/bore-score-api/models"
 
 	"github.com/gin-gonic/gin"
@@ -54,8 +53,8 @@ func AddGroupMembership(c *gin.Context) {
 		return
 	}
 
-	result, group := db.GetGroup(ctx, newGroupMembership.GroupID)
-	if result != data.Success {
+	success, group := db.GetGroup(ctx, newGroupMembership.GroupID)
+	if !success {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("group %s does not exist", newGroupMembership.GroupID)})
 		return
 	}
