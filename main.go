@@ -28,14 +28,17 @@ func main() {
 
 	groups := router.Group("/groups")
 	{
-		groups.GET("", routes.GetGroups)
-		groups.GET("/:name", routes.GetGroup)
+		groups.GET("", auth.TokenAuth(true), routes.GetGroups)
+		groups.GET("/:name", auth.TokenAuth(true), routes.GetGroup)
 		groups.POST("", routes.PostGroup)
 		groups.DELETE("/:name", routes.DeleteGroup)
 	}
 
-	// TODO: use a route param instead of a separate route
-	router.GET("groups-all", routes.GetAllGroups)
+	groupMemberships := router.Group("/memberships").Use(auth.TokenAuth(false))
+	{
+		groupMemberships.GET("/:username", routes.GetGroupMemberships)
+		groupMemberships.POST("", routes.AddGroupMembership)
+	}
 
 	linkTypes := router.Group("/linkTypes")
 	{

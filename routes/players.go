@@ -10,7 +10,16 @@ import (
 )
 
 func GetPlayers(c *gin.Context) {
-	success, players := db.GetAllPlayers(context.TODO())
+	group := c.Query("group")
+
+	var success bool
+	var players []models.Player
+
+	if len(group) > 0 {
+		success, players = db.GetPlayersInGroup(context.TODO(), group)
+	} else {
+		success, players = db.GetAllPlayers(context.TODO())
+	}
 
 	if !success {
 		Error.Println("Could not get players")

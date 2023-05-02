@@ -24,14 +24,21 @@ type IDatabase interface {
 
 	GetAllGroups(ctx context.Context) (bool, []models.Group)
 	GetGroups(ctx context.Context) (bool, []models.Group)
-	GetGroup(ctx context.Context, name string) (RetrieveGroupResult, *models.Group)
+	GetGroup(ctx context.Context, id string) (bool, *models.Group)
+	GetGroupByName(ctx context.Context, name string) (bool, *models.Group)
 	GroupExists(ctx context.Context, name string) bool
 	AddGroup(ctx context.Context, newGroup *models.Group) bool
 	DeleteGroup(ctx context.Context, name string) bool
 
+	GetGroupMemberships(ctx context.Context, username string) (bool, []models.GroupMembership)
+	GetGroupMembershipsForGroup(ctx context.Context, groupName string) (bool, []models.GroupMembership)
+	IsInGroup(ctx context.Context, groupId string, username string) bool
+	AddGroupMembership(ctx context.Context, newGroupMembership *models.GroupMembership) bool
+
 	GetAllLinkTypes(ctx context.Context) (bool, []models.LinkType)
 
 	GetAllPlayers(ctx context.Context) (bool, []models.Player)
+	GetPlayersInGroup(ctx context.Context, groupName string) (bool, []models.Player)
 	GetPlayer(ctx context.Context, username string) (bool, *models.Player)
 	PlayerExists(ctx context.Context, username string) bool
 	AddPlayer(ctx context.Context, newPlayer *models.Player) bool

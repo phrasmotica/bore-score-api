@@ -10,14 +10,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type RetrieveGroupResult int
-
-const (
-	Success      RetrieveGroupResult = 0
-	Failure      RetrieveGroupResult = 1
-	Unauthorised RetrieveGroupResult = 2
-)
-
 func (d *MongoDatabase) GetAllGroups(ctx context.Context) (bool, []models.Group) {
 	filter := bson.D{
 		{
@@ -66,29 +58,42 @@ func (d *MongoDatabase) GetGroups(ctx context.Context) (bool, []models.Group) {
 	return true, groups
 }
 
-func (d *MongoDatabase) GetGroup(ctx context.Context, name string) (RetrieveGroupResult, *models.Group) {
-	result := d.findGroup(ctx, name)
+func (d *MongoDatabase) GetGroup(ctx context.Context, id string) (bool, *models.Group) {
+	result := d.findGroup(ctx, id)
 	if err := result.Err(); err != nil {
 		Error.Println(err)
-		return Failure, nil
+		return false, nil
 	}
 
 	var group models.Group
 
 	if err := result.Decode(&group); err != nil {
 		Error.Println(err)
-		return Failure, nil
+		return false, nil
 	}
 
-	if group.Visibility == models.Private {
-		return Unauthorised, nil
+	return true, &group
+}
+
+func (d *MongoDatabase) GetGroupByName(ctx context.Context, name string) (bool, *models.Group) {
+	result := d.findGroupByName(ctx, name)
+	if err := result.Err(); err != nil {
+		Error.Println(err)
+		return false, nil
 	}
 
-	return Success, &group
+	var group models.Group
+
+	if err := result.Decode(&group); err != nil {
+		Error.Println(err)
+		return false, nil
+	}
+
+	return true, &group
 }
 
 func (d *MongoDatabase) GroupExists(ctx context.Context, name string) bool {
-	result := d.findGroup(ctx, name)
+	result := d.findGroupByName(ctx, name)
 	return result.Err() == nil
 }
 
@@ -96,7 +101,12 @@ func (d *MongoDatabase) findGroups(ctx context.Context, filter interface{}) (*mo
 	return d.Database.Collection("Groups").Find(ctx, filter)
 }
 
-func (d *MongoDatabase) findGroup(ctx context.Context, name string) *mongo.SingleResult {
+func (d *MongoDatabase) findGroup(ctx context.Context, id string) *mongo.SingleResult {
+	filter := bson.D{{"id", id}}
+	return d.Database.Collection("Groups").FindOne(ctx, filter)
+}
+
+func (d *MongoDatabase) findGroupByName(ctx context.Context, name string) *mongo.SingleResult {
 	filter := bson.D{{"name", name}}
 	return d.Database.Collection("Groups").FindOne(ctx, filter)
 }

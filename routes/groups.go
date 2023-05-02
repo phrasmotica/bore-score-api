@@ -4,28 +4,25 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"phrasmotica/bore-score-api/data"
 	"phrasmotica/bore-score-api/models"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
 
-func GetAllGroups(c *gin.Context) {
-	success, groups := db.GetAllGroups(context.TODO())
-
-	if !success {
-		Error.Println("Could not get all groups")
-		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
-		return
-	}
-
-	Info.Printf("Got %d groups\n", len(groups))
-
-	c.IndentedJSON(http.StatusOK, groups)
-}
-
 func GetGroups(c *gin.Context) {
-	success, groups := db.GetGroups(context.TODO())
+	getAll := c.Query("all") == strconv.Itoa(1)
+
+	var success bool
+	var groups []models.Group
+
+	ctx := context.TODO()
+
+	if getAll {
+		success, groups = db.GetAllGroups(ctx)
+	} else {
+		success, groups = db.GetGroups(ctx)
+	}
 
 	if !success {
 		Error.Println("Could not get groups")
@@ -33,26 +30,43 @@ func GetGroups(c *gin.Context) {
 		return
 	}
 
-	Info.Printf("Got %d groups\n", len(groups))
+	filteredGroups := []models.Group{}
 
-	c.IndentedJSON(http.StatusOK, groups)
+	for _, g := range groups {
+		callingUsername := c.GetString("username")
+
+		if canSeeGroup(ctx, g, callingUsername) {
+			filteredGroups = append(filteredGroups, g)
+		}
+	}
+
+	Info.Printf("Got %d groups\n", len(filteredGroups))
+
+	c.IndentedJSON(http.StatusOK, filteredGroups)
 }
 
 func GetGroup(c *gin.Context) {
 	name := c.Param("name")
 
-	result, group := db.GetGroup(context.TODO(), name)
+	ctx := context.TODO()
 
-	if result == data.Failure {
+	success, group := db.GetGroupByName(ctx, name)
+
+	if !success {
 		Error.Printf("Group %s not found\n", name)
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "group not found"})
 		return
 	}
 
-	if result == data.Unauthorised {
-		Error.Printf("Group %s is private\n", name)
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"message": "group is private"})
-		return
+	if group.Visibility == models.Private {
+		callingUsername := c.GetString("username")
+		isInGroup := db.IsInGroup(ctx, group.ID, callingUsername)
+
+		if !isInGroup {
+			Error.Printf("Group %s is private\n", name)
+			c.IndentedJSON(http.StatusUnauthorized, gin.H{"message": "group is private"})
+			return
+		}
 	}
 
 	Info.Printf("Got group %s\n", name)
@@ -117,4 +131,8 @@ func DeleteGroup(c *gin.Context) {
 	Info.Printf("Deleted group %s\n", name)
 
 	c.IndentedJSON(http.StatusNoContent, gin.H{})
+}
+
+func canSeeGroup(ctx context.Context, group models.Group, callingUsername string) bool {
+	return group.Visibility != models.Private || db.IsInGroup(ctx, group.ID, callingUsername)
 }
