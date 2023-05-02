@@ -257,6 +257,20 @@ func (d *TableStorageDatabase) GetGroupMemberships(ctx context.Context, username
 	return true, memberships
 }
 
+// GetGroupMembershipsForGroup implements IDatabase
+func (d *TableStorageDatabase) GetGroupMembershipsForGroup(ctx context.Context, groupName string) (bool, []models.GroupMembership) {
+	success, group := d.GetGroupByName(ctx, groupName)
+	if !success {
+		return false, []models.GroupMembership{}
+	}
+
+	memberships := list(ctx, d.Client, "GroupMemberships", createGroupMembership, &aztables.ListEntitiesOptions{
+		Filter: to.Ptr(fmt.Sprintf("GroupID eq '%s'", group.ID)),
+	})
+
+	return true, memberships
+}
+
 // IsInGroup implements IDatabase
 func (d *TableStorageDatabase) IsInGroup(ctx context.Context, groupId string, username string) bool {
 	success, memberships := d.GetGroupMemberships(ctx, username)
@@ -312,6 +326,31 @@ func (d *TableStorageDatabase) GetAllLinkTypes(ctx context.Context) (bool, []mod
 func (d *TableStorageDatabase) GetAllPlayers(ctx context.Context) (bool, []models.Player) {
 	players := list(ctx, d.Client, "Players", createPlayer, nil)
 	return true, players
+}
+
+// GetPlayersInGroup implements IDatabase
+func (d *TableStorageDatabase) GetPlayersInGroup(ctx context.Context, groupName string) (bool, []models.Player) {
+	success, players := d.GetAllPlayers(ctx)
+	if !success {
+		return false, []models.Player{}
+	}
+
+	success, memberships := d.GetGroupMembershipsForGroup(ctx, groupName)
+	if !success {
+		return false, []models.Player{}
+	}
+
+	playersInGroup := []models.Player{}
+
+	for _, m := range memberships {
+		for _, p := range players {
+			if p.Username == m.Username {
+				playersInGroup = append(playersInGroup, p)
+			}
+		}
+	}
+
+	return true, playersInGroup
 }
 
 // GetPlayer implements IDatabase
