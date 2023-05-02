@@ -5,40 +5,24 @@ import (
 	"fmt"
 	"net/http"
 	"phrasmotica/bore-score-api/models"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
 
-func GetAllGroups(c *gin.Context) {
-	ctx := context.TODO()
-
-	success, groups := db.GetAllGroups(ctx)
-
-	if !success {
-		Error.Println("Could not get all groups")
-		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
-		return
-	}
-
-	filteredGroups := []models.Group{}
-
-	for _, g := range groups {
-		callingUsername := c.GetString("username")
-
-		if canSeeGroup(ctx, g, callingUsername) {
-			filteredGroups = append(filteredGroups, g)
-		}
-	}
-
-	Info.Printf("Got %d groups\n", len(filteredGroups))
-
-	c.IndentedJSON(http.StatusOK, filteredGroups)
-}
-
 func GetGroups(c *gin.Context) {
+	getAll := c.Query("all") == strconv.Itoa(1)
+
+	var success bool
+	var groups []models.Group
+
 	ctx := context.TODO()
 
-	success, groups := db.GetGroups(ctx)
+	if getAll {
+		success, groups = db.GetAllGroups(ctx)
+	} else {
+		success, groups = db.GetGroups(ctx)
+	}
 
 	if !success {
 		Error.Println("Could not get groups")

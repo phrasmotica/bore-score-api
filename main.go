@@ -40,9 +40,6 @@ func main() {
 		groupMemberships.POST("", routes.AddGroupMembership)
 	}
 
-	// TODO: use a route param instead of a separate route
-	router.GET("groups-all", auth.TokenAuth(true), routes.GetAllGroups)
-
 	linkTypes := router.Group("/linkTypes")
 	{
 		linkTypes.GET("", routes.GetLinkTypes)
