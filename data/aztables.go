@@ -422,6 +422,14 @@ func (d *TableStorageDatabase) GetAllResults(ctx context.Context) (bool, []model
 	return true, results
 }
 
+// GetResultsForGroup implements IDatabase
+func (d *TableStorageDatabase) GetResultsForGroup(ctx context.Context, groupName string) (bool, []models.Result) {
+	results := list(ctx, d.Client, "Results", createResult, &aztables.ListEntitiesOptions{
+		Filter: to.Ptr(fmt.Sprintf("GroupName eq '%s'", groupName)),
+	})
+	return true, results
+}
+
 // GetResultsWithPlayer implements IDatabase
 func (d *TableStorageDatabase) GetResultsWithPlayer(ctx context.Context, username string) (bool, []models.Result) {
 	// TODO: restructure data so that we can find the results containing this player more easily.

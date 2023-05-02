@@ -46,6 +46,7 @@ type IDatabase interface {
 
 	GetAllResults(ctx context.Context) (bool, []models.Result)
 	GetResultsWithPlayer(ctx context.Context, username string) (bool, []models.Result)
+	GetResultsForGroup(ctx context.Context, groupName string) (bool, []models.Result)
 	GetResult(ctx context.Context, resultId string) (bool, *models.Result)
 	ResultExists(ctx context.Context, resultId string) bool
 	AddResult(ctx context.Context, newResult *models.Result) bool

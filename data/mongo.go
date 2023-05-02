@@ -13,6 +13,11 @@ type MongoDatabase struct {
 	Database *mongo.Database
 }
 
+// GetResultsForGroup implements IDatabase
+func (*MongoDatabase) GetResultsForGroup(ctx context.Context, groupName string) (bool, []models.Result) {
+	panic("unimplemented")
+}
+
 // GetGroupMembershipsForGroup implements IDatabase
 func (*MongoDatabase) GetGroupMembershipsForGroup(ctx context.Context, groupName string) (bool, []models.GroupMembership) {
 	panic("unimplemented")

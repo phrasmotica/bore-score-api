@@ -11,14 +11,18 @@ import (
 
 func GetResults(c *gin.Context) {
 	username := c.Query("username")
+	group := c.Query("group")
 
 	var success bool
 	var results []models.Result
 
 	ctx := context.TODO()
 
+	// TODO: allow using both filters simultaneously
 	if len(username) > 0 {
 		success, results = db.GetResultsWithPlayer(ctx, username)
+	} else if len(group) > 0 {
+		success, results = db.GetResultsForGroup(ctx, group)
 	} else {
 		success, results = db.GetAllResults(ctx)
 	}
