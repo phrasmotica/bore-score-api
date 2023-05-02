@@ -155,19 +155,14 @@ func (d *TableStorageDatabase) DeleteGame(ctx context.Context, name string) bool
 
 // GetAllGroups implements IDatabase
 func (d *TableStorageDatabase) GetAllGroups(ctx context.Context) (bool, []models.Group) {
-	// TODO: get private groups that the calling user is a member of
-	groups := list(ctx, d.Client, "Groups", createGroup, &aztables.ListEntitiesOptions{
-		Filter: to.Ptr("Visibility eq 'public' or Visibility eq 'global'"),
-	})
-
+	groups := list(ctx, d.Client, "Groups", createGroup, nil)
 	return true, groups
 }
 
 // GetGroups implements IDatabase
 func (d *TableStorageDatabase) GetGroups(ctx context.Context) (bool, []models.Group) {
-	// TODO: get private groups that the calling user is a member of
 	groups := list(ctx, d.Client, "Groups", createGroup, &aztables.ListEntitiesOptions{
-		Filter: to.Ptr("Visibility eq 'public'"),
+		Filter: to.Ptr("Visibility ne 'global'"),
 	})
 
 	return true, groups

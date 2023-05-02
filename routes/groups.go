@@ -4,14 +4,15 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"phrasmotica/bore-score-api/data"
 	"phrasmotica/bore-score-api/models"
 
 	"github.com/gin-gonic/gin"
 )
 
 func GetAllGroups(c *gin.Context) {
-	success, groups := db.GetAllGroups(context.TODO())
+	ctx := context.TODO()
+
+	success, groups := db.GetAllGroups(ctx)
 
 	if !success {
 		Error.Println("Could not get all groups")
@@ -19,13 +20,25 @@ func GetAllGroups(c *gin.Context) {
 		return
 	}
 
-	Info.Printf("Got %d groups\n", len(groups))
+	filteredGroups := []models.Group{}
 
-	c.IndentedJSON(http.StatusOK, groups)
+	for _, g := range groups {
+		callingUsername := c.GetString("username")
+
+		if canSeeGroup(ctx, g, callingUsername) {
+			filteredGroups = append(filteredGroups, g)
+		}
+	}
+
+	Info.Printf("Got %d groups\n", len(filteredGroups))
+
+	c.IndentedJSON(http.StatusOK, filteredGroups)
 }
 
 func GetGroups(c *gin.Context) {
-	success, groups := db.GetGroups(context.TODO())
+	ctx := context.TODO()
+
+	success, groups := db.GetGroups(ctx)
 
 	if !success {
 		Error.Println("Could not get groups")
@@ -33,9 +46,19 @@ func GetGroups(c *gin.Context) {
 		return
 	}
 
-	Info.Printf("Got %d groups\n", len(groups))
+	filteredGroups := []models.Group{}
 
-	c.IndentedJSON(http.StatusOK, groups)
+	for _, g := range groups {
+		callingUsername := c.GetString("username")
+
+		if canSeeGroup(ctx, g, callingUsername) {
+			filteredGroups = append(filteredGroups, g)
+		}
+	}
+
+	Info.Printf("Got %d groups\n", len(filteredGroups))
+
+	c.IndentedJSON(http.StatusOK, filteredGroups)
 }
 
 func GetGroup(c *gin.Context) {
@@ -124,4 +147,8 @@ func DeleteGroup(c *gin.Context) {
 	Info.Printf("Deleted group %s\n", name)
 
 	c.IndentedJSON(http.StatusNoContent, gin.H{})
+}
+
+func canSeeGroup(ctx context.Context, group models.Group, callingUsername string) bool {
+	return group.Visibility != models.Private || db.IsInGroup(ctx, group.ID, callingUsername)
 }
