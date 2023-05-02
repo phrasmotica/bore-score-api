@@ -15,10 +15,12 @@ func GetResults(c *gin.Context) {
 	var success bool
 	var results []models.Result
 
+	ctx := context.TODO()
+
 	if len(username) > 0 {
-		success, results = db.GetResultsWithPlayer(context.TODO(), username)
+		success, results = db.GetResultsWithPlayer(ctx, username)
 	} else {
-		success, results = db.GetAllResults(context.TODO())
+		success, results = db.GetAllResults(ctx)
 	}
 
 	if !success {
@@ -27,9 +29,18 @@ func GetResults(c *gin.Context) {
 		return
 	}
 
-	Info.Printf("Got %d results\n", len(results))
+	filteredResults := []models.Result{}
 
-	c.IndentedJSON(http.StatusOK, results)
+	callingUsername := c.GetString("username")
+	for _, r := range results {
+		if canSeeResult(ctx, r, callingUsername) {
+			filteredResults = append(filteredResults, r)
+		}
+	}
+
+	Info.Printf("Got %d results\n", len(filteredResults))
+
+	c.IndentedJSON(http.StatusOK, filteredResults)
 }
 
 func PostResult(c *gin.Context) {
@@ -95,4 +106,13 @@ func validateNewResult(result *models.Result) (bool, string) {
 	}
 
 	return true, ""
+}
+
+func canSeeResult(ctx context.Context, r models.Result, callingUsername string) bool {
+	if len(r.GroupName) <= 0 {
+		return true
+	}
+
+	success, group := db.GetGroupByName(ctx, r.GroupName)
+	return success && canSeeGroup(ctx, *group, callingUsername)
 }

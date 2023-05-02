@@ -57,7 +57,7 @@ func main() {
 
 	results := router.Group("/results")
 	{
-		results.GET("", routes.GetResults)
+		results.GET("", auth.TokenAuth(true), routes.GetResults)
 		results.POST("", routes.PostResult)
 	}
 
