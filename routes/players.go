@@ -38,8 +38,8 @@ func GetPlayer(c *gin.Context) {
 	success, player := db.GetPlayer(context.TODO(), username)
 
 	if !success {
-		Error.Printf("Could not get player %s\n", username)
-		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
+		Error.Printf("Player %s does not exist\n", username)
+		c.IndentedJSON(http.StatusNotFound, gin.H{})
 		return
 	}
 
