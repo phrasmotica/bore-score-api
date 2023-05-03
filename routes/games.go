@@ -63,8 +63,8 @@ func GetGame(c *gin.Context) {
 	success, game := db.GetGame(context.TODO(), name)
 
 	if !success {
-		Error.Printf("Could not get game %s\n", name)
-		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
+		Error.Printf("Game %s does not exist\n", name)
+		c.IndentedJSON(http.StatusNotFound, gin.H{})
 		return
 	}
 
