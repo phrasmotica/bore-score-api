@@ -95,6 +95,9 @@ func PostGroup(c *gin.Context) {
 		return
 	}
 
+	creatorUsername := c.GetString("username")
+	newGroup.CreatedBy = creatorUsername
+
 	if success := db.AddGroup(ctx, &newGroup); !success {
 		Error.Printf("Could not add group %s\n", newGroup.Name)
 		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
@@ -108,15 +111,15 @@ func PostGroup(c *gin.Context) {
 		ID:              uuid.NewString(),
 		GroupID:         newGroup.ID,
 		TimeCreated:     time.Now().UTC().Unix(),
-		Username:        c.GetString("username"),
+		Username:        creatorUsername,
 		InviterUsername: "",
 	}
 
 	if success := db.AddGroupMembership(ctx, &membership); !success {
 		// not a fatal error, they can join the group afterwards...
-		Error.Printf("Could not add membership to group %s for user %s\n", newGroup.ID, membership.Username)
+		Error.Printf("Could not add membership to group %s for group creator %s\n", newGroup.ID, creatorUsername)
 	} else {
-		Info.Printf("Added membership to group %s for group creator %s\n", newGroup.ID, membership.Username)
+		Info.Printf("Added membership to group %s for group creator %s\n", newGroup.ID, creatorUsername)
 	}
 
 	c.IndentedJSON(http.StatusCreated, newGroup)

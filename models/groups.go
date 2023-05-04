@@ -7,6 +7,7 @@ type Group struct {
 	DisplayName    string              `json:"displayName" bson:"displayName"`
 	Description    string              `json:"description" bson:"description"`
 	ProfilePicture string              `json:"profilePicture" bson:"profilePicture"`
+	CreatedBy      string              `json:"createdBy" bson:"createdBy"`
 	Visibility     GroupVisibilityName `json:"visibility" bson:"visibility"`
 }
 

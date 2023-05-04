@@ -887,6 +887,7 @@ func createGroup(entity *aztables.EDMEntity) models.Group {
 		Description:    propString(entity, "Description"),
 		ProfilePicture: propString(entity, "ProfilePicture"),
 		Visibility:     models.GroupVisibilityName(propString(entity, "Visibility")),
+		CreatedBy:      propString(entity, "CreatedBy"),
 	}
 }
 
