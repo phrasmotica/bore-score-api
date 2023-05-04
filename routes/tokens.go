@@ -46,5 +46,22 @@ func GenerateToken(c *gin.Context) {
 		return
 	}
 
+	Info.Printf("Generated token for user %s\n", user.Username)
+
+	c.IndentedJSON(http.StatusOK, gin.H{"token": tokenString})
+}
+
+func RefreshToken(c *gin.Context) {
+	currentToken := c.GetString("token")
+
+	tokenString, err := auth.RefreshJWT(currentToken)
+	if err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		c.Abort()
+		return
+	}
+
+	Info.Printf("Refreshed token for user %s\n", c.GetString("username"))
+
 	c.IndentedJSON(http.StatusOK, gin.H{"token": tokenString})
 }

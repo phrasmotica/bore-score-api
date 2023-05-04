@@ -46,6 +46,8 @@ func TokenAuth(optional bool) gin.HandlerFunc {
 			return
 		}
 
+		c.Set("token", tokenString)
+
 		c.Set("username", claims.Username)
 		c.Set("email", claims.Email)
 
