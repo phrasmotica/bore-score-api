@@ -6,8 +6,10 @@ import (
 	"net/http"
 	"phrasmotica/bore-score-api/models"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 func GetGroups(c *gin.Context) {
@@ -100,6 +102,22 @@ func PostGroup(c *gin.Context) {
 	}
 
 	Info.Printf("Added group %s\n", newGroup.Name)
+
+	// add membership for the creator
+	membership := models.GroupMembership{
+		ID:              uuid.NewString(),
+		GroupID:         newGroup.ID,
+		TimeCreated:     time.Now().UTC().Unix(),
+		Username:        c.GetString("username"),
+		InviterUsername: "",
+	}
+
+	if success := db.AddGroupMembership(ctx, &membership); !success {
+		// not a fatal error, they can join the group afterwards...
+		Error.Printf("Could not add membership to group %s for user %s\n", newGroup.ID, membership.Username)
+	} else {
+		Info.Printf("Added membership to group %s for group creator %s\n", newGroup.ID, membership.Username)
+	}
 
 	c.IndentedJSON(http.StatusCreated, newGroup)
 }
