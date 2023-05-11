@@ -4,10 +4,24 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"phrasmotica/bore-score-api/data"
 	"phrasmotica/bore-score-api/models"
 
 	"github.com/gin-gonic/gin"
 )
+
+type ResultResponse struct {
+	ID               string                `json:"id" bson:"id"`
+	GameName         string                `json:"gameName" bson:"gameName"`
+	GroupName        string                `json:"groupName" bson:"groupName"`
+	TimeCreated      int64                 `json:"timeCreated" bson:"timeCreated"`
+	TimePlayed       int64                 `json:"timePlayed" bson:"timePlayed"`
+	Notes            string                `json:"notes" bson:"notes"`
+	CooperativeScore int                   `json:"cooperativeScore" bson:"cooperativeScore"`
+	CooperativeWin   bool                  `json:"cooperativeWin" bson:"cooperativeWin"`
+	Scores           []models.PlayerScore  `json:"scores" bson:"scores"`
+	ApprovalStatus   models.ApprovalStatus `json:"approvalStatus" bson:"approvalStatus"`
+}
 
 func GetResults(c *gin.Context) {
 	username := c.Query("username")
@@ -33,12 +47,25 @@ func GetResults(c *gin.Context) {
 		return
 	}
 
-	filteredResults := []models.Result{}
+	filteredResults := []ResultResponse{}
 
 	callingUsername := c.GetString("username")
 	for _, r := range results {
 		if canSeeResult(ctx, r, callingUsername) {
-			filteredResults = append(filteredResults, r)
+			approvalStatus := computeOverallApproval(ctx, db, r)
+
+			filteredResults = append(filteredResults, ResultResponse{
+				ID:               r.ID,
+				GameName:         r.GameName,
+				GroupName:        r.GroupName,
+				TimeCreated:      r.TimeCreated,
+				TimePlayed:       r.TimePlayed,
+				Notes:            r.Notes,
+				CooperativeScore: r.CooperativeScore,
+				CooperativeWin:   r.CooperativeWin,
+				Scores:           r.Scores,
+				ApprovalStatus:   approvalStatus,
+			})
 		}
 	}
 
@@ -119,4 +146,34 @@ func canSeeResult(ctx context.Context, r models.Result, callingUsername string) 
 
 	success, group := db.GetGroupByName(ctx, r.GroupName)
 	return success && canSeeGroup(ctx, *group, callingUsername)
+}
+
+func computeOverallApproval(ctx context.Context, db data.IDatabase, result models.Result) models.ApprovalStatus {
+	approvalStatus := models.Pending
+
+	success, approvals := db.GetApprovals(ctx, result.ID)
+	if success {
+		isApproved := func(a models.Approval) bool { return a.ApprovalStatus == models.Approved }
+		isRejected := func(a models.Approval) bool { return a.ApprovalStatus == models.Rejected }
+
+		if all(approvals, isApproved) {
+			approvalStatus = models.Approved
+		} else if all(approvals, isRejected) {
+			approvalStatus = models.Rejected
+		}
+	} else {
+		Error.Println(fmt.Sprintf("Could not get approvals for result %s\n", result.ID))
+	}
+
+	return approvalStatus
+}
+
+func all[T interface{}](arr []T, predicate func(T) bool) bool {
+	for _, e := range arr {
+		if !predicate(e) {
+			return false
+		}
+	}
+
+	return true
 }
