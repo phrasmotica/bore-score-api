@@ -279,6 +279,7 @@ func (d *TableStorageDatabase) IsInGroup(ctx context.Context, groupId string, us
 	}
 
 	for _, m := range memberships {
+		// TODO: use slices.ContainsFunc(...) to check
 		if m.GroupID == groupId && m.Username == username {
 			return true
 		}
@@ -343,6 +344,7 @@ func (d *TableStorageDatabase) GetPlayersInGroup(ctx context.Context, groupName 
 	playersInGroup := []models.Player{}
 
 	for _, m := range memberships {
+		// TODO: use slices.ContainsFunc(...) to check
 		for _, p := range players {
 			if p.Username == m.Username {
 				playersInGroup = append(playersInGroup, p)
@@ -445,6 +447,7 @@ func (d *TableStorageDatabase) GetResultsWithPlayer(ctx context.Context, usernam
 
 	// pick out the results that this player was involved in
 	for i := range results {
+		// TODO: use slices.ContainsFunc(...) to check
 		scores := results[i].Scores
 		for j := range scores {
 			if scores[j].Username == username {
@@ -556,6 +559,7 @@ func (d *TableStorageDatabase) ScrubResultsWithPlayer(ctx context.Context, usern
 
 		scores := result.Scores
 		for j := range scores {
+			// TODO: use slices.ContainsFunc(...) to check
 			if scores[j].Username == username {
 				result.Scores[j].Username = ""
 			}

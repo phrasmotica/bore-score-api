@@ -6,6 +6,7 @@ func hasUniquePlayerScores(result *models.Result) bool {
 	var uniquePlayers []string
 
 	for _, e := range result.Scores {
+		// TODO: use slices.Contains(...) to check
 		uniquePlayers = appendIfMissing(uniquePlayers, e.Username)
 	}
 

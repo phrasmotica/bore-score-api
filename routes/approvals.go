@@ -62,6 +62,7 @@ func PostApproval(c *gin.Context) {
 	isInResult := false
 
 	for _, score := range result.Scores {
+		// TODO: use slices.ContainsFunc(...) to check
 		if newApproval.Username == score.Username {
 			isInResult = true
 		}

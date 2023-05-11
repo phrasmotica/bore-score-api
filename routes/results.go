@@ -6,8 +6,10 @@ import (
 	"net/http"
 	"phrasmotica/bore-score-api/data"
 	"phrasmotica/bore-score-api/models"
+	"sort"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/exp/slices"
 )
 
 type ResultResponse struct {
@@ -156,16 +158,42 @@ func computeOverallApproval(ctx context.Context, db data.IDatabase, result model
 		isApproved := func(a models.Approval) bool { return a.ApprovalStatus == models.Approved }
 		isRejected := func(a models.Approval) bool { return a.ApprovalStatus == models.Rejected }
 
-		if all(approvals, isApproved) {
-			approvalStatus = models.Approved
-		} else if all(approvals, isRejected) {
-			approvalStatus = models.Rejected
+		latestApprovals := computeLatestApprovals(approvals)
+
+		if len(latestApprovals) == len(result.Scores) {
+			if all(latestApprovals, isApproved) {
+				approvalStatus = models.Approved
+			} else if all(latestApprovals, isRejected) {
+				approvalStatus = models.Rejected
+			}
 		}
 	} else {
 		Error.Println(fmt.Sprintf("Could not get approvals for result %s\n", result.ID))
 	}
 
 	return approvalStatus
+}
+
+func computeLatestApprovals(approvals []models.Approval) []models.Approval {
+	latestApprovals := []models.Approval{}
+
+	sortedApprovals := approvals[:]
+
+	// https://stackoverflow.com/a/42872183
+	sort.Slice(sortedApprovals, func(i, j int) bool {
+		return sortedApprovals[i].TimeCreated > sortedApprovals[j].TimeCreated
+	})
+
+	usersAdded := []string{}
+
+	for _, a := range sortedApprovals {
+		if !slices.Contains(usersAdded, a.Username) {
+			latestApprovals = append(latestApprovals, a)
+			usersAdded = append(usersAdded, a.Username)
+		}
+	}
+
+	return latestApprovals
 }
 
 func all[T interface{}](arr []T, predicate func(T) bool) bool {
