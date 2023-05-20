@@ -48,15 +48,14 @@ func GetGroups(c *gin.Context) {
 }
 
 func GetGroup(c *gin.Context) {
-	// TODO: get group by ID rather than name
-	name := c.Param("groupId")
+	groupId := c.Param("groupId")
 
 	ctx := context.TODO()
 
-	success, group := db.GetGroupByName(ctx, name)
+	success, group := db.GetGroup(ctx, groupId)
 
 	if !success {
-		Error.Printf("Group %s not found\n", name)
+		Error.Printf("Group %s not found\n", groupId)
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "group not found"})
 		return
 	}
@@ -65,13 +64,14 @@ func GetGroup(c *gin.Context) {
 		callingUsername := c.GetString("username")
 
 		if !db.IsInGroup(ctx, group.ID, callingUsername) {
-			Error.Printf("User %s is not in group %s\n", callingUsername, name)
+			Error.Printf("User %s is not in group %s\n", callingUsername, groupId)
 			c.IndentedJSON(http.StatusUnauthorized, gin.H{})
 			return
 		}
 	}
 
-	Info.Printf("Got group %s\n", name)
+	Info.Printf("Got group %s\n", groupId)
+
 	c.IndentedJSON(http.StatusOK, group)
 }
 

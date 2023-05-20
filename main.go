@@ -29,14 +29,10 @@ func main() {
 	groups := router.Group("/groups")
 	{
 		groups.GET("", auth.TokenAuth(true), routes.GetGroups)
-
-		// renamed param from name to groupId so that the /:groupId/invitations
-		// route does not cause a clash
 		groups.GET("/:groupId", auth.TokenAuth(true), routes.GetGroup)
-
 		groups.GET("/:groupId/invitations", auth.TokenAuth(false), routes.GetGroupInvitationsForGroup)
 		groups.POST("", auth.TokenAuth(false), routes.PostGroup)
-		groups.DELETE("/:name", routes.DeleteGroup)
+		groups.DELETE("/:name", routes.DeleteGroup) // TODO: select by group ID instead of name
 	}
 
 	groupInvitations := router.Group("/invitations").Use(auth.TokenAuth(false))
