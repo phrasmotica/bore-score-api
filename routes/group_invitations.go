@@ -16,7 +16,7 @@ func GetGroupInvitation(c *gin.Context) {
 
 	if !success {
 		Error.Printf("Group invitation %s does not exist\n", invitationId)
-		c.IndentedJSON(http.StatusNotFound, nil)
+		c.IndentedJSON(http.StatusNotFound, gin.H{})
 		return
 	}
 
@@ -24,7 +24,7 @@ func GetGroupInvitation(c *gin.Context) {
 
 	if invitation.InviterUsername != callingUsername {
 		Error.Println("Cannot get another user's group invitations")
-		c.IndentedJSON(http.StatusUnauthorized, nil)
+		c.IndentedJSON(http.StatusUnauthorized, gin.H{})
 		return
 	}
 
@@ -60,6 +60,39 @@ func GetGroupInvitations(c *gin.Context) {
 	Info.Printf("Got %d group invitations\n", len(approvals))
 
 	c.IndentedJSON(http.StatusOK, approvals)
+}
+
+func GetGroupInvitationsForGroup(c *gin.Context) {
+	groupId := c.Param("groupId")
+
+	ctx := context.TODO()
+
+	success, group := db.GetGroup(ctx, groupId)
+	if !success {
+		Error.Printf("Group %s does not exist\n", groupId)
+		c.IndentedJSON(http.StatusForbidden, gin.H{})
+		return
+	}
+
+	callingUsername := c.GetString("username")
+
+	if !db.IsInGroup(ctx, group.ID, callingUsername) {
+		Error.Printf("User %s is not in group %s\n", callingUsername, groupId)
+		c.IndentedJSON(http.StatusForbidden, gin.H{})
+		return
+	}
+
+	success, invitations := db.GetGroupInvitationsForGroup(ctx, groupId)
+
+	if !success {
+		Error.Printf("Could not get group invitations for group %s\n", groupId)
+		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{})
+		return
+	}
+
+	Info.Printf("Got %d group invitations\n", len(invitations))
+
+	c.IndentedJSON(http.StatusOK, invitations)
 }
 
 func AddGroupInvitation(c *gin.Context) {

@@ -33,6 +33,11 @@ func (*MongoDatabase) GetGroupInvitations(ctx context.Context, username string) 
 	panic("unimplemented")
 }
 
+// GetGroupInvitationsForGroup implements IDatabase
+func (*MongoDatabase) GetGroupInvitationsForGroup(ctx context.Context, groupId string) (bool, []models.GroupInvitation) {
+	panic("unimplemented")
+}
+
 // GetResultsForGroup implements IDatabase
 func (*MongoDatabase) GetResultsForGroup(ctx context.Context, groupName string) (bool, []models.Result) {
 	panic("unimplemented")

@@ -270,6 +270,20 @@ func (d *TableStorageDatabase) GetGroupInvitations(ctx context.Context, username
 	return true, invitations
 }
 
+// GetGroupInvitationsForGroup implements IDatabase
+func (d *TableStorageDatabase) GetGroupInvitationsForGroup(ctx context.Context, groupId string) (bool, []models.GroupInvitation) {
+	success, group := d.GetGroup(ctx, groupId)
+	if !success {
+		return false, []models.GroupInvitation{}
+	}
+
+	invitations := list(ctx, d.Client, "GroupInvitations", createGroupInvitation, &aztables.ListEntitiesOptions{
+		Filter: to.Ptr(fmt.Sprintf("GroupID eq '%s'", group.ID)),
+	})
+
+	return true, invitations
+}
+
 // AddGroupInvitation implements IDatabase
 func (d *TableStorageDatabase) AddGroupInvitation(ctx context.Context, newGroupInvitation *models.GroupInvitation) bool {
 	newGroupInvitation.ID = uuid.NewString()
