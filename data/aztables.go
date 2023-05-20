@@ -246,6 +246,17 @@ func (d *TableStorageDatabase) DeleteGroup(ctx context.Context, name string) boo
 	return true
 }
 
+// GetGroupInvitation implements IDatabase
+func (d *TableStorageDatabase) GetGroupInvitation(ctx context.Context, invitationId string) (bool, *models.GroupInvitation) {
+	result := d.findGroupInvitation(ctx, invitationId)
+	if result == nil {
+		return false, nil
+	}
+
+	invitation := createGroupInvitation(result)
+	return true, &invitation
+}
+
 // GetGroupInvitations implements IDatabase
 func (d *TableStorageDatabase) GetGroupInvitations(ctx context.Context, username string) (bool, []models.GroupInvitation) {
 	if !d.UserExists(ctx, username) {
@@ -818,6 +829,20 @@ func (d *TableStorageDatabase) findGroupByName(ctx context.Context, name string)
 
 	entities := listEntities(ctx, client, &aztables.ListEntitiesOptions{
 		Filter: to.Ptr(fmt.Sprintf("Name eq '%s'", name)),
+	})
+
+	if len(entities) == 1 {
+		return &entities[0]
+	}
+
+	return nil
+}
+
+func (d *TableStorageDatabase) findGroupInvitation(ctx context.Context, id string) *aztables.EDMEntity {
+	client := d.Client.NewClient("GroupInvitations")
+
+	entities := listEntities(ctx, client, &aztables.ListEntitiesOptions{
+		Filter: to.Ptr(fmt.Sprintf("RowKey eq '%s'", id)),
 	})
 
 	if len(entities) == 1 {

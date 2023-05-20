@@ -9,6 +9,30 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func GetGroupInvitation(c *gin.Context) {
+	invitationId := c.Param("invitationId")
+
+	success, invitation := db.GetGroupInvitation(context.TODO(), invitationId)
+
+	if !success {
+		Error.Printf("Group invitation %s does not exist\n", invitationId)
+		c.IndentedJSON(http.StatusNotFound, nil)
+		return
+	}
+
+	callingUsername := c.GetString("username")
+
+	if invitation.InviterUsername != callingUsername {
+		Error.Println("Cannot get another user's group invitations")
+		c.IndentedJSON(http.StatusUnauthorized, nil)
+		return
+	}
+
+	Info.Printf("Got group invitation %s\n", invitationId)
+
+	c.IndentedJSON(http.StatusOK, invitation)
+}
+
 func GetGroupInvitations(c *gin.Context) {
 	username := c.Param("username")
 	callingUsername := c.GetString("username")

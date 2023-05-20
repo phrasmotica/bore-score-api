@@ -30,6 +30,7 @@ type IDatabase interface {
 	AddGroup(ctx context.Context, newGroup *models.Group) bool
 	DeleteGroup(ctx context.Context, name string) bool
 
+	GetGroupInvitation(ctx context.Context, invitationId string) (bool, *models.GroupInvitation)
 	GetGroupInvitations(ctx context.Context, username string) (bool, []models.GroupInvitation)
 	AddGroupInvitation(ctx context.Context, newGroupInvitation *models.GroupInvitation) bool
 	UpdateGroupInvitation(ctx context.Context, newGroupInvitation *models.GroupInvitation) bool

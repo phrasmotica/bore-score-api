@@ -18,6 +18,11 @@ func (*MongoDatabase) UpdateGroupInvitation(ctx context.Context, newGroupInvitat
 	panic("unimplemented")
 }
 
+// GetGroupInvitation implements IDatabase
+func (*MongoDatabase) GetGroupInvitation(ctx context.Context, invitationId string) (bool, *models.GroupInvitation) {
+	panic("unimplemented")
+}
+
 // AddGroupInvitation implements IDatabase
 func (*MongoDatabase) AddGroupInvitation(ctx context.Context, newGroupInvitation *models.GroupInvitation) bool {
 	panic("unimplemented")

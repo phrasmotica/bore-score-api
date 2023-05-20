@@ -36,6 +36,7 @@ func main() {
 
 	groupInvitations := router.Group("/invitations").Use(auth.TokenAuth(false))
 	{
+		groupInvitations.GET("/:invitationId", routes.GetGroupInvitation)
 		groupInvitations.POST("/:invitationId/accept", routes.AcceptGroupInvitation)
 		groupInvitations.POST("", routes.AddGroupInvitation)
 	}
