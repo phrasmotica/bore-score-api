@@ -34,6 +34,12 @@ func main() {
 		groups.DELETE("/:name", routes.DeleteGroup)
 	}
 
+	groupInvitations := router.Group("/invitations").Use(auth.TokenAuth(false))
+	{
+		groupInvitations.POST("/:invitationId/accept", routes.AcceptGroupInvitation)
+		groupInvitations.POST("", routes.AddGroupInvitation)
+	}
+
 	groupMemberships := router.Group("/memberships").Use(auth.TokenAuth(false))
 	{
 		groupMemberships.GET("/:username", routes.GetGroupMemberships)
@@ -75,6 +81,7 @@ func main() {
 	users := router.Group("/users")
 	{
 		users.GET("/:username", auth.TokenAuth(true), routes.GetUser)
+		users.GET("/:username/invitations", auth.TokenAuth(false), routes.GetGroupInvitations)
 		users.POST("", routes.RegisterUser)
 	}
 

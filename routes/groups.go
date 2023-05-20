@@ -108,11 +108,11 @@ func PostGroup(c *gin.Context) {
 
 	// add membership for the creator
 	membership := models.GroupMembership{
-		ID:              uuid.NewString(),
-		GroupID:         newGroup.ID,
-		TimeCreated:     time.Now().UTC().Unix(),
-		Username:        creatorUsername,
-		InviterUsername: "",
+		ID:           uuid.NewString(),
+		GroupID:      newGroup.ID,
+		TimeCreated:  time.Now().UTC().Unix(),
+		Username:     creatorUsername,
+		InvitationID: "",
 	}
 
 	if success := db.AddGroupMembership(ctx, &membership); !success {

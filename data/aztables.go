@@ -7,10 +7,12 @@ import (
 	"log"
 	"os"
 	"phrasmotica/bore-score-api/models"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/data/aztables"
+	"github.com/google/uuid"
 )
 
 type TableStorageDatabase struct {
@@ -244,6 +246,85 @@ func (d *TableStorageDatabase) DeleteGroup(ctx context.Context, name string) boo
 	return true
 }
 
+// GetGroupInvitations implements IDatabase
+func (d *TableStorageDatabase) GetGroupInvitations(ctx context.Context, username string) (bool, []models.GroupInvitation) {
+	if !d.UserExists(ctx, username) {
+		return false, []models.GroupInvitation{}
+	}
+
+	invitations := list(ctx, d.Client, "GroupInvitations", createGroupInvitation, &aztables.ListEntitiesOptions{
+		Filter: to.Ptr(fmt.Sprintf("Username eq '%s'", username)),
+	})
+
+	return true, invitations
+}
+
+// AddGroupInvitation implements IDatabase
+func (d *TableStorageDatabase) AddGroupInvitation(ctx context.Context, newGroupInvitation *models.GroupInvitation) bool {
+	newGroupInvitation.ID = uuid.NewString()
+	newGroupInvitation.TimeCreated = time.Now().UTC().Unix()
+	newGroupInvitation.InvitationStatus = models.Sent
+
+	entity := aztables.EDMEntity{
+		Entity: aztables.Entity{
+			PartitionKey: newGroupInvitation.GroupID,
+			RowKey:       newGroupInvitation.ID,
+		},
+		Properties: map[string]interface{}{
+			"GroupID":          newGroupInvitation.GroupID,
+			"TimeCreated":      aztables.EDMInt64(newGroupInvitation.TimeCreated),
+			"Username":         newGroupInvitation.Username,
+			"InviterUsername":  newGroupInvitation.InviterUsername,
+			"InvitationStatus": string(newGroupInvitation.InvitationStatus),
+		},
+	}
+
+	marshalled, err := json.Marshal(entity)
+	if err != nil {
+		Error.Println(err)
+		return false
+	}
+
+	_, addErr := d.Client.NewClient("GroupInvitations").AddEntity(ctx, marshalled, nil)
+	if addErr != nil {
+		Error.Println(addErr)
+		return false
+	}
+
+	return true
+}
+
+// UpdateGroupInvitation implements IDatabase
+func (d *TableStorageDatabase) UpdateGroupInvitation(ctx context.Context, newGroupInvitation *models.GroupInvitation) bool {
+	entity := aztables.EDMEntity{
+		Entity: aztables.Entity{
+			PartitionKey: newGroupInvitation.GroupID,
+			RowKey:       newGroupInvitation.ID,
+		},
+		Properties: map[string]interface{}{
+			"GroupID":          newGroupInvitation.GroupID,
+			"TimeCreated":      aztables.EDMInt64(newGroupInvitation.TimeCreated),
+			"Username":         newGroupInvitation.Username,
+			"InviterUsername":  newGroupInvitation.InviterUsername,
+			"InvitationStatus": string(newGroupInvitation.InvitationStatus),
+		},
+	}
+
+	marshalled, err := json.Marshal(entity)
+	if err != nil {
+		Error.Println(err)
+		return false
+	}
+
+	_, addErr := d.Client.NewClient("GroupInvitations").UpdateEntity(ctx, marshalled, nil)
+	if addErr != nil {
+		Error.Println(addErr)
+		return false
+	}
+
+	return true
+}
+
 // GetGroupMemberships implements IDatabase
 func (d *TableStorageDatabase) GetGroupMemberships(ctx context.Context, username string) (bool, []models.GroupMembership) {
 	if !d.UserExists(ctx, username) {
@@ -290,16 +371,19 @@ func (d *TableStorageDatabase) IsInGroup(ctx context.Context, groupId string, us
 
 // AddGroupMembership implements IDatabase
 func (d *TableStorageDatabase) AddGroupMembership(ctx context.Context, newGroupMembership *models.GroupMembership) bool {
+	newGroupMembership.ID = uuid.NewString()
+	newGroupMembership.TimeCreated = time.Now().UTC().Unix()
+
 	entity := aztables.EDMEntity{
 		Entity: aztables.Entity{
 			PartitionKey: newGroupMembership.GroupID,
 			RowKey:       newGroupMembership.ID,
 		},
 		Properties: map[string]interface{}{
-			"GroupID":         newGroupMembership.GroupID,
-			"TimeCreated":     aztables.EDMInt64(newGroupMembership.TimeCreated),
-			"Username":        newGroupMembership.Username,
-			"InviterUsername": newGroupMembership.InviterUsername,
+			"GroupID":      newGroupMembership.GroupID,
+			"TimeCreated":  aztables.EDMInt64(newGroupMembership.TimeCreated),
+			"Username":     newGroupMembership.Username,
+			"InvitationID": newGroupMembership.InvitationID,
 		},
 	}
 
@@ -895,12 +979,24 @@ func createGroup(entity *aztables.EDMEntity) models.Group {
 	}
 }
 
+func createGroupInvitation(entity *aztables.EDMEntity) models.GroupInvitation {
+	return models.GroupInvitation{
+		ID:               entity.RowKey,
+		GroupID:          propString(entity, "GroupID"),
+		TimeCreated:      propInt64(entity, "TimeCreated"),
+		Username:         propString(entity, "Username"),
+		InviterUsername:  propString(entity, "InviterUsername"),
+		InvitationStatus: models.InvitationStatus(propString(entity, "InvitationStatus")),
+	}
+}
+
 func createGroupMembership(entity *aztables.EDMEntity) models.GroupMembership {
 	return models.GroupMembership{
-		ID:          entity.RowKey,
-		GroupID:     propString(entity, "GroupID"),
-		TimeCreated: propInt64(entity, "TimeCreated"),
-		Username:    propString(entity, "Username"),
+		ID:           entity.RowKey,
+		GroupID:      propString(entity, "GroupID"),
+		TimeCreated:  propInt64(entity, "TimeCreated"),
+		Username:     propString(entity, "Username"),
+		InvitationID: propString(entity, "InvitationID"),
 	}
 }
 
