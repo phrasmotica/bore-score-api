@@ -32,6 +32,7 @@ func main() {
 
 		groups.GET("/:groupId", auth.TokenAuth(true), routes.GetGroup)
 		groups.GET("/:groupId/invitations", auth.TokenAuth(false), routes.GetGroupInvitationsForGroup)
+		groups.GET("/:groupId/results", auth.TokenAuth(false), routes.GetResultsForGroup)
 
 		groups.POST("", auth.TokenAuth(false), routes.PostGroup)
 
