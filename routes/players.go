@@ -10,20 +10,42 @@ import (
 )
 
 func GetPlayers(c *gin.Context) {
-	group := c.Query("group")
-
-	var success bool
-	var players []models.Player
-
-	if len(group) > 0 {
-		success, players = db.GetPlayersInGroup(context.TODO(), group)
-	} else {
-		success, players = db.GetAllPlayers(context.TODO())
-	}
-
+	success, players := db.GetAllPlayers(context.TODO())
 	if !success {
 		Error.Println("Could not get players")
-		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
+		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{})
+		return
+	}
+
+	Info.Printf("Got %d players\n", len(players))
+
+	c.IndentedJSON(http.StatusOK, players)
+}
+
+func GetPlayersInGroup(c *gin.Context) {
+	groupId := c.Param("groupId")
+
+	ctx := context.TODO()
+
+	groupSuccess, group := db.GetGroup(ctx, groupId)
+	if !groupSuccess {
+		Error.Printf("Group %s does not exist\n", groupId)
+		c.IndentedJSON(http.StatusNotFound, gin.H{})
+		return
+	}
+
+	callingUsername := c.GetString("username")
+
+	if !canSeeGroup(ctx, group, callingUsername, false) {
+		Error.Printf("User %s cannot see results for group %s\n", callingUsername, group.ID)
+		c.IndentedJSON(http.StatusUnauthorized, gin.H{})
+		return
+	}
+
+	success, players := db.GetPlayersInGroup(ctx, group.ID)
+	if !success {
+		Error.Printf("Could not get players in group %s\n", group.ID)
+		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{})
 		return
 	}
 

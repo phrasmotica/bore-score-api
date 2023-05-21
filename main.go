@@ -32,6 +32,7 @@ func main() {
 
 		groups.GET("/:groupId", auth.TokenAuth(true), routes.GetGroup)
 		groups.GET("/:groupId/invitations", auth.TokenAuth(false), routes.GetGroupInvitationsForGroup)
+		groups.GET("/:groupId/players", auth.TokenAuth(false), routes.GetPlayersInGroup)
 		groups.GET("/:groupId/results", auth.TokenAuth(false), routes.GetResultsForGroup)
 
 		groups.POST("", auth.TokenAuth(false), routes.PostGroup)
@@ -58,6 +59,7 @@ func main() {
 		linkTypes.GET("", routes.GetLinkTypes)
 	}
 
+	// TODO: move Player columns into User entity
 	players := router.Group("/players")
 	{
 		players.GET("", routes.GetPlayers)
