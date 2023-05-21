@@ -98,6 +98,9 @@ func PostGroup(c *gin.Context) {
 	creatorUsername := c.GetString("username")
 	newGroup.CreatedBy = creatorUsername
 
+	newGroup.ID = uuid.NewString()
+	newGroup.TimeCreated = time.Now().UTC().Unix()
+
 	if success := db.AddGroup(ctx, &newGroup); !success {
 		Error.Printf("Could not add group %s\n", newGroup.Name)
 		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})

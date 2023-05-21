@@ -212,6 +212,7 @@ func (d *TableStorageDatabase) AddGroup(ctx context.Context, newGroup *models.Gr
 			"Description":    newGroup.Description,
 			"ProfilePicture": newGroup.ProfilePicture,
 			"Visibility":     string(newGroup.Visibility),
+			"CreatedBy":      newGroup.CreatedBy,
 		},
 	}
 
