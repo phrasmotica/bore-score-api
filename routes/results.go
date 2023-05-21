@@ -29,15 +29,32 @@ func GetResults(c *gin.Context) {
 	username := c.Query("username")
 	groupId := c.Query("group")
 
+	callingUsername := c.GetString("username")
+
 	var success bool
 	var results []models.Result
 
 	ctx := context.TODO()
 
-	// TODO: allow using both filters simultaneously
 	if len(username) > 0 {
+		// TODO: move this to a new endpoint /users/{userId}/results
 		success, results = db.GetResultsWithPlayer(ctx, username)
 	} else if len(groupId) > 0 {
+		// TODO: move this to a new endpoint /groups/{groupId}/results
+		groupSuccess, group := db.GetGroup(ctx, groupId)
+
+		if !groupSuccess {
+			Error.Printf("Group %s does not exist\n", groupId)
+			c.IndentedJSON(http.StatusNotFound, gin.H{})
+			return
+		}
+
+		if !canSeeGroup(ctx, group, callingUsername, false) {
+			Error.Printf("User %s cannot see results for group %s\n", callingUsername, group.ID)
+			c.IndentedJSON(http.StatusUnauthorized, gin.H{})
+			return
+		}
+
 		success, results = db.GetResultsForGroup(ctx, groupId)
 	} else {
 		success, results = db.GetAllResults(ctx)
@@ -51,7 +68,6 @@ func GetResults(c *gin.Context) {
 
 	filteredResults := []ResultResponse{}
 
-	callingUsername := c.GetString("username")
 	for _, r := range results {
 		if canSeeResult(ctx, r, callingUsername) {
 			approvalStatus := computeOverallApproval(ctx, db, r)
@@ -149,7 +165,7 @@ func canSeeResult(ctx context.Context, r models.Result, callingUsername string) 
 	}
 
 	success, group := db.GetGroup(ctx, r.GroupID)
-	return success && canSeeGroup(ctx, *group, callingUsername)
+	return success && canSeeGroup(ctx, group, callingUsername, false)
 }
 
 func computeOverallApproval(ctx context.Context, db data.IDatabase, result models.Result) models.ApprovalStatus {

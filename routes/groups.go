@@ -36,7 +36,7 @@ func GetGroups(c *gin.Context) {
 	for _, g := range groups {
 		callingUsername := c.GetString("username")
 
-		if canSeeGroup(ctx, g, callingUsername) {
+		if canSeeGroup(ctx, &g, callingUsername, true) {
 			filteredGroups = append(filteredGroups, g)
 		}
 	}
@@ -166,8 +166,8 @@ func DeleteGroup(c *gin.Context) {
 	c.IndentedJSON(http.StatusNoContent, gin.H{})
 }
 
-func canSeeGroup(ctx context.Context, group models.Group, callingUsername string) bool {
+func canSeeGroup(ctx context.Context, group *models.Group, callingUsername string, allowInvitees bool) bool {
 	return (group.Visibility != models.Private ||
 		db.IsInGroup(ctx, group.ID, callingUsername) ||
-		db.IsInvitedToGroup(ctx, group.ID, callingUsername))
+		(allowInvitees && db.IsInvitedToGroup(ctx, group.ID, callingUsername)))
 }
