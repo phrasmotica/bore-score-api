@@ -13,6 +13,11 @@ type MongoDatabase struct {
 	Database *mongo.Database
 }
 
+// IsInvitedToGroup implements IDatabase
+func (*MongoDatabase) IsInvitedToGroup(ctx context.Context, groupId string, username string) bool {
+	panic("unimplemented")
+}
+
 // UpdateGroupInvitation implements IDatabase
 func (*MongoDatabase) UpdateGroupInvitation(ctx context.Context, newGroupInvitation *models.GroupInvitation) bool {
 	panic("unimplemented")

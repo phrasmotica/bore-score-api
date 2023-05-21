@@ -13,6 +13,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/data/aztables"
 	"github.com/google/uuid"
+	"golang.org/x/exp/slices"
 )
 
 type TableStorageDatabase struct {
@@ -282,6 +283,15 @@ func (d *TableStorageDatabase) GetGroupInvitationsForGroup(ctx context.Context, 
 	})
 
 	return true, invitations
+}
+
+// IsInvitedToGroup implements IDatabase
+func (d *TableStorageDatabase) IsInvitedToGroup(ctx context.Context, groupId string, username string) bool {
+	success, invitations := d.GetGroupInvitations(ctx, username)
+
+	return success && slices.ContainsFunc(invitations, func(i models.GroupInvitation) bool {
+		return i.GroupID == groupId && i.Username == username
+	})
 }
 
 // AddGroupInvitation implements IDatabase

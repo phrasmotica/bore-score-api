@@ -62,10 +62,16 @@ func GetGroup(c *gin.Context) {
 	if group.Visibility == models.Private {
 		callingUsername := c.GetString("username")
 
+		// could use canSeeGroup(...) here, but prefer to break down the conditions
+		// for logging purposes. TODO: put logging into canSeeGroup(...)?
 		if !db.IsInGroup(ctx, group.ID, callingUsername) {
-			Error.Printf("User %s is not in group %s\n", callingUsername, groupId)
-			c.IndentedJSON(http.StatusUnauthorized, gin.H{})
-			return
+			if !db.IsInvitedToGroup(ctx, group.ID, callingUsername) {
+				Error.Printf("User %s is not in private group %s\n", callingUsername, groupId)
+				c.IndentedJSON(http.StatusUnauthorized, gin.H{})
+				return
+			} else {
+				Info.Printf("User %s is invited to private group %s\n", callingUsername, group.ID)
+			}
 		}
 	}
 
@@ -161,5 +167,7 @@ func DeleteGroup(c *gin.Context) {
 }
 
 func canSeeGroup(ctx context.Context, group models.Group, callingUsername string) bool {
-	return group.Visibility != models.Private || db.IsInGroup(ctx, group.ID, callingUsername)
+	return (group.Visibility != models.Private ||
+		db.IsInGroup(ctx, group.ID, callingUsername) ||
+		db.IsInvitedToGroup(ctx, group.ID, callingUsername))
 }
