@@ -231,8 +231,8 @@ func (d *TableStorageDatabase) AddGroup(ctx context.Context, newGroup *models.Gr
 }
 
 // DeleteGroup implements IDatabase
-func (d *TableStorageDatabase) DeleteGroup(ctx context.Context, name string) bool {
-	group := d.findGroupByName(ctx, name)
+func (d *TableStorageDatabase) DeleteGroup(ctx context.Context, id string) bool {
+	group := d.findGroup(ctx, id)
 	if group == nil {
 		return false
 	}

@@ -134,22 +134,31 @@ func validateNewGroup(group *models.Group) (bool, string) {
 }
 
 func DeleteGroup(c *gin.Context) {
-	name := c.Param("name")
+	groupId := c.Param("groupId")
 
 	ctx := context.TODO()
 
-	if !db.GroupExists(ctx, name) {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("group %s does not exist", name)})
+	success, group := db.GetGroup(ctx, groupId)
+	if !success {
+		Error.Printf("Group %s does not exist\n", groupId)
+		c.IndentedJSON(http.StatusNotFound, gin.H{})
 		return
 	}
 
-	if success := db.DeleteGroup(ctx, name); !success {
-		Error.Printf("Could not delete group %s\n", name)
-		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
+	callingUsername := c.GetString("username")
+	if group.CreatedBy != callingUsername {
+		Error.Println("Cannot delete a group that someone else created")
+		c.IndentedJSON(http.StatusForbidden, gin.H{})
 		return
 	}
 
-	Info.Printf("Deleted group %s\n", name)
+	if success := db.DeleteGroup(ctx, group.ID); !success {
+		Error.Printf("Could not delete group %s\n", groupId)
+		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{})
+		return
+	}
+
+	Info.Printf("Deleted group %s\n", groupId)
 
 	c.IndentedJSON(http.StatusNoContent, gin.H{})
 }
