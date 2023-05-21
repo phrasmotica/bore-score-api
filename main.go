@@ -12,45 +12,61 @@ func main() {
 
 	router.Use(auth.CORSMiddleware())
 
-	approvals := router.Group("/approvals").Use(auth.TokenAuth(false))
+	approvals := router.Group("/approvals", auth.TokenAuth(false))
 	{
 		approvals.GET("/:resultId", routes.GetApprovals)
+
 		approvals.POST("", routes.PostApproval)
 	}
 
 	games := router.Group("/games")
 	{
 		games.GET("", routes.GetGames)
-		games.GET("/:name", routes.GetGame)
+
 		games.POST("", routes.PostGame)
-		games.DELETE("/:name", routes.DeleteGame)
+
+		gameByName := games.Group("/:name")
+		{
+			gameByName.GET("", routes.GetGame)
+
+			gameByName.DELETE("", routes.DeleteGame)
+		}
 	}
 
 	groups := router.Group("/groups")
 	{
 		groups.GET("", auth.TokenAuth(true), routes.GetGroups)
 
-		groups.GET("/:groupId", auth.TokenAuth(true), routes.GetGroup)
-		groups.GET("/:groupId/invitations", auth.TokenAuth(false), routes.GetGroupInvitationsForGroup)
-		groups.GET("/:groupId/players", auth.TokenAuth(false), routes.GetPlayersInGroup)
-		groups.GET("/:groupId/results", auth.TokenAuth(false), routes.GetResultsForGroup)
-
 		groups.POST("", auth.TokenAuth(false), routes.PostGroup)
 
-		groups.DELETE("/:groupId", auth.TokenAuth(false), routes.DeleteGroup)
+		groupById := groups.Group("/:groupId")
+		{
+			groupById.GET("", auth.TokenAuth(true), routes.GetGroup)
+			groupById.GET("/invitations", auth.TokenAuth(false), routes.GetGroupInvitationsForGroup)
+			groupById.GET("/players", auth.TokenAuth(false), routes.GetPlayersInGroup)
+			groupById.GET("/results", auth.TokenAuth(false), routes.GetResultsForGroup)
+
+			groupById.DELETE("", auth.TokenAuth(false), routes.DeleteGroup)
+		}
 	}
 
-	groupInvitations := router.Group("/invitations").Use(auth.TokenAuth(false))
+	groupInvitations := router.Group("/invitations", auth.TokenAuth(false))
 	{
-		groupInvitations.GET("/:invitationId", routes.GetGroupInvitation)
-		groupInvitations.POST("/:invitationId/accept", routes.AcceptGroupInvitation)
-		groupInvitations.POST("/:invitationId/decline", routes.DeclineGroupInvitation)
 		groupInvitations.POST("", routes.AddGroupInvitation)
+
+		groupInvitationById := groupInvitations.Group("/:invitationId")
+		{
+			groupInvitationById.GET("", routes.GetGroupInvitation)
+
+			groupInvitationById.POST("/accept", routes.AcceptGroupInvitation)
+			groupInvitationById.POST("/decline", routes.DeclineGroupInvitation)
+		}
 	}
 
-	groupMemberships := router.Group("/memberships").Use(auth.TokenAuth(false))
+	groupMemberships := router.Group("/memberships", auth.TokenAuth(false))
 	{
 		groupMemberships.GET("/:username", routes.GetGroupMemberships)
+
 		groupMemberships.POST("", routes.AddGroupMembership)
 	}
 
@@ -63,9 +79,15 @@ func main() {
 	players := router.Group("/players")
 	{
 		players.GET("", routes.GetPlayers)
-		players.GET("/:username", routes.GetPlayer)
+
 		players.POST("", routes.PostPlayer)
-		players.DELETE("/:username", routes.DeletePlayer)
+
+		playerByUsername := players.Group("/:username")
+		{
+			playerByUsername.GET("", routes.GetPlayer)
+
+			playerByUsername.DELETE("", routes.DeletePlayer)
+		}
 	}
 
 	router.GET("/summary", routes.GetSummary)
@@ -73,6 +95,7 @@ func main() {
 	results := router.Group("/results")
 	{
 		results.GET("", auth.TokenAuth(true), routes.GetResults)
+
 		results.POST("", routes.PostResult)
 	}
 
@@ -89,16 +112,14 @@ func main() {
 
 	users := router.Group("/users")
 	{
-		users.GET("/:username", auth.TokenAuth(true), routes.GetUser)
-		users.GET("/:username/invitations", auth.TokenAuth(false), routes.GetGroupInvitationsForUser)
-		users.GET("/:username/results", auth.TokenAuth(false), routes.GetResultsForUser)
-
 		users.POST("", routes.RegisterUser)
-	}
 
-	secured := router.Group("/secured").Use(auth.TokenAuth(false))
-	{
-		secured.GET("/ping", routes.Ping)
+		userByUsername := users.Group("/:username")
+		{
+			userByUsername.GET("", auth.TokenAuth(true), routes.GetUser)
+			userByUsername.GET("/invitations", auth.TokenAuth(false), routes.GetGroupInvitationsForUser)
+			userByUsername.GET("/results", auth.TokenAuth(false), routes.GetResultsForUser)
+		}
 	}
 
 	router.Run(":8000")
