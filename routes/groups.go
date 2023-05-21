@@ -2,7 +2,6 @@ package routes
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"phrasmotica/bore-score-api/models"
 	"strconv"
@@ -90,11 +89,6 @@ func PostGroup(c *gin.Context) {
 		return
 	}
 
-	if db.GroupExists(ctx, newGroup.Name) {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("group %s already exists", newGroup.Name)})
-		return
-	}
-
 	creatorUsername := c.GetString("username")
 	newGroup.CreatedBy = creatorUsername
 
@@ -102,12 +96,12 @@ func PostGroup(c *gin.Context) {
 	newGroup.TimeCreated = time.Now().UTC().Unix()
 
 	if success := db.AddGroup(ctx, &newGroup); !success {
-		Error.Printf("Could not add group %s\n", newGroup.Name)
+		Error.Printf("Could not add group %s\n", newGroup.DisplayName)
 		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
 		return
 	}
 
-	Info.Printf("Added group %s\n", newGroup.Name)
+	Info.Printf("Added group %s\n", newGroup.DisplayName)
 
 	// add membership for the creator
 	membership := models.GroupMembership{

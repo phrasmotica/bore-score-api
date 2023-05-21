@@ -37,14 +37,14 @@ type IDatabase interface {
 	UpdateGroupInvitation(ctx context.Context, newGroupInvitation *models.GroupInvitation) bool
 
 	GetGroupMemberships(ctx context.Context, username string) (bool, []models.GroupMembership)
-	GetGroupMembershipsForGroup(ctx context.Context, groupName string) (bool, []models.GroupMembership)
+	GetGroupMembershipsForGroup(ctx context.Context, groupId string) (bool, []models.GroupMembership)
 	IsInGroup(ctx context.Context, groupId string, username string) bool
 	AddGroupMembership(ctx context.Context, newGroupMembership *models.GroupMembership) bool
 
 	GetAllLinkTypes(ctx context.Context) (bool, []models.LinkType)
 
 	GetAllPlayers(ctx context.Context) (bool, []models.Player)
-	GetPlayersInGroup(ctx context.Context, groupName string) (bool, []models.Player)
+	GetPlayersInGroup(ctx context.Context, groupId string) (bool, []models.Player)
 	GetPlayer(ctx context.Context, username string) (bool, *models.Player)
 	PlayerExists(ctx context.Context, username string) bool
 	AddPlayer(ctx context.Context, newPlayer *models.Player) bool
@@ -52,7 +52,7 @@ type IDatabase interface {
 
 	GetAllResults(ctx context.Context) (bool, []models.Result)
 	GetResultsWithPlayer(ctx context.Context, username string) (bool, []models.Result)
-	GetResultsForGroup(ctx context.Context, groupName string) (bool, []models.Result)
+	GetResultsForGroup(ctx context.Context, groupId string) (bool, []models.Result)
 	GetResult(ctx context.Context, resultId string) (bool, *models.Result)
 	ResultExists(ctx context.Context, resultId string) bool
 	AddResult(ctx context.Context, newResult *models.Result) bool

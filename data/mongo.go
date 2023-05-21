@@ -39,17 +39,17 @@ func (*MongoDatabase) GetGroupInvitationsForGroup(ctx context.Context, groupId s
 }
 
 // GetResultsForGroup implements IDatabase
-func (*MongoDatabase) GetResultsForGroup(ctx context.Context, groupName string) (bool, []models.Result) {
+func (*MongoDatabase) GetResultsForGroup(ctx context.Context, groupId string) (bool, []models.Result) {
 	panic("unimplemented")
 }
 
 // GetGroupMembershipsForGroup implements IDatabase
-func (*MongoDatabase) GetGroupMembershipsForGroup(ctx context.Context, groupName string) (bool, []models.GroupMembership) {
+func (*MongoDatabase) GetGroupMembershipsForGroup(ctx context.Context, groupId string) (bool, []models.GroupMembership) {
 	panic("unimplemented")
 }
 
 // GetPlayersInGroup implements IDatabase
-func (*MongoDatabase) GetPlayersInGroup(ctx context.Context, groupName string) (bool, []models.Player) {
+func (*MongoDatabase) GetPlayersInGroup(ctx context.Context, groupId string) (bool, []models.Player) {
 	panic("unimplemented")
 }
 

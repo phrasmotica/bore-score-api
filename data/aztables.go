@@ -365,8 +365,8 @@ func (d *TableStorageDatabase) GetGroupMemberships(ctx context.Context, username
 }
 
 // GetGroupMembershipsForGroup implements IDatabase
-func (d *TableStorageDatabase) GetGroupMembershipsForGroup(ctx context.Context, groupName string) (bool, []models.GroupMembership) {
-	success, group := d.GetGroupByName(ctx, groupName)
+func (d *TableStorageDatabase) GetGroupMembershipsForGroup(ctx context.Context, groupId string) (bool, []models.GroupMembership) {
+	success, group := d.GetGroup(ctx, groupId)
 	if !success {
 		return false, []models.GroupMembership{}
 	}
@@ -440,13 +440,13 @@ func (d *TableStorageDatabase) GetAllPlayers(ctx context.Context) (bool, []model
 }
 
 // GetPlayersInGroup implements IDatabase
-func (d *TableStorageDatabase) GetPlayersInGroup(ctx context.Context, groupName string) (bool, []models.Player) {
+func (d *TableStorageDatabase) GetPlayersInGroup(ctx context.Context, groupId string) (bool, []models.Player) {
 	success, players := d.GetAllPlayers(ctx)
 	if !success {
 		return false, []models.Player{}
 	}
 
-	success, memberships := d.GetGroupMembershipsForGroup(ctx, groupName)
+	success, memberships := d.GetGroupMembershipsForGroup(ctx, groupId)
 	if !success {
 		return false, []models.Player{}
 	}
@@ -535,9 +535,9 @@ func (d *TableStorageDatabase) GetAllResults(ctx context.Context) (bool, []model
 }
 
 // GetResultsForGroup implements IDatabase
-func (d *TableStorageDatabase) GetResultsForGroup(ctx context.Context, groupName string) (bool, []models.Result) {
+func (d *TableStorageDatabase) GetResultsForGroup(ctx context.Context, groupId string) (bool, []models.Result) {
 	results := list(ctx, d.Client, "Results", createResult, &aztables.ListEntitiesOptions{
-		Filter: to.Ptr(fmt.Sprintf("GroupName eq '%s'", groupName)),
+		Filter: to.Ptr(fmt.Sprintf("GroupID eq '%s'", groupId)),
 	})
 	return true, results
 }
@@ -601,7 +601,7 @@ func (d *TableStorageDatabase) AddResult(ctx context.Context, newResult *models.
 		},
 		Properties: map[string]interface{}{
 			"GameName":         newResult.GameName,
-			"GroupName":        newResult.GroupName,
+			"GroupID":          newResult.GroupID,
 			"TimeCreated":      aztables.EDMInt64(newResult.TimeCreated),
 			"TimePlayed":       aztables.EDMInt64(newResult.TimePlayed),
 			"Notes":            newResult.Notes,
@@ -937,6 +937,7 @@ func list[T interface{}](ctx context.Context, client *aztables.ServiceClient, ta
 func listEntities(ctx context.Context, client *aztables.Client, options *aztables.ListEntitiesOptions) []aztables.EDMEntity {
 	var entities = make([]aztables.EDMEntity, 0)
 
+	// TODO: don't do this if it already exists
 	client.CreateTable(ctx, nil)
 
 	pager := client.NewListEntitiesPager(options)
@@ -1063,7 +1064,7 @@ func createResult(entity *aztables.EDMEntity) models.Result {
 	return models.Result{
 		ID:               entity.RowKey,
 		GameName:         propString(entity, "GameName"),
-		GroupName:        propString(entity, "GroupName"),
+		GroupID:          propString(entity, "GroupID"),
 		TimeCreated:      propInt64(entity, "TimeCreated"),
 		TimePlayed:       propInt64(entity, "TimePlayed"),
 		Notes:            propString(entity, "Notes"),

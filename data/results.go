@@ -31,12 +31,6 @@ func (d *MongoDatabase) AddResult(ctx context.Context, newResult *models.Result)
 	newResult.ID = uuid.NewString()
 	newResult.TimeCreated = time.Now().UTC().Unix()
 
-	if len(newResult.GroupName) <= 0 {
-		// results are assigned attached to the global group "all" by default
-		Error.Printf("Assigning new result %s to group all\n", newResult.ID)
-		newResult.GroupName = "all"
-	}
-
 	_, err := d.Database.Collection("Results").InsertOne(ctx, newResult)
 
 	if err != nil {

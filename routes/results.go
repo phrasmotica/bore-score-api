@@ -15,7 +15,7 @@ import (
 type ResultResponse struct {
 	ID               string                `json:"id" bson:"id"`
 	GameName         string                `json:"gameName" bson:"gameName"`
-	GroupName        string                `json:"groupName" bson:"groupName"`
+	GroupID          string                `json:"groupId" bson:"groupId"`
 	TimeCreated      int64                 `json:"timeCreated" bson:"timeCreated"`
 	TimePlayed       int64                 `json:"timePlayed" bson:"timePlayed"`
 	Notes            string                `json:"notes" bson:"notes"`
@@ -27,7 +27,7 @@ type ResultResponse struct {
 
 func GetResults(c *gin.Context) {
 	username := c.Query("username")
-	group := c.Query("group")
+	groupId := c.Query("group")
 
 	var success bool
 	var results []models.Result
@@ -37,8 +37,8 @@ func GetResults(c *gin.Context) {
 	// TODO: allow using both filters simultaneously
 	if len(username) > 0 {
 		success, results = db.GetResultsWithPlayer(ctx, username)
-	} else if len(group) > 0 {
-		success, results = db.GetResultsForGroup(ctx, group)
+	} else if len(groupId) > 0 {
+		success, results = db.GetResultsForGroup(ctx, groupId)
 	} else {
 		success, results = db.GetAllResults(ctx)
 	}
@@ -59,7 +59,7 @@ func GetResults(c *gin.Context) {
 			filteredResults = append(filteredResults, ResultResponse{
 				ID:               r.ID,
 				GameName:         r.GameName,
-				GroupName:        r.GroupName,
+				GroupID:          r.GroupID,
 				TimeCreated:      r.TimeCreated,
 				TimePlayed:       r.TimePlayed,
 				Notes:            r.Notes,
@@ -103,16 +103,18 @@ func PostResult(c *gin.Context) {
 		}
 	}
 
-	if len(newResult.GroupName) > 0 {
-		success, group := db.GetGroupByName(ctx, newResult.GroupName)
+	if len(newResult.GroupID) > 0 {
+		success, group := db.GetGroup(ctx, newResult.GroupID)
 		if !success {
-			c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("result is attached to non-existent group %s", newResult.GroupName)})
+			Error.Printf("Result is attached to non-existent group %s", newResult.GroupID)
+			c.IndentedJSON(http.StatusForbidden, gin.H{})
 			return
 		}
 
 		for _, score := range newResult.Scores {
 			if !db.IsInGroup(ctx, group.ID, score.Username) {
-				c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("player %s is not in group %s", score.Username, newResult.GroupName)})
+				Error.Printf("Player %s is not in group %s", score.Username, newResult.GroupID)
+				c.IndentedJSON(http.StatusForbidden, gin.H{})
 				return
 			}
 		}
@@ -142,11 +144,11 @@ func validateNewResult(result *models.Result) (bool, string) {
 }
 
 func canSeeResult(ctx context.Context, r models.Result, callingUsername string) bool {
-	if len(r.GroupName) <= 0 {
+	if len(r.GroupID) <= 0 {
 		return true
 	}
 
-	success, group := db.GetGroupByName(ctx, r.GroupName)
+	success, group := db.GetGroup(ctx, r.GroupID)
 	return success && canSeeGroup(ctx, *group, callingUsername)
 }
 
