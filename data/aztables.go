@@ -206,7 +206,6 @@ func (d *TableStorageDatabase) AddGroup(ctx context.Context, newGroup *models.Gr
 			RowKey:       newGroup.ID,
 		},
 		Properties: map[string]interface{}{
-			"Name":           newGroup.Name,
 			"TimeCreated":    aztables.EDMInt64(newGroup.TimeCreated),
 			"DisplayName":    newGroup.DisplayName,
 			"Description":    newGroup.Description,
@@ -1010,7 +1009,6 @@ func createLinks(entity *aztables.EDMEntity) []models.Link {
 func createGroup(entity *aztables.EDMEntity) models.Group {
 	return models.Group{
 		ID:             entity.RowKey,
-		Name:           propString(entity, "Name"),
 		TimeCreated:    propInt64(entity, "TimeCreated"),
 		DisplayName:    propString(entity, "DisplayName"),
 		Description:    propString(entity, "Description"),
