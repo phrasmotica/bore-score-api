@@ -218,3 +218,60 @@ func AcceptGroupInvitation(c *gin.Context) {
 
 	c.IndentedJSON(http.StatusNoContent, gin.H{})
 }
+
+func DeclineGroupInvitation(c *gin.Context) {
+	invitationId := c.Param("invitationId")
+
+	ctx := context.TODO()
+
+	success, invitation := db.GetGroupInvitation(ctx, invitationId)
+	if !success {
+		Error.Printf("Group invitation %s does not exist\n", invitationId)
+		c.IndentedJSON(http.StatusForbidden, gin.H{})
+		return
+	}
+
+	callingUsername := c.GetString("username")
+
+	if invitation.Username != callingUsername {
+		Error.Println("Cannot decline another user's group invitation")
+		c.IndentedJSON(http.StatusForbidden, gin.H{})
+		return
+	}
+
+	if !db.UserExists(ctx, invitation.Username) {
+		Error.Printf("Invited user %s does not exist\n", invitation.Username)
+		c.IndentedJSON(http.StatusForbidden, gin.H{})
+		return
+	}
+
+	if !db.UserExists(ctx, invitation.InviterUsername) {
+		Error.Printf("Inviting user %s does not exist\n", invitation.InviterUsername)
+		c.IndentedJSON(http.StatusForbidden, gin.H{})
+		return
+	}
+
+	if !db.IsInGroup(ctx, invitation.GroupID, invitation.InviterUsername) {
+		Error.Printf("Inviter %s is not in group %s\n", invitation.InviterUsername, invitation.GroupID)
+		c.IndentedJSON(http.StatusForbidden, gin.H{})
+		return
+	}
+
+	if db.IsInGroup(ctx, invitation.GroupID, invitation.Username) {
+		Info.Printf("User %s is already in group %s\n", invitation.Username, invitation.GroupID)
+		c.IndentedJSON(http.StatusNoContent, gin.H{})
+		return
+	}
+
+	invitation.InvitationStatus = models.Declined
+
+	if success := db.UpdateGroupInvitation(ctx, invitation); !success {
+		Error.Println("Could not decline group invitation")
+		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{})
+		return
+	}
+
+	Info.Printf("Declined invitation to group %s for user %s by inviter %s\n", invitation.GroupID, invitation.Username, invitation.InviterUsername)
+
+	c.IndentedJSON(http.StatusNoContent, gin.H{})
+}

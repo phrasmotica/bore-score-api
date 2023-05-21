@@ -42,6 +42,7 @@ func main() {
 	{
 		groupInvitations.GET("/:invitationId", routes.GetGroupInvitation)
 		groupInvitations.POST("/:invitationId/accept", routes.AcceptGroupInvitation)
+		groupInvitations.POST("/:invitationId/decline", routes.DeclineGroupInvitation)
 		groupInvitations.POST("", routes.AddGroupInvitation)
 	}
 
