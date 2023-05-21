@@ -125,8 +125,8 @@ func (d *MongoDatabase) AddGroup(ctx context.Context, newGroup *models.Group) bo
 	return true
 }
 
-func (d *MongoDatabase) DeleteGroup(ctx context.Context, name string) bool {
-	filter := bson.D{{"name", name}}
+func (d *MongoDatabase) DeleteGroup(ctx context.Context, id string) bool {
+	filter := bson.D{{"id", id}}
 	_, err := d.Database.Collection("Groups").DeleteOne(ctx, filter)
 
 	if err != nil {

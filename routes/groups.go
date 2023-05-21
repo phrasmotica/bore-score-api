@@ -2,7 +2,6 @@ package routes
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"phrasmotica/bore-score-api/models"
 	"strconv"
@@ -37,7 +36,7 @@ func GetGroups(c *gin.Context) {
 	for _, g := range groups {
 		callingUsername := c.GetString("username")
 
-		if canSeeGroup(ctx, g, callingUsername) {
+		if canSeeGroup(ctx, &g, callingUsername, true) {
 			filteredGroups = append(filteredGroups, g)
 		}
 	}
@@ -48,30 +47,36 @@ func GetGroups(c *gin.Context) {
 }
 
 func GetGroup(c *gin.Context) {
-	name := c.Param("name")
+	groupId := c.Param("groupId")
 
 	ctx := context.TODO()
 
-	success, group := db.GetGroupByName(ctx, name)
+	success, group := db.GetGroup(ctx, groupId)
 
 	if !success {
-		Error.Printf("Group %s not found\n", name)
+		Error.Printf("Group %s not found\n", groupId)
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "group not found"})
 		return
 	}
 
 	if group.Visibility == models.Private {
 		callingUsername := c.GetString("username")
-		isInGroup := db.IsInGroup(ctx, group.ID, callingUsername)
 
-		if !isInGroup {
-			Error.Printf("Group %s is private\n", name)
-			c.IndentedJSON(http.StatusUnauthorized, gin.H{"message": "group is private"})
-			return
+		// could use canSeeGroup(...) here, but prefer to break down the conditions
+		// for logging purposes. TODO: put logging into canSeeGroup(...)?
+		if !db.IsInGroup(ctx, group.ID, callingUsername) {
+			if !db.IsInvitedToGroup(ctx, group.ID, callingUsername) {
+				Error.Printf("User %s is not in private group %s\n", callingUsername, groupId)
+				c.IndentedJSON(http.StatusUnauthorized, gin.H{})
+				return
+			} else {
+				Info.Printf("User %s is invited to private group %s\n", callingUsername, group.ID)
+			}
 		}
 	}
 
-	Info.Printf("Got group %s\n", name)
+	Info.Printf("Got group %s\n", groupId)
+
 	c.IndentedJSON(http.StatusOK, group)
 }
 
@@ -90,29 +95,27 @@ func PostGroup(c *gin.Context) {
 		return
 	}
 
-	if db.GroupExists(ctx, newGroup.Name) {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("group %s already exists", newGroup.Name)})
-		return
-	}
-
 	creatorUsername := c.GetString("username")
 	newGroup.CreatedBy = creatorUsername
 
+	newGroup.ID = uuid.NewString()
+	newGroup.TimeCreated = time.Now().UTC().Unix()
+
 	if success := db.AddGroup(ctx, &newGroup); !success {
-		Error.Printf("Could not add group %s\n", newGroup.Name)
+		Error.Printf("Could not add group %s\n", newGroup.DisplayName)
 		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
 		return
 	}
 
-	Info.Printf("Added group %s\n", newGroup.Name)
+	Info.Printf("Added group %s\n", newGroup.DisplayName)
 
 	// add membership for the creator
 	membership := models.GroupMembership{
-		ID:              uuid.NewString(),
-		GroupID:         newGroup.ID,
-		TimeCreated:     time.Now().UTC().Unix(),
-		Username:        creatorUsername,
-		InviterUsername: "",
+		ID:           uuid.NewString(),
+		GroupID:      newGroup.ID,
+		TimeCreated:  time.Now().UTC().Unix(),
+		Username:     creatorUsername,
+		InvitationID: "",
 	}
 
 	if success := db.AddGroupMembership(ctx, &membership); !success {
@@ -134,26 +137,37 @@ func validateNewGroup(group *models.Group) (bool, string) {
 }
 
 func DeleteGroup(c *gin.Context) {
-	name := c.Param("name")
+	groupId := c.Param("groupId")
 
 	ctx := context.TODO()
 
-	if !db.GroupExists(ctx, name) {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("group %s does not exist", name)})
+	success, group := db.GetGroup(ctx, groupId)
+	if !success {
+		Error.Printf("Group %s does not exist\n", groupId)
+		c.IndentedJSON(http.StatusNotFound, gin.H{})
 		return
 	}
 
-	if success := db.DeleteGroup(ctx, name); !success {
-		Error.Printf("Could not delete group %s\n", name)
-		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
+	callingUsername := c.GetString("username")
+	if group.CreatedBy != callingUsername {
+		Error.Println("Cannot delete a group that someone else created")
+		c.IndentedJSON(http.StatusForbidden, gin.H{})
 		return
 	}
 
-	Info.Printf("Deleted group %s\n", name)
+	if success := db.DeleteGroup(ctx, group.ID); !success {
+		Error.Printf("Could not delete group %s\n", groupId)
+		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{})
+		return
+	}
+
+	Info.Printf("Deleted group %s\n", groupId)
 
 	c.IndentedJSON(http.StatusNoContent, gin.H{})
 }
 
-func canSeeGroup(ctx context.Context, group models.Group, callingUsername string) bool {
-	return group.Visibility != models.Private || db.IsInGroup(ctx, group.ID, callingUsername)
+func canSeeGroup(ctx context.Context, group *models.Group, callingUsername string, allowInvitees bool) bool {
+	return (group.Visibility != models.Private ||
+		db.IsInGroup(ctx, group.ID, callingUsername) ||
+		(allowInvitees && db.IsInvitedToGroup(ctx, group.ID, callingUsername)))
 }

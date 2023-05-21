@@ -15,7 +15,7 @@ import (
 type ResultResponse struct {
 	ID               string                `json:"id" bson:"id"`
 	GameName         string                `json:"gameName" bson:"gameName"`
-	GroupName        string                `json:"groupName" bson:"groupName"`
+	GroupID          string                `json:"groupId" bson:"groupId"`
 	TimeCreated      int64                 `json:"timeCreated" bson:"timeCreated"`
 	TimePlayed       int64                 `json:"timePlayed" bson:"timePlayed"`
 	Notes            string                `json:"notes" bson:"notes"`
@@ -26,19 +26,32 @@ type ResultResponse struct {
 }
 
 func GetResults(c *gin.Context) {
-	username := c.Query("username")
-	group := c.Query("group")
+	groupId := c.Query("group")
+
+	callingUsername := c.GetString("username")
 
 	var success bool
 	var results []models.Result
 
 	ctx := context.TODO()
 
-	// TODO: allow using both filters simultaneously
-	if len(username) > 0 {
-		success, results = db.GetResultsWithPlayer(ctx, username)
-	} else if len(group) > 0 {
-		success, results = db.GetResultsForGroup(ctx, group)
+	if len(groupId) > 0 {
+		// TODO: move this to a new endpoint /groups/{groupId}/results
+		groupSuccess, group := db.GetGroup(ctx, groupId)
+
+		if !groupSuccess {
+			Error.Printf("Group %s does not exist\n", groupId)
+			c.IndentedJSON(http.StatusNotFound, gin.H{})
+			return
+		}
+
+		if !canSeeGroup(ctx, group, callingUsername, false) {
+			Error.Printf("User %s cannot see results for group %s\n", callingUsername, group.ID)
+			c.IndentedJSON(http.StatusUnauthorized, gin.H{})
+			return
+		}
+
+		success, results = db.GetResultsForGroup(ctx, groupId)
 	} else {
 		success, results = db.GetAllResults(ctx)
 	}
@@ -49,27 +62,33 @@ func GetResults(c *gin.Context) {
 		return
 	}
 
-	filteredResults := []ResultResponse{}
+	filteredResults := filterResults(ctx, results, callingUsername)
 
+	Info.Printf("Got %d results\n", len(filteredResults))
+
+	c.IndentedJSON(http.StatusOK, filteredResults)
+}
+
+func GetResultsForUser(c *gin.Context) {
+	username := c.Param("username")
 	callingUsername := c.GetString("username")
-	for _, r := range results {
-		if canSeeResult(ctx, r, callingUsername) {
-			approvalStatus := computeOverallApproval(ctx, db, r)
 
-			filteredResults = append(filteredResults, ResultResponse{
-				ID:               r.ID,
-				GameName:         r.GameName,
-				GroupName:        r.GroupName,
-				TimeCreated:      r.TimeCreated,
-				TimePlayed:       r.TimePlayed,
-				Notes:            r.Notes,
-				CooperativeScore: r.CooperativeScore,
-				CooperativeWin:   r.CooperativeWin,
-				Scores:           r.Scores,
-				ApprovalStatus:   approvalStatus,
-			})
-		}
+	if username != callingUsername {
+		Error.Println("Cannot see results for another user")
+		c.IndentedJSON(http.StatusUnauthorized, gin.H{})
+		return
 	}
+
+	ctx := context.TODO()
+
+	success, results := db.GetResultsWithPlayer(ctx, username)
+	if !success {
+		Error.Printf("Could not get results for user %s\n", username)
+		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{})
+		return
+	}
+
+	filteredResults := filterResults(ctx, results, callingUsername)
 
 	Info.Printf("Got %d results\n", len(filteredResults))
 
@@ -103,16 +122,18 @@ func PostResult(c *gin.Context) {
 		}
 	}
 
-	if len(newResult.GroupName) > 0 {
-		success, group := db.GetGroupByName(ctx, newResult.GroupName)
+	if len(newResult.GroupID) > 0 {
+		success, group := db.GetGroup(ctx, newResult.GroupID)
 		if !success {
-			c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("result is attached to non-existent group %s", newResult.GroupName)})
+			Error.Printf("Result is attached to non-existent group %s", newResult.GroupID)
+			c.IndentedJSON(http.StatusForbidden, gin.H{})
 			return
 		}
 
 		for _, score := range newResult.Scores {
 			if !db.IsInGroup(ctx, group.ID, score.Username) {
-				c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("player %s is not in group %s", score.Username, newResult.GroupName)})
+				Error.Printf("Player %s is not in group %s", score.Username, newResult.GroupID)
+				c.IndentedJSON(http.StatusForbidden, gin.H{})
 				return
 			}
 		}
@@ -141,13 +162,38 @@ func validateNewResult(result *models.Result) (bool, string) {
 	return true, ""
 }
 
+func filterResults(ctx context.Context, results []models.Result, username string) []ResultResponse {
+	filteredResults := []ResultResponse{}
+
+	for _, r := range results {
+		if canSeeResult(ctx, r, username) {
+			approvalStatus := computeOverallApproval(ctx, db, r)
+
+			filteredResults = append(filteredResults, ResultResponse{
+				ID:               r.ID,
+				GameName:         r.GameName,
+				GroupID:          r.GroupID,
+				TimeCreated:      r.TimeCreated,
+				TimePlayed:       r.TimePlayed,
+				Notes:            r.Notes,
+				CooperativeScore: r.CooperativeScore,
+				CooperativeWin:   r.CooperativeWin,
+				Scores:           r.Scores,
+				ApprovalStatus:   approvalStatus,
+			})
+		}
+	}
+
+	return filteredResults
+}
+
 func canSeeResult(ctx context.Context, r models.Result, callingUsername string) bool {
-	if len(r.GroupName) <= 0 {
+	if len(r.GroupID) <= 0 {
 		return true
 	}
 
-	success, group := db.GetGroupByName(ctx, r.GroupName)
-	return success && canSeeGroup(ctx, *group, callingUsername)
+	success, group := db.GetGroup(ctx, r.GroupID)
+	return success && canSeeGroup(ctx, group, callingUsername, false)
 }
 
 func computeOverallApproval(ctx context.Context, db data.IDatabase, result models.Result) models.ApprovalStatus {

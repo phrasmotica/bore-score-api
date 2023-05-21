@@ -60,15 +60,9 @@ func AddGroupMembership(c *gin.Context) {
 	}
 
 	if group.Visibility == models.Private {
-		inviterUsername := c.GetString("username")
-
-		inviterIsInGroup := db.IsInGroup(ctx, newGroupMembership.GroupID, inviterUsername)
-		if !inviterIsInGroup {
-			c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("inviter is not in group %s", newGroupMembership.GroupID)})
-			return
-		}
-
-		newGroupMembership.InviterUsername = inviterUsername
+		Error.Printf("Group %s is private\n", newGroupMembership.GroupID)
+		c.IndentedJSON(http.StatusForbidden, gin.H{})
+		return
 	}
 
 	if db.IsInGroup(ctx, group.ID, newGroupMembership.Username) {
@@ -83,7 +77,7 @@ func AddGroupMembership(c *gin.Context) {
 		return
 	}
 
-	Info.Printf("Added membership to group %s for user %s by inviter %s\n", newGroupMembership.GroupID, newGroupMembership.Username, newGroupMembership.InviterUsername)
+	Info.Printf("Added membership to group %s for user %s\n", newGroupMembership.GroupID, newGroupMembership.Username)
 
 	c.IndentedJSON(http.StatusCreated, newGroupMembership)
 }

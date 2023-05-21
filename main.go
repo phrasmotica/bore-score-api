@@ -29,9 +29,21 @@ func main() {
 	groups := router.Group("/groups")
 	{
 		groups.GET("", auth.TokenAuth(true), routes.GetGroups)
-		groups.GET("/:name", auth.TokenAuth(true), routes.GetGroup)
+
+		groups.GET("/:groupId", auth.TokenAuth(true), routes.GetGroup)
+		groups.GET("/:groupId/invitations", auth.TokenAuth(false), routes.GetGroupInvitationsForGroup)
+
 		groups.POST("", auth.TokenAuth(false), routes.PostGroup)
-		groups.DELETE("/:name", routes.DeleteGroup)
+
+		groups.DELETE("/:groupId", auth.TokenAuth(false), routes.DeleteGroup)
+	}
+
+	groupInvitations := router.Group("/invitations").Use(auth.TokenAuth(false))
+	{
+		groupInvitations.GET("/:invitationId", routes.GetGroupInvitation)
+		groupInvitations.POST("/:invitationId/accept", routes.AcceptGroupInvitation)
+		groupInvitations.POST("/:invitationId/decline", routes.DeclineGroupInvitation)
+		groupInvitations.POST("", routes.AddGroupInvitation)
 	}
 
 	groupMemberships := router.Group("/memberships").Use(auth.TokenAuth(false))
@@ -75,6 +87,9 @@ func main() {
 	users := router.Group("/users")
 	{
 		users.GET("/:username", auth.TokenAuth(true), routes.GetUser)
+		users.GET("/:username/invitations", auth.TokenAuth(false), routes.GetGroupInvitationsForUser)
+		users.GET("/:username/results", auth.TokenAuth(false), routes.GetResultsForUser)
+
 		users.POST("", routes.RegisterUser)
 	}
 

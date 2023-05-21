@@ -7,10 +7,13 @@ import (
 	"log"
 	"os"
 	"phrasmotica/bore-score-api/models"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/data/aztables"
+	"github.com/google/uuid"
+	"golang.org/x/exp/slices"
 )
 
 type TableStorageDatabase struct {
@@ -204,12 +207,12 @@ func (d *TableStorageDatabase) AddGroup(ctx context.Context, newGroup *models.Gr
 			RowKey:       newGroup.ID,
 		},
 		Properties: map[string]interface{}{
-			"Name":           newGroup.Name,
 			"TimeCreated":    aztables.EDMInt64(newGroup.TimeCreated),
 			"DisplayName":    newGroup.DisplayName,
 			"Description":    newGroup.Description,
 			"ProfilePicture": newGroup.ProfilePicture,
 			"Visibility":     string(newGroup.Visibility),
+			"CreatedBy":      newGroup.CreatedBy,
 		},
 	}
 
@@ -229,8 +232,8 @@ func (d *TableStorageDatabase) AddGroup(ctx context.Context, newGroup *models.Gr
 }
 
 // DeleteGroup implements IDatabase
-func (d *TableStorageDatabase) DeleteGroup(ctx context.Context, name string) bool {
-	group := d.findGroupByName(ctx, name)
+func (d *TableStorageDatabase) DeleteGroup(ctx context.Context, id string) bool {
+	group := d.findGroup(ctx, id)
 	if group == nil {
 		return false
 	}
@@ -238,6 +241,119 @@ func (d *TableStorageDatabase) DeleteGroup(ctx context.Context, name string) boo
 	_, err := d.Client.NewClient("Groups").DeleteEntity(ctx, group.PartitionKey, group.RowKey, nil)
 	if err != nil {
 		Error.Println(err)
+		return false
+	}
+
+	return true
+}
+
+// GetGroupInvitation implements IDatabase
+func (d *TableStorageDatabase) GetGroupInvitation(ctx context.Context, invitationId string) (bool, *models.GroupInvitation) {
+	result := d.findGroupInvitation(ctx, invitationId)
+	if result == nil {
+		return false, nil
+	}
+
+	invitation := createGroupInvitation(result)
+	return true, &invitation
+}
+
+// GetGroupInvitations implements IDatabase
+func (d *TableStorageDatabase) GetGroupInvitations(ctx context.Context, username string) (bool, []models.GroupInvitation) {
+	if !d.UserExists(ctx, username) {
+		return false, []models.GroupInvitation{}
+	}
+
+	invitations := list(ctx, d.Client, "GroupInvitations", createGroupInvitation, &aztables.ListEntitiesOptions{
+		Filter: to.Ptr(fmt.Sprintf("Username eq '%s'", username)),
+	})
+
+	return true, invitations
+}
+
+// GetGroupInvitationsForGroup implements IDatabase
+func (d *TableStorageDatabase) GetGroupInvitationsForGroup(ctx context.Context, groupId string) (bool, []models.GroupInvitation) {
+	success, group := d.GetGroup(ctx, groupId)
+	if !success {
+		return false, []models.GroupInvitation{}
+	}
+
+	invitations := list(ctx, d.Client, "GroupInvitations", createGroupInvitation, &aztables.ListEntitiesOptions{
+		Filter: to.Ptr(fmt.Sprintf("GroupID eq '%s'", group.ID)),
+	})
+
+	return true, invitations
+}
+
+// IsInvitedToGroup implements IDatabase
+func (d *TableStorageDatabase) IsInvitedToGroup(ctx context.Context, groupId string, username string) bool {
+	success, invitations := d.GetGroupInvitations(ctx, username)
+
+	return success && slices.ContainsFunc(invitations, func(i models.GroupInvitation) bool {
+		return i.GroupID == groupId && i.Username == username
+	})
+}
+
+// AddGroupInvitation implements IDatabase
+func (d *TableStorageDatabase) AddGroupInvitation(ctx context.Context, newGroupInvitation *models.GroupInvitation) bool {
+	newGroupInvitation.ID = uuid.NewString()
+	newGroupInvitation.TimeCreated = time.Now().UTC().Unix()
+	newGroupInvitation.InvitationStatus = models.Sent
+
+	entity := aztables.EDMEntity{
+		Entity: aztables.Entity{
+			PartitionKey: newGroupInvitation.GroupID,
+			RowKey:       newGroupInvitation.ID,
+		},
+		Properties: map[string]interface{}{
+			"GroupID":          newGroupInvitation.GroupID,
+			"TimeCreated":      aztables.EDMInt64(newGroupInvitation.TimeCreated),
+			"Username":         newGroupInvitation.Username,
+			"InviterUsername":  newGroupInvitation.InviterUsername,
+			"InvitationStatus": string(newGroupInvitation.InvitationStatus),
+		},
+	}
+
+	marshalled, err := json.Marshal(entity)
+	if err != nil {
+		Error.Println(err)
+		return false
+	}
+
+	_, addErr := d.Client.NewClient("GroupInvitations").AddEntity(ctx, marshalled, nil)
+	if addErr != nil {
+		Error.Println(addErr)
+		return false
+	}
+
+	return true
+}
+
+// UpdateGroupInvitation implements IDatabase
+func (d *TableStorageDatabase) UpdateGroupInvitation(ctx context.Context, newGroupInvitation *models.GroupInvitation) bool {
+	entity := aztables.EDMEntity{
+		Entity: aztables.Entity{
+			PartitionKey: newGroupInvitation.GroupID,
+			RowKey:       newGroupInvitation.ID,
+		},
+		Properties: map[string]interface{}{
+			"GroupID":          newGroupInvitation.GroupID,
+			"TimeCreated":      aztables.EDMInt64(newGroupInvitation.TimeCreated),
+			"Username":         newGroupInvitation.Username,
+			"InviterUsername":  newGroupInvitation.InviterUsername,
+			"InvitationStatus": string(newGroupInvitation.InvitationStatus),
+		},
+	}
+
+	marshalled, err := json.Marshal(entity)
+	if err != nil {
+		Error.Println(err)
+		return false
+	}
+
+	_, addErr := d.Client.NewClient("GroupInvitations").UpdateEntity(ctx, marshalled, nil)
+	if addErr != nil {
+		Error.Println(addErr)
 		return false
 	}
 
@@ -258,8 +374,8 @@ func (d *TableStorageDatabase) GetGroupMemberships(ctx context.Context, username
 }
 
 // GetGroupMembershipsForGroup implements IDatabase
-func (d *TableStorageDatabase) GetGroupMembershipsForGroup(ctx context.Context, groupName string) (bool, []models.GroupMembership) {
-	success, group := d.GetGroupByName(ctx, groupName)
+func (d *TableStorageDatabase) GetGroupMembershipsForGroup(ctx context.Context, groupId string) (bool, []models.GroupMembership) {
+	success, group := d.GetGroup(ctx, groupId)
 	if !success {
 		return false, []models.GroupMembership{}
 	}
@@ -290,16 +406,19 @@ func (d *TableStorageDatabase) IsInGroup(ctx context.Context, groupId string, us
 
 // AddGroupMembership implements IDatabase
 func (d *TableStorageDatabase) AddGroupMembership(ctx context.Context, newGroupMembership *models.GroupMembership) bool {
+	newGroupMembership.ID = uuid.NewString()
+	newGroupMembership.TimeCreated = time.Now().UTC().Unix()
+
 	entity := aztables.EDMEntity{
 		Entity: aztables.Entity{
 			PartitionKey: newGroupMembership.GroupID,
 			RowKey:       newGroupMembership.ID,
 		},
 		Properties: map[string]interface{}{
-			"GroupID":         newGroupMembership.GroupID,
-			"TimeCreated":     aztables.EDMInt64(newGroupMembership.TimeCreated),
-			"Username":        newGroupMembership.Username,
-			"InviterUsername": newGroupMembership.InviterUsername,
+			"GroupID":      newGroupMembership.GroupID,
+			"TimeCreated":  aztables.EDMInt64(newGroupMembership.TimeCreated),
+			"Username":     newGroupMembership.Username,
+			"InvitationID": newGroupMembership.InvitationID,
 		},
 	}
 
@@ -330,13 +449,13 @@ func (d *TableStorageDatabase) GetAllPlayers(ctx context.Context) (bool, []model
 }
 
 // GetPlayersInGroup implements IDatabase
-func (d *TableStorageDatabase) GetPlayersInGroup(ctx context.Context, groupName string) (bool, []models.Player) {
+func (d *TableStorageDatabase) GetPlayersInGroup(ctx context.Context, groupId string) (bool, []models.Player) {
 	success, players := d.GetAllPlayers(ctx)
 	if !success {
 		return false, []models.Player{}
 	}
 
-	success, memberships := d.GetGroupMembershipsForGroup(ctx, groupName)
+	success, memberships := d.GetGroupMembershipsForGroup(ctx, groupId)
 	if !success {
 		return false, []models.Player{}
 	}
@@ -425,9 +544,9 @@ func (d *TableStorageDatabase) GetAllResults(ctx context.Context) (bool, []model
 }
 
 // GetResultsForGroup implements IDatabase
-func (d *TableStorageDatabase) GetResultsForGroup(ctx context.Context, groupName string) (bool, []models.Result) {
+func (d *TableStorageDatabase) GetResultsForGroup(ctx context.Context, groupId string) (bool, []models.Result) {
 	results := list(ctx, d.Client, "Results", createResult, &aztables.ListEntitiesOptions{
-		Filter: to.Ptr(fmt.Sprintf("GroupName eq '%s'", groupName)),
+		Filter: to.Ptr(fmt.Sprintf("GroupID eq '%s'", groupId)),
 	})
 	return true, results
 }
@@ -491,7 +610,7 @@ func (d *TableStorageDatabase) AddResult(ctx context.Context, newResult *models.
 		},
 		Properties: map[string]interface{}{
 			"GameName":         newResult.GameName,
-			"GroupName":        newResult.GroupName,
+			"GroupID":          newResult.GroupID,
 			"TimeCreated":      aztables.EDMInt64(newResult.TimeCreated),
 			"TimePlayed":       aztables.EDMInt64(newResult.TimePlayed),
 			"Notes":            newResult.Notes,
@@ -743,6 +862,20 @@ func (d *TableStorageDatabase) findGroupByName(ctx context.Context, name string)
 	return nil
 }
 
+func (d *TableStorageDatabase) findGroupInvitation(ctx context.Context, id string) *aztables.EDMEntity {
+	client := d.Client.NewClient("GroupInvitations")
+
+	entities := listEntities(ctx, client, &aztables.ListEntitiesOptions{
+		Filter: to.Ptr(fmt.Sprintf("RowKey eq '%s'", id)),
+	})
+
+	if len(entities) == 1 {
+		return &entities[0]
+	}
+
+	return nil
+}
+
 func (d *TableStorageDatabase) findPlayer(ctx context.Context, username string) *aztables.EDMEntity {
 	client := d.Client.NewClient("Players")
 
@@ -813,6 +946,7 @@ func list[T interface{}](ctx context.Context, client *aztables.ServiceClient, ta
 func listEntities(ctx context.Context, client *aztables.Client, options *aztables.ListEntitiesOptions) []aztables.EDMEntity {
 	var entities = make([]aztables.EDMEntity, 0)
 
+	// TODO: don't do this if it already exists
 	client.CreateTable(ctx, nil)
 
 	pager := client.NewListEntitiesPager(options)
@@ -885,7 +1019,6 @@ func createLinks(entity *aztables.EDMEntity) []models.Link {
 func createGroup(entity *aztables.EDMEntity) models.Group {
 	return models.Group{
 		ID:             entity.RowKey,
-		Name:           propString(entity, "Name"),
 		TimeCreated:    propInt64(entity, "TimeCreated"),
 		DisplayName:    propString(entity, "DisplayName"),
 		Description:    propString(entity, "Description"),
@@ -895,12 +1028,24 @@ func createGroup(entity *aztables.EDMEntity) models.Group {
 	}
 }
 
+func createGroupInvitation(entity *aztables.EDMEntity) models.GroupInvitation {
+	return models.GroupInvitation{
+		ID:               entity.RowKey,
+		GroupID:          propString(entity, "GroupID"),
+		TimeCreated:      propInt64(entity, "TimeCreated"),
+		Username:         propString(entity, "Username"),
+		InviterUsername:  propString(entity, "InviterUsername"),
+		InvitationStatus: models.InvitationStatus(propString(entity, "InvitationStatus")),
+	}
+}
+
 func createGroupMembership(entity *aztables.EDMEntity) models.GroupMembership {
 	return models.GroupMembership{
-		ID:          entity.RowKey,
-		GroupID:     propString(entity, "GroupID"),
-		TimeCreated: propInt64(entity, "TimeCreated"),
-		Username:    propString(entity, "Username"),
+		ID:           entity.RowKey,
+		GroupID:      propString(entity, "GroupID"),
+		TimeCreated:  propInt64(entity, "TimeCreated"),
+		Username:     propString(entity, "Username"),
+		InvitationID: propString(entity, "InvitationID"),
 	}
 }
 
@@ -927,7 +1072,7 @@ func createResult(entity *aztables.EDMEntity) models.Result {
 	return models.Result{
 		ID:               entity.RowKey,
 		GameName:         propString(entity, "GameName"),
-		GroupName:        propString(entity, "GroupName"),
+		GroupID:          propString(entity, "GroupID"),
 		TimeCreated:      propInt64(entity, "TimeCreated"),
 		TimePlayed:       propInt64(entity, "TimePlayed"),
 		Notes:            propString(entity, "Notes"),

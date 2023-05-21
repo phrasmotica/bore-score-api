@@ -13,18 +13,48 @@ type MongoDatabase struct {
 	Database *mongo.Database
 }
 
+// IsInvitedToGroup implements IDatabase
+func (*MongoDatabase) IsInvitedToGroup(ctx context.Context, groupId string, username string) bool {
+	panic("unimplemented")
+}
+
+// UpdateGroupInvitation implements IDatabase
+func (*MongoDatabase) UpdateGroupInvitation(ctx context.Context, newGroupInvitation *models.GroupInvitation) bool {
+	panic("unimplemented")
+}
+
+// GetGroupInvitation implements IDatabase
+func (*MongoDatabase) GetGroupInvitation(ctx context.Context, invitationId string) (bool, *models.GroupInvitation) {
+	panic("unimplemented")
+}
+
+// AddGroupInvitation implements IDatabase
+func (*MongoDatabase) AddGroupInvitation(ctx context.Context, newGroupInvitation *models.GroupInvitation) bool {
+	panic("unimplemented")
+}
+
+// GetGroupInvitations implements IDatabase
+func (*MongoDatabase) GetGroupInvitations(ctx context.Context, username string) (bool, []models.GroupInvitation) {
+	panic("unimplemented")
+}
+
+// GetGroupInvitationsForGroup implements IDatabase
+func (*MongoDatabase) GetGroupInvitationsForGroup(ctx context.Context, groupId string) (bool, []models.GroupInvitation) {
+	panic("unimplemented")
+}
+
 // GetResultsForGroup implements IDatabase
-func (*MongoDatabase) GetResultsForGroup(ctx context.Context, groupName string) (bool, []models.Result) {
+func (*MongoDatabase) GetResultsForGroup(ctx context.Context, groupId string) (bool, []models.Result) {
 	panic("unimplemented")
 }
 
 // GetGroupMembershipsForGroup implements IDatabase
-func (*MongoDatabase) GetGroupMembershipsForGroup(ctx context.Context, groupName string) (bool, []models.GroupMembership) {
+func (*MongoDatabase) GetGroupMembershipsForGroup(ctx context.Context, groupId string) (bool, []models.GroupMembership) {
 	panic("unimplemented")
 }
 
 // GetPlayersInGroup implements IDatabase
-func (*MongoDatabase) GetPlayersInGroup(ctx context.Context, groupName string) (bool, []models.Player) {
+func (*MongoDatabase) GetPlayersInGroup(ctx context.Context, groupId string) (bool, []models.Player) {
 	panic("unimplemented")
 }
 
