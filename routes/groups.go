@@ -11,6 +11,17 @@ import (
 	"github.com/google/uuid"
 )
 
+type GroupResponse struct {
+	ID             string                     `json:"id" bson:"id"`
+	TimeCreated    int64                      `json:"timeCreated" bson:"timeCreated"`
+	DisplayName    string                     `json:"displayName" bson:"displayName"`
+	Description    string                     `json:"description" bson:"description"`
+	ProfilePicture string                     `json:"profilePicture" bson:"profilePicture"`
+	CreatedBy      string                     `json:"createdBy" bson:"createdBy"`
+	Visibility     models.GroupVisibilityName `json:"visibility" bson:"visibility"`
+	MemberCount    int                        `json:"memberCount" bson:"memberCount"`
+}
+
 func GetGroups(c *gin.Context) {
 	getAll := c.Query("all") == strconv.Itoa(1)
 
@@ -31,13 +42,13 @@ func GetGroups(c *gin.Context) {
 		return
 	}
 
-	filteredGroups := []models.Group{}
+	filteredGroups := []GroupResponse{}
 
 	for _, g := range groups {
 		callingUsername := c.GetString("username")
 
 		if canSeeGroup(ctx, &g, callingUsername, true) {
-			filteredGroups = append(filteredGroups, g)
+			filteredGroups = append(filteredGroups, createGroupResponse(ctx, &g))
 		}
 	}
 
@@ -75,9 +86,11 @@ func GetGroup(c *gin.Context) {
 		}
 	}
 
-	Info.Printf("Got group %s\n", groupId)
+	groupResponse := createGroupResponse(ctx, group)
 
-	c.IndentedJSON(http.StatusOK, group)
+	Info.Printf("Got group %s\n", groupResponse.ID)
+
+	c.IndentedJSON(http.StatusOK, groupResponse)
 }
 
 func PostGroup(c *gin.Context) {
@@ -166,8 +179,32 @@ func DeleteGroup(c *gin.Context) {
 	c.IndentedJSON(http.StatusNoContent, gin.H{})
 }
 
+func createGroupResponse(ctx context.Context, group *models.Group) GroupResponse {
+	memberCount := computeMemberCount(ctx, group)
+
+	return GroupResponse{
+		ID:             group.ID,
+		TimeCreated:    group.TimeCreated,
+		DisplayName:    group.DisplayName,
+		Description:    group.Description,
+		ProfilePicture: group.ProfilePicture,
+		CreatedBy:      group.CreatedBy,
+		Visibility:     group.Visibility,
+		MemberCount:    memberCount,
+	}
+}
+
 func canSeeGroup(ctx context.Context, group *models.Group, callingUsername string, allowInvitees bool) bool {
 	return (group.Visibility != models.Private ||
 		db.IsInGroup(ctx, group.ID, callingUsername) ||
 		(allowInvitees && db.IsInvitedToGroup(ctx, group.ID, callingUsername)))
+}
+
+func computeMemberCount(ctx context.Context, group *models.Group) int {
+	success, members := db.GetPlayersInGroup(ctx, group.ID)
+	if !success {
+		return 0
+	}
+
+	return len(members)
 }
