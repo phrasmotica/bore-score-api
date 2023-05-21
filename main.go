@@ -87,7 +87,9 @@ func main() {
 	users := router.Group("/users")
 	{
 		users.GET("/:username", auth.TokenAuth(true), routes.GetUser)
-		users.GET("/:username/invitations", auth.TokenAuth(false), routes.GetGroupInvitations)
+		users.GET("/:username/invitations", auth.TokenAuth(false), routes.GetGroupInvitationsForUser)
+		users.GET("/:username/results", auth.TokenAuth(false), routes.GetResultsForUser)
+
 		users.POST("", routes.RegisterUser)
 	}
 

@@ -9,6 +9,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// TODO: move error messages from response bodies to logging calls
+
 func GetGroupInvitation(c *gin.Context) {
 	invitationId := c.Param("invitationId")
 
@@ -33,7 +35,7 @@ func GetGroupInvitation(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, invitation)
 }
 
-func GetGroupInvitations(c *gin.Context) {
+func GetGroupInvitationsForUser(c *gin.Context) {
 	username := c.Param("username")
 	callingUsername := c.GetString("username")
 

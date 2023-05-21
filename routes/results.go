@@ -26,7 +26,6 @@ type ResultResponse struct {
 }
 
 func GetResults(c *gin.Context) {
-	username := c.Query("username")
 	groupId := c.Query("group")
 
 	callingUsername := c.GetString("username")
@@ -36,10 +35,7 @@ func GetResults(c *gin.Context) {
 
 	ctx := context.TODO()
 
-	if len(username) > 0 {
-		// TODO: move this to a new endpoint /users/{userId}/results
-		success, results = db.GetResultsWithPlayer(ctx, username)
-	} else if len(groupId) > 0 {
+	if len(groupId) > 0 {
 		// TODO: move this to a new endpoint /groups/{groupId}/results
 		groupSuccess, group := db.GetGroup(ctx, groupId)
 
@@ -66,26 +62,33 @@ func GetResults(c *gin.Context) {
 		return
 	}
 
-	filteredResults := []ResultResponse{}
+	filteredResults := filterResults(ctx, results, callingUsername)
 
-	for _, r := range results {
-		if canSeeResult(ctx, r, callingUsername) {
-			approvalStatus := computeOverallApproval(ctx, db, r)
+	Info.Printf("Got %d results\n", len(filteredResults))
 
-			filteredResults = append(filteredResults, ResultResponse{
-				ID:               r.ID,
-				GameName:         r.GameName,
-				GroupID:          r.GroupID,
-				TimeCreated:      r.TimeCreated,
-				TimePlayed:       r.TimePlayed,
-				Notes:            r.Notes,
-				CooperativeScore: r.CooperativeScore,
-				CooperativeWin:   r.CooperativeWin,
-				Scores:           r.Scores,
-				ApprovalStatus:   approvalStatus,
-			})
-		}
+	c.IndentedJSON(http.StatusOK, filteredResults)
+}
+
+func GetResultsForUser(c *gin.Context) {
+	username := c.Param("username")
+	callingUsername := c.GetString("username")
+
+	if username != callingUsername {
+		Error.Println("Cannot see results for another user")
+		c.IndentedJSON(http.StatusUnauthorized, gin.H{})
+		return
 	}
+
+	ctx := context.TODO()
+
+	success, results := db.GetResultsWithPlayer(ctx, username)
+	if !success {
+		Error.Printf("Could not get results for user %s\n", username)
+		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{})
+		return
+	}
+
+	filteredResults := filterResults(ctx, results, callingUsername)
 
 	Info.Printf("Got %d results\n", len(filteredResults))
 
@@ -157,6 +160,31 @@ func validateNewResult(result *models.Result) (bool, string) {
 	}
 
 	return true, ""
+}
+
+func filterResults(ctx context.Context, results []models.Result, username string) []ResultResponse {
+	filteredResults := []ResultResponse{}
+
+	for _, r := range results {
+		if canSeeResult(ctx, r, username) {
+			approvalStatus := computeOverallApproval(ctx, db, r)
+
+			filteredResults = append(filteredResults, ResultResponse{
+				ID:               r.ID,
+				GameName:         r.GameName,
+				GroupID:          r.GroupID,
+				TimeCreated:      r.TimeCreated,
+				TimePlayed:       r.TimePlayed,
+				Notes:            r.Notes,
+				CooperativeScore: r.CooperativeScore,
+				CooperativeWin:   r.CooperativeWin,
+				Scores:           r.Scores,
+				ApprovalStatus:   approvalStatus,
+			})
+		}
+	}
+
+	return filteredResults
 }
 
 func canSeeResult(ctx context.Context, r models.Result, callingUsername string) bool {
