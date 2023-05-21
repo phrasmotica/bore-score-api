@@ -2,15 +2,38 @@ package main
 
 import (
 	"phrasmotica/bore-score-api/auth"
+	docs "phrasmotica/bore-score-api/docs/borescoreapi"
 	"phrasmotica/bore-score-api/routes"
 
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
+// adapted from https://levelup.gitconnected.com/tutorial-generate-swagger-specification-and-swaggerui-for-gin-go-web-framework-9f0c038483b5, https://github.com/swaggo/gin-swagger
+
+// @title BoreScore API
+// @version 0.1.0
+// @description This is the BoreScore API.
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+// @contact.url http://www.swagger.io/support
+// @contact.email support@swagger.io
+
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host localhost:8000
+// @BasePath /
+// @schemes http
 func main() {
 	router := gin.Default()
 
 	router.Use(auth.CORSMiddleware())
+
+	docs.SwaggerInfo.BasePath = "/"
+	router.GET("/swagger/index.html", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	approvals := router.Group("/approvals", auth.TokenAuth(false))
 	{
