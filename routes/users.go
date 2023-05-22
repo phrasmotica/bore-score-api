@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"net/http"
 	"phrasmotica/bore-score-api/models"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type UserResponse struct {
@@ -64,6 +66,8 @@ func RegisterUser(c *gin.Context) {
 		return
 	}
 
+	prime(&newUser)
+
 	success := db.AddUser(ctx, &newUser)
 	if !success {
 		Error.Printf("Could not add user %s\n", newUser.Username)
@@ -73,4 +77,10 @@ func RegisterUser(c *gin.Context) {
 	}
 
 	c.IndentedJSON(http.StatusCreated, gin.H{"email": newUser.Email, "username": newUser.Username})
+}
+
+// Primes the user object so that it's ready for database insertion.
+func prime(user *models.User) {
+	user.ID = uuid.NewString()
+	user.TimeCreated = time.Now().UTC().Unix()
 }
