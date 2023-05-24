@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"phrasmotica/bore-score-api/models"
+	"strings"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
@@ -1091,13 +1092,13 @@ func createScores(entity *aztables.EDMEntity) []models.PlayerScore {
 }
 
 func createUser(entity *aztables.EDMEntity) models.User {
-	// don't transmit password!
 	return models.User{
 		ID:          entity.RowKey,
 		Username:    propString(entity, "Username"),
 		TimeCreated: propInt64(entity, "TimeCreated"),
 		Email:       propString(entity, "Email"),
 		Password:    propString(entity, "Password"),
+		Permissions: strings.Split(propString(entity, "Permissions"), ";"),
 	}
 }
 

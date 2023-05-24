@@ -81,4 +81,5 @@ func RegisterUser(c *gin.Context) {
 func prime(user *models.User) {
 	user.ID = uuid.NewString()
 	user.TimeCreated = time.Now().UTC().Unix()
+	user.Permissions = []string{}
 }
