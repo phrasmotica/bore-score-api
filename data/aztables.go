@@ -394,14 +394,9 @@ func (d *TableStorageDatabase) IsInGroup(ctx context.Context, groupId string, us
 		return false
 	}
 
-	for _, m := range memberships {
-		// TODO: use slices.ContainsFunc(...) to check
-		if m.GroupID == groupId && m.Username == username {
-			return true
-		}
-	}
-
-	return false
+	return success && slices.ContainsFunc(memberships, func(m models.GroupMembership) bool {
+		return m.GroupID == groupId && m.Username == username
+	})
 }
 
 // AddGroupMembership implements IDatabase
@@ -463,11 +458,13 @@ func (d *TableStorageDatabase) GetPlayersInGroup(ctx context.Context, groupId st
 	playersInGroup := []models.Player{}
 
 	for _, m := range memberships {
-		// TODO: use slices.ContainsFunc(...) to check
-		for _, p := range players {
-			if p.Username == m.Username {
-				playersInGroup = append(playersInGroup, p)
-			}
+		// returns the index of the player with this membership
+		playerIndex := slices.IndexFunc(players, func(p models.Player) bool {
+			return p.Username == m.Username
+		})
+
+		if playerIndex >= 0 {
+			playersInGroup = append(playersInGroup, players[playerIndex])
 		}
 	}
 

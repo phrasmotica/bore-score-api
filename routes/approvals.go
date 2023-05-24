@@ -6,6 +6,7 @@ import (
 	"phrasmotica/bore-score-api/models"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/exp/slices"
 )
 
 func GetApprovals(c *gin.Context) {
@@ -62,14 +63,9 @@ func PostApproval(c *gin.Context) {
 		return
 	}
 
-	isInResult := false
-
-	for _, score := range result.Scores {
-		// TODO: use slices.ContainsFunc(...) to check
-		if newApproval.Username == score.Username {
-			isInResult = true
-		}
-	}
+	isInResult := slices.ContainsFunc(result.Scores, func(s models.PlayerScore) bool {
+		return newApproval.Username == s.Username
+	})
 
 	if !isInResult {
 		Error.Printf("Player %s does not have a score in result %s", newApproval.Username, result.ID)
