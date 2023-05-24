@@ -3,6 +3,7 @@ package auth
 import (
 	"errors"
 	"os"
+	"phrasmotica/bore-score-api/models"
 	"time"
 
 	"github.com/golang-jwt/jwt"
@@ -11,19 +12,21 @@ import (
 var jwtKey = []byte(os.Getenv("JWT_SECRET_KEY"))
 
 type JWTClaim struct {
-	Username string `json:"username"`
-	Email    string `json:"email"`
+	Username    string   `json:"username"`
+	Email       string   `json:"email"`
+	Permissions []string `json:"permissions"`
 	jwt.StandardClaims
 }
 
 const tokenLifetime = 1 * time.Hour
 
-func GenerateJWT(email string, username string) (tokenString string, err error) {
+func GenerateJWT(user *models.User) (tokenString string, err error) {
 	expirationTime := time.Now().Add(tokenLifetime)
 
 	claims := &JWTClaim{
-		Email:    email,
-		Username: username,
+		Email:       user.Email,
+		Username:    user.Username,
+		Permissions: user.Permissions,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),
 		},

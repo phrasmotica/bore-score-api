@@ -38,7 +38,7 @@ func GenerateToken(c *gin.Context) {
 		return
 	}
 
-	tokenString, err := auth.GenerateJWT(user.Email, user.Username)
+	tokenString, err := auth.GenerateJWT(user)
 	if err != nil {
 		Error.Printf("Could not generate token for user with email %s\n", user.Email)
 		c.AbortWithError(http.StatusInternalServerError, err)
