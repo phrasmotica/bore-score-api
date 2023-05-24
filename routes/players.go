@@ -2,7 +2,6 @@ package routes
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"phrasmotica/bore-score-api/models"
 
@@ -13,7 +12,7 @@ func GetPlayers(c *gin.Context) {
 	success, players := db.GetAllPlayers(context.TODO())
 	if !success {
 		Error.Println("Could not get players")
-		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{})
+		c.AbortWithStatus(http.StatusServiceUnavailable)
 		return
 	}
 
@@ -30,7 +29,7 @@ func GetPlayersInGroup(c *gin.Context) {
 	groupSuccess, group := db.GetGroup(ctx, groupId)
 	if !groupSuccess {
 		Error.Printf("Group %s does not exist\n", groupId)
-		c.IndentedJSON(http.StatusNotFound, gin.H{})
+		c.AbortWithStatus(http.StatusNotFound)
 		return
 	}
 
@@ -38,14 +37,14 @@ func GetPlayersInGroup(c *gin.Context) {
 
 	if !canSeeGroup(ctx, group, callingUsername, false) {
 		Error.Printf("User %s cannot see results for group %s\n", callingUsername, group.ID)
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{})
+		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
 
 	success, players := db.GetPlayersInGroup(ctx, group.ID)
 	if !success {
 		Error.Printf("Could not get players in group %s\n", group.ID)
-		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{})
+		c.AbortWithStatus(http.StatusServiceUnavailable)
 		return
 	}
 
@@ -61,7 +60,7 @@ func GetPlayer(c *gin.Context) {
 
 	if !success {
 		Error.Printf("Player %s does not exist\n", username)
-		c.IndentedJSON(http.StatusNotFound, gin.H{})
+		c.AbortWithStatus(http.StatusNotFound)
 		return
 	}
 
@@ -76,24 +75,27 @@ func PostPlayer(c *gin.Context) {
 	ctx := context.TODO()
 
 	if err := c.BindJSON(&newPlayer); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "invalid body format"})
+		Error.Println("Invalid body format")
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
 	if success, err := validateNewPlayer(&newPlayer); !success {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": err})
+		Error.Printf("Error validating new player %s: %s\n", newPlayer.DisplayName, err)
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
 	if db.PlayerExists(ctx, newPlayer.Username) {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("player %s already exists", newPlayer.Username)})
+		Error.Printf("Player %s already exists", newPlayer.Username)
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
 	success := db.AddPlayer(ctx, &newPlayer)
 	if !success {
 		Error.Printf("Could not add player %s\n", newPlayer.Username)
-		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
+		c.AbortWithStatus(http.StatusServiceUnavailable)
 		return
 	}
 
@@ -120,14 +122,15 @@ func DeletePlayer(c *gin.Context) {
 	ctx := context.TODO()
 
 	if !db.PlayerExists(ctx, username) {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("player %s does not exist", username)})
+		Error.Printf("Player %s does not exist\n", username)
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
 	success, scrubbedCount := db.ScrubResultsWithPlayer(ctx, username)
 	if !success {
 		Error.Printf("Could not scrub player %s from results\n", username)
-		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
+		c.AbortWithStatus(http.StatusServiceUnavailable)
 		return
 	}
 
@@ -135,11 +138,11 @@ func DeletePlayer(c *gin.Context) {
 
 	if success := db.DeletePlayer(ctx, username); !success {
 		Error.Printf("Could not delete player %s\n", username)
-		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
+		c.AbortWithStatus(http.StatusServiceUnavailable)
 		return
 	}
 
 	Info.Printf("Deleted player %s\n", username)
 
-	c.IndentedJSON(http.StatusNoContent, gin.H{})
+	c.IndentedJSON(http.StatusNoContent, nil)
 }

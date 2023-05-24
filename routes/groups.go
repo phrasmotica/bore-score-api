@@ -38,7 +38,7 @@ func GetGroups(c *gin.Context) {
 
 	if !success {
 		Error.Println("Could not get groups")
-		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
+		c.AbortWithStatus(http.StatusServiceUnavailable)
 		return
 	}
 
@@ -66,7 +66,7 @@ func GetGroup(c *gin.Context) {
 
 	if !success {
 		Error.Printf("Group %s not found\n", groupId)
-		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "group not found"})
+		c.AbortWithStatus(http.StatusNotFound)
 		return
 	}
 
@@ -78,7 +78,7 @@ func GetGroup(c *gin.Context) {
 		if !db.IsInGroup(ctx, group.ID, callingUsername) {
 			if !db.IsInvitedToGroup(ctx, group.ID, callingUsername) {
 				Error.Printf("User %s is not in private group %s\n", callingUsername, groupId)
-				c.IndentedJSON(http.StatusUnauthorized, gin.H{})
+				c.AbortWithStatus(http.StatusUnauthorized)
 				return
 			} else {
 				Info.Printf("User %s is invited to private group %s\n", callingUsername, group.ID)
@@ -99,12 +99,14 @@ func PostGroup(c *gin.Context) {
 	ctx := context.TODO()
 
 	if err := c.BindJSON(&newGroup); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "invalid body format"})
+		Error.Println("Invalid body format")
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
 	if success, err := validateNewGroup(&newGroup); !success {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": err})
+		Error.Printf("Error validating new group %s: %s\n", newGroup.DisplayName, err)
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
@@ -116,7 +118,7 @@ func PostGroup(c *gin.Context) {
 
 	if success := db.AddGroup(ctx, &newGroup); !success {
 		Error.Printf("Could not add group %s\n", newGroup.DisplayName)
-		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
+		c.AbortWithStatus(http.StatusServiceUnavailable)
 		return
 	}
 
@@ -157,26 +159,26 @@ func DeleteGroup(c *gin.Context) {
 	success, group := db.GetGroup(ctx, groupId)
 	if !success {
 		Error.Printf("Group %s does not exist\n", groupId)
-		c.IndentedJSON(http.StatusNotFound, gin.H{})
+		c.AbortWithStatus(http.StatusNotFound)
 		return
 	}
 
 	callingUsername := c.GetString("username")
 	if group.CreatedBy != callingUsername {
 		Error.Println("Cannot delete a group that someone else created")
-		c.IndentedJSON(http.StatusForbidden, gin.H{})
+		c.AbortWithStatus(http.StatusForbidden)
 		return
 	}
 
 	if success := db.DeleteGroup(ctx, group.ID); !success {
 		Error.Printf("Could not delete group %s\n", groupId)
-		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{})
+		c.AbortWithStatus(http.StatusServiceUnavailable)
 		return
 	}
 
 	Info.Printf("Deleted group %s\n", groupId)
 
-	c.IndentedJSON(http.StatusNoContent, gin.H{})
+	c.IndentedJSON(http.StatusNoContent, nil)
 }
 
 func createGroupResponse(ctx context.Context, group *models.Group) GroupResponse {

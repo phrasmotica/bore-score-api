@@ -12,7 +12,7 @@ func GetSummary(c *gin.Context) {
 
 	if !success {
 		Error.Println("Could not get summary")
-		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
+		c.AbortWithStatus(http.StatusServiceUnavailable)
 		return
 	}
 

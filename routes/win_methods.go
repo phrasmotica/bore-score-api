@@ -12,7 +12,7 @@ func GetWinMethods(c *gin.Context) {
 
 	if !success {
 		Error.Println("Could not get win methods")
-		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
+		c.AbortWithStatus(http.StatusServiceUnavailable)
 		return
 	}
 

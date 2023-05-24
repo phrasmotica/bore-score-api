@@ -34,7 +34,7 @@ func GetResults(c *gin.Context) {
 	success, results = db.GetAllResults(ctx)
 	if !success {
 		Error.Println("Could not get results")
-		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
+		c.AbortWithStatus(http.StatusServiceUnavailable)
 		return
 	}
 
@@ -54,7 +54,7 @@ func GetResultsForGroup(c *gin.Context) {
 	groupSuccess, group := db.GetGroup(ctx, groupId)
 	if !groupSuccess {
 		Error.Printf("Group %s does not exist\n", groupId)
-		c.IndentedJSON(http.StatusNotFound, gin.H{})
+		c.AbortWithStatus(http.StatusNotFound)
 		return
 	}
 
@@ -62,14 +62,14 @@ func GetResultsForGroup(c *gin.Context) {
 
 	if !canSeeGroup(ctx, group, callingUsername, false) {
 		Error.Printf("User %s cannot see results for group %s\n", callingUsername, group.ID)
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{})
+		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
 
 	success, results := db.GetResultsForGroup(ctx, groupId)
 	if !success {
 		Error.Printf("Could not get results for group %s\n", groupId)
-		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{})
+		c.AbortWithStatus(http.StatusServiceUnavailable)
 		return
 	}
 
@@ -90,7 +90,7 @@ func GetResultsForUser(c *gin.Context) {
 
 	if username != callingUsername {
 		Error.Println("Cannot see results for another user")
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{})
+		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
 
@@ -99,7 +99,7 @@ func GetResultsForUser(c *gin.Context) {
 	success, results := db.GetResultsWithPlayer(ctx, username)
 	if !success {
 		Error.Printf("Could not get results for user %s\n", username)
-		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{})
+		c.AbortWithStatus(http.StatusServiceUnavailable)
 		return
 	}
 
@@ -114,25 +114,29 @@ func PostResult(c *gin.Context) {
 	var newResult models.Result
 
 	if err := c.BindJSON(&newResult); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "invalid body format"})
+		Error.Println("Invalid body format")
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
 	if success, err := validateNewResult(&newResult); !success {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": err})
+		Error.Printf("Error validating new result %s: %s\n", newResult.ID, err)
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
 	ctx := context.TODO()
 
 	if !db.GameExists(ctx, newResult.GameName) {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("game %s does not exist", newResult.GameName)})
+		Error.Printf("Game %s does not exist\n", newResult.GameName)
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
 	for _, score := range newResult.Scores {
 		if !db.PlayerExists(ctx, score.Username) {
-			c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("player %s does not exist", score.Username)})
+			Error.Printf("Player %s does not exist\n", score.Username)
+			c.AbortWithStatus(http.StatusBadRequest)
 			return
 		}
 	}
@@ -140,15 +144,15 @@ func PostResult(c *gin.Context) {
 	if len(newResult.GroupID) > 0 {
 		success, group := db.GetGroup(ctx, newResult.GroupID)
 		if !success {
-			Error.Printf("Result is attached to non-existent group %s", newResult.GroupID)
-			c.IndentedJSON(http.StatusForbidden, gin.H{})
+			Error.Printf("Group %s does not exist\n", newResult.GroupID)
+			c.AbortWithStatus(http.StatusForbidden)
 			return
 		}
 
 		for _, score := range newResult.Scores {
 			if !db.IsInGroup(ctx, group.ID, score.Username) {
-				Error.Printf("Player %s is not in group %s", score.Username, newResult.GroupID)
-				c.IndentedJSON(http.StatusForbidden, gin.H{})
+				Error.Printf("Player %s is not in group %s\n", score.Username, newResult.GroupID)
+				c.AbortWithStatus(http.StatusForbidden)
 				return
 			}
 		}
@@ -156,7 +160,7 @@ func PostResult(c *gin.Context) {
 
 	if success := db.AddResult(ctx, &newResult); !success {
 		Error.Println("Could not add result")
-		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
+		c.AbortWithStatus(http.StatusServiceUnavailable)
 		return
 	}
 

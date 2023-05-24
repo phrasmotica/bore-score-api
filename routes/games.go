@@ -2,7 +2,6 @@ package routes
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -48,7 +47,7 @@ func GetGames(c *gin.Context) {
 
 	if !success {
 		Error.Println("Could not get games")
-		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
+		c.AbortWithStatus(http.StatusServiceUnavailable)
 		return
 	}
 
@@ -64,7 +63,7 @@ func GetGame(c *gin.Context) {
 
 	if !success {
 		Error.Printf("Game %s does not exist\n", name)
-		c.IndentedJSON(http.StatusNotFound, gin.H{})
+		c.AbortWithStatus(http.StatusNotFound)
 		return
 	}
 
@@ -79,23 +78,26 @@ func PostGame(c *gin.Context) {
 	ctx := context.TODO()
 
 	if err := c.BindJSON(&newGame); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "invalid body format"})
+		Error.Println("Invalid body format")
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
 	if success, err := validateNewGame(&newGame); !success {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": err})
+		Error.Printf("Error validating new game %s: %s\n", newGame.DisplayName, err)
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
 	if db.GameExists(ctx, newGame.Name) {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("game %s already exists", newGame.Name)})
+		Error.Printf("Game %s already exists", newGame.Name)
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
 	if success := db.AddGame(ctx, &newGame); !success {
 		Error.Printf("Could not add game %s\n", newGame.Name)
-		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
+		c.AbortWithStatus(http.StatusServiceUnavailable)
 		return
 	}
 
@@ -134,14 +136,15 @@ func DeleteGame(c *gin.Context) {
 	ctx := context.TODO()
 
 	if !db.GameExists(ctx, name) {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("game %s does not exist", name)})
+		Error.Printf("Game %s does not exist", name)
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
 	success, deletedCount := db.DeleteResultsWithGame(ctx, name)
 	if !success {
 		Error.Printf("Could not delete results for game %s\n", name)
-		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
+		c.AbortWithStatus(http.StatusServiceUnavailable)
 		return
 	}
 
@@ -149,11 +152,11 @@ func DeleteGame(c *gin.Context) {
 
 	if success := db.DeleteGame(ctx, name); !success {
 		Error.Printf("Could not delete game %s\n", name)
-		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
+		c.AbortWithStatus(http.StatusServiceUnavailable)
 		return
 	}
 
 	Info.Printf("Deleted game %s\n", name)
 
-	c.IndentedJSON(http.StatusNoContent, gin.H{})
+	c.IndentedJSON(http.StatusNoContent, nil)
 }

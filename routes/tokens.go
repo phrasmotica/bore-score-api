@@ -18,8 +18,8 @@ func GenerateToken(c *gin.Context) {
 
 	var request TokenRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
-		c.Abort()
+		Error.Println("Invalid body format")
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 
@@ -27,22 +27,21 @@ func GenerateToken(c *gin.Context) {
 	success, user := db.GetUserByEmail(ctx, request.Email)
 	if !success {
 		Error.Printf("Could not get user with email %s\n", request.Email)
-		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
-		c.Abort()
+		c.AbortWithStatus(http.StatusServiceUnavailable)
 		return
 	}
 
 	credentialError := user.CheckPassword(request.Password)
 	if credentialError != nil {
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"message": "invalid credentials"})
-		c.Abort()
+		Error.Println("Invalid password")
+		c.AbortWithError(http.StatusUnauthorized, credentialError)
 		return
 	}
 
 	tokenString, err := auth.GenerateJWT(user.Email, user.Username)
 	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
-		c.Abort()
+		Error.Printf("Could not generate token for user with email %s\n", user.Email)
+		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 
@@ -53,15 +52,16 @@ func GenerateToken(c *gin.Context) {
 
 func RefreshToken(c *gin.Context) {
 	currentToken := c.GetString("token")
+	callingUsername := c.GetString("username")
 
 	tokenString, err := auth.RefreshJWT(currentToken)
 	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
-		c.Abort()
+		Error.Printf("Could not refresh token for user %s\n", callingUsername)
+		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 
-	Info.Printf("Refreshed token for user %s\n", c.GetString("username"))
+	Info.Printf("Refreshed token for user %s\n", callingUsername)
 
 	c.IndentedJSON(http.StatusOK, gin.H{"token": tokenString})
 }

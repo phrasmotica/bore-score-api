@@ -2,7 +2,6 @@ package routes
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"phrasmotica/bore-score-api/models"
 	"time"
@@ -25,7 +24,7 @@ func GetUser(c *gin.Context) {
 
 	if !success {
 		Error.Printf("Could not get user %s\n", username)
-		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
+		c.AbortWithStatus(http.StatusServiceUnavailable)
 		return
 	}
 
@@ -49,20 +48,20 @@ func RegisterUser(c *gin.Context) {
 
 	var newUser models.User
 	if err := c.ShouldBindJSON(&newUser); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
-		c.Abort()
+		Error.Println("Invalid body format")
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 
 	if err := newUser.HashPassword(newUser.Password); err != nil {
-		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": err.Error()})
-		c.Abort()
+		Error.Println("Could not hash password")
+		c.AbortWithError(http.StatusServiceUnavailable, err)
 		return
 	}
 
 	if db.UserExistsByEmail(ctx, newUser.Email) {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("user %s already exists", newUser.Email)})
-		c.Abort()
+		Error.Printf("User %s already exists\n", newUser.Email)
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
@@ -71,8 +70,7 @@ func RegisterUser(c *gin.Context) {
 	success := db.AddUser(ctx, &newUser)
 	if !success {
 		Error.Printf("Could not add user %s\n", newUser.Username)
-		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
-		c.Abort()
+		c.AbortWithStatus(http.StatusServiceUnavailable)
 		return
 	}
 

@@ -1,10 +1,18 @@
 package auth
 
 import (
+	"log"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
+)
+
+// TODO: put these in a more central place, or inject them as dependencies
+var (
+	Info  *log.Logger = log.New(os.Stdout, "INFO: ", log.LstdFlags|log.Lshortfile)
+	Error *log.Logger = log.New(os.Stdout, "ERROR: ", log.LstdFlags|log.Lshortfile)
 )
 
 // taken from https://stackoverflow.com/a/29439630
@@ -34,15 +42,15 @@ func TokenAuth(optional bool) gin.HandlerFunc {
 				return
 			}
 
-			c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "request does not contain an access token"})
-			c.Abort()
+			Error.Println("Request does not contain an access token")
+			c.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
 
 		err, claims := ValidateToken(tokenString)
 		if err != nil {
-			c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-			c.Abort()
+			Error.Println(err.Error())
+			c.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
 

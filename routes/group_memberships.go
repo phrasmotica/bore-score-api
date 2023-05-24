@@ -2,7 +2,6 @@ package routes
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"phrasmotica/bore-score-api/models"
 
@@ -14,14 +13,16 @@ func GetGroupMemberships(c *gin.Context) {
 	callingUsername := c.GetString("username")
 
 	if username != callingUsername {
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"message": "cannot get another user's group memberships"})
+		Error.Println("Cannot get another user's group memberships")
+		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
 
 	ctx := context.TODO()
 
 	if !db.UserExists(ctx, username) {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("user %s does not exist", username)})
+		Error.Printf("User %s does not exist\n", username)
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
@@ -29,7 +30,7 @@ func GetGroupMemberships(c *gin.Context) {
 
 	if !success {
 		Error.Println("Could not get group memberships")
-		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
+		c.AbortWithStatus(http.StatusServiceUnavailable)
 		return
 	}
 
@@ -42,38 +43,41 @@ func AddGroupMembership(c *gin.Context) {
 	var newGroupMembership models.GroupMembership
 
 	if err := c.BindJSON(&newGroupMembership); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "invalid body format"})
+		Error.Println("Invalid body format")
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
 	ctx := context.TODO()
 
 	if !db.UserExists(ctx, newGroupMembership.Username) {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("user %s does not exist", newGroupMembership.Username)})
+		Error.Printf("User %s does not exist\n", newGroupMembership.Username)
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
 	success, group := db.GetGroup(ctx, newGroupMembership.GroupID)
 	if !success {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("group %s does not exist", newGroupMembership.GroupID)})
+		Error.Printf("Group %s does not exist", newGroupMembership.GroupID)
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
 	if group.Visibility == models.Private {
 		Error.Printf("Group %s is private\n", newGroupMembership.GroupID)
-		c.IndentedJSON(http.StatusForbidden, gin.H{})
+		c.AbortWithStatus(http.StatusForbidden)
 		return
 	}
 
 	if db.IsInGroup(ctx, group.ID, newGroupMembership.Username) {
 		Info.Printf("User %s is already in group %s\n", newGroupMembership.Username, newGroupMembership.GroupID)
-		c.IndentedJSON(http.StatusNoContent, gin.H{})
+		c.IndentedJSON(http.StatusNoContent, nil)
 		return
 	}
 
 	if success := db.AddGroupMembership(ctx, &newGroupMembership); !success {
 		Error.Println("Could not add group membership")
-		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
+		c.AbortWithStatus(http.StatusServiceUnavailable)
 		return
 	}
 

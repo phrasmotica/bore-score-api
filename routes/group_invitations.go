@@ -2,14 +2,11 @@ package routes
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"phrasmotica/bore-score-api/models"
 
 	"github.com/gin-gonic/gin"
 )
-
-// TODO: move error messages from response bodies to logging calls
 
 func GetGroupInvitation(c *gin.Context) {
 	invitationId := c.Param("invitationId")
@@ -18,7 +15,7 @@ func GetGroupInvitation(c *gin.Context) {
 
 	if !success {
 		Error.Printf("Group invitation %s does not exist\n", invitationId)
-		c.IndentedJSON(http.StatusNotFound, gin.H{})
+		c.AbortWithStatus(http.StatusNotFound)
 		return
 	}
 
@@ -26,7 +23,7 @@ func GetGroupInvitation(c *gin.Context) {
 
 	if invitation.InviterUsername != callingUsername {
 		Error.Println("Cannot get another user's group invitations")
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{})
+		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
 
@@ -40,14 +37,16 @@ func GetGroupInvitationsForUser(c *gin.Context) {
 	callingUsername := c.GetString("username")
 
 	if username != callingUsername {
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"message": "cannot get another user's group invitations"})
+		Error.Println("Cannot get another user's group invitations")
+		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
 
 	ctx := context.TODO()
 
 	if !db.UserExists(ctx, username) {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("user %s does not exist", username)})
+		Info.Printf("User %s does not exist", username)
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
@@ -55,7 +54,7 @@ func GetGroupInvitationsForUser(c *gin.Context) {
 
 	if !success {
 		Error.Println("Could not get group invitations")
-		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
+		c.AbortWithStatus(http.StatusServiceUnavailable)
 		return
 	}
 
@@ -72,7 +71,7 @@ func GetGroupInvitationsForGroup(c *gin.Context) {
 	success, group := db.GetGroup(ctx, groupId)
 	if !success {
 		Error.Printf("Group %s does not exist\n", groupId)
-		c.IndentedJSON(http.StatusForbidden, gin.H{})
+		c.AbortWithStatus(http.StatusForbidden)
 		return
 	}
 
@@ -80,7 +79,7 @@ func GetGroupInvitationsForGroup(c *gin.Context) {
 
 	if !db.IsInGroup(ctx, group.ID, callingUsername) {
 		Error.Printf("User %s is not in group %s\n", callingUsername, groupId)
-		c.IndentedJSON(http.StatusForbidden, gin.H{})
+		c.AbortWithStatus(http.StatusForbidden)
 		return
 	}
 
@@ -88,7 +87,7 @@ func GetGroupInvitationsForGroup(c *gin.Context) {
 
 	if !success {
 		Error.Printf("Could not get group invitations for group %s\n", groupId)
-		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{})
+		c.AbortWithStatus(http.StatusServiceUnavailable)
 		return
 	}
 
@@ -102,7 +101,7 @@ func AddGroupInvitation(c *gin.Context) {
 
 	if err := c.BindJSON(&newGroupInvitation); err != nil {
 		Error.Println("Invalid body format")
-		c.IndentedJSON(http.StatusBadRequest, gin.H{})
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
@@ -110,38 +109,38 @@ func AddGroupInvitation(c *gin.Context) {
 
 	if !db.UserExists(ctx, newGroupInvitation.Username) {
 		Error.Printf("User %s does not exist\n", newGroupInvitation.Username)
-		c.IndentedJSON(http.StatusBadRequest, gin.H{})
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
 	if !db.UserExists(ctx, newGroupInvitation.InviterUsername) {
 		Error.Printf("User %s does not exist\n", newGroupInvitation.InviterUsername)
-		c.IndentedJSON(http.StatusBadRequest, gin.H{})
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
 	success, group := db.GetGroup(ctx, newGroupInvitation.GroupID)
 	if !success {
 		Error.Printf("Group %s does not exist\n", newGroupInvitation.GroupID)
-		c.IndentedJSON(http.StatusBadRequest, gin.H{})
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
 	if !db.IsInGroup(ctx, newGroupInvitation.GroupID, newGroupInvitation.InviterUsername) {
 		Error.Printf("Inviter %s is not in group %s\n", newGroupInvitation.InviterUsername, newGroupInvitation.GroupID)
-		c.IndentedJSON(http.StatusForbidden, gin.H{})
+		c.AbortWithStatus(http.StatusForbidden)
 		return
 	}
 
 	if db.IsInGroup(ctx, group.ID, newGroupInvitation.Username) {
 		Info.Printf("User %s is already in group %s\n", newGroupInvitation.Username, newGroupInvitation.GroupID)
-		c.IndentedJSON(http.StatusNoContent, gin.H{})
+		c.IndentedJSON(http.StatusNoContent, nil)
 		return
 	}
 
 	if success := db.AddGroupInvitation(ctx, &newGroupInvitation); !success {
 		Error.Println("Could not add group invitation")
-		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{})
+		c.AbortWithStatus(http.StatusServiceUnavailable)
 		return
 	}
 
@@ -158,7 +157,7 @@ func AcceptGroupInvitation(c *gin.Context) {
 	success, invitation := db.GetGroupInvitation(ctx, invitationId)
 	if !success {
 		Error.Printf("Group invitation %s does not exist\n", invitationId)
-		c.IndentedJSON(http.StatusForbidden, gin.H{})
+		c.AbortWithStatus(http.StatusForbidden)
 		return
 	}
 
@@ -166,31 +165,31 @@ func AcceptGroupInvitation(c *gin.Context) {
 
 	if invitation.Username != callingUsername {
 		Error.Println("Cannot accept another user's group invitation")
-		c.IndentedJSON(http.StatusForbidden, gin.H{})
+		c.AbortWithStatus(http.StatusForbidden)
 		return
 	}
 
 	if !db.UserExists(ctx, invitation.Username) {
 		Error.Printf("Invited user %s does not exist\n", invitation.Username)
-		c.IndentedJSON(http.StatusForbidden, gin.H{})
+		c.AbortWithStatus(http.StatusForbidden)
 		return
 	}
 
 	if !db.UserExists(ctx, invitation.InviterUsername) {
 		Error.Printf("Inviting user %s does not exist\n", invitation.InviterUsername)
-		c.IndentedJSON(http.StatusForbidden, gin.H{})
+		c.AbortWithStatus(http.StatusForbidden)
 		return
 	}
 
 	if !db.IsInGroup(ctx, invitation.GroupID, invitation.InviterUsername) {
 		Error.Printf("Inviter %s is not in group %s\n", invitation.InviterUsername, invitation.GroupID)
-		c.IndentedJSON(http.StatusForbidden, gin.H{})
+		c.AbortWithStatus(http.StatusForbidden)
 		return
 	}
 
 	if db.IsInGroup(ctx, invitation.GroupID, invitation.Username) {
 		Info.Printf("User %s is already in group %s\n", invitation.Username, invitation.GroupID)
-		c.IndentedJSON(http.StatusNoContent, gin.H{})
+		c.IndentedJSON(http.StatusNoContent, nil)
 		return
 	}
 
@@ -198,7 +197,7 @@ func AcceptGroupInvitation(c *gin.Context) {
 
 	if success := db.UpdateGroupInvitation(ctx, invitation); !success {
 		Error.Println("Could not accept group invitation")
-		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{})
+		c.AbortWithStatus(http.StatusServiceUnavailable)
 		return
 	}
 
@@ -212,13 +211,13 @@ func AcceptGroupInvitation(c *gin.Context) {
 
 	if success := db.AddGroupMembership(ctx, &newMembership); !success {
 		Error.Println("Could not add group membership ")
-		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{})
+		c.AbortWithStatus(http.StatusServiceUnavailable)
 		return
 	}
 
 	Info.Printf("Added membership to group %s for user %s from invitation %s\n", newMembership.GroupID, newMembership.Username, newMembership.InvitationID)
 
-	c.IndentedJSON(http.StatusNoContent, gin.H{})
+	c.IndentedJSON(http.StatusNoContent, nil)
 }
 
 func DeclineGroupInvitation(c *gin.Context) {
@@ -229,7 +228,7 @@ func DeclineGroupInvitation(c *gin.Context) {
 	success, invitation := db.GetGroupInvitation(ctx, invitationId)
 	if !success {
 		Error.Printf("Group invitation %s does not exist\n", invitationId)
-		c.IndentedJSON(http.StatusForbidden, gin.H{})
+		c.AbortWithStatus(http.StatusForbidden)
 		return
 	}
 
@@ -237,31 +236,31 @@ func DeclineGroupInvitation(c *gin.Context) {
 
 	if invitation.Username != callingUsername {
 		Error.Println("Cannot decline another user's group invitation")
-		c.IndentedJSON(http.StatusForbidden, gin.H{})
+		c.AbortWithStatus(http.StatusForbidden)
 		return
 	}
 
 	if !db.UserExists(ctx, invitation.Username) {
 		Error.Printf("Invited user %s does not exist\n", invitation.Username)
-		c.IndentedJSON(http.StatusForbidden, gin.H{})
+		c.AbortWithStatus(http.StatusForbidden)
 		return
 	}
 
 	if !db.UserExists(ctx, invitation.InviterUsername) {
 		Error.Printf("Inviting user %s does not exist\n", invitation.InviterUsername)
-		c.IndentedJSON(http.StatusForbidden, gin.H{})
+		c.AbortWithStatus(http.StatusForbidden)
 		return
 	}
 
 	if !db.IsInGroup(ctx, invitation.GroupID, invitation.InviterUsername) {
 		Error.Printf("Inviter %s is not in group %s\n", invitation.InviterUsername, invitation.GroupID)
-		c.IndentedJSON(http.StatusForbidden, gin.H{})
+		c.AbortWithStatus(http.StatusForbidden)
 		return
 	}
 
 	if db.IsInGroup(ctx, invitation.GroupID, invitation.Username) {
 		Info.Printf("User %s is already in group %s\n", invitation.Username, invitation.GroupID)
-		c.IndentedJSON(http.StatusNoContent, gin.H{})
+		c.IndentedJSON(http.StatusNoContent, nil)
 		return
 	}
 
@@ -269,11 +268,11 @@ func DeclineGroupInvitation(c *gin.Context) {
 
 	if success := db.UpdateGroupInvitation(ctx, invitation); !success {
 		Error.Println("Could not decline group invitation")
-		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{})
+		c.AbortWithStatus(http.StatusServiceUnavailable)
 		return
 	}
 
 	Info.Printf("Declined invitation to group %s for user %s by inviter %s\n", invitation.GroupID, invitation.Username, invitation.InviterUsername)
 
-	c.IndentedJSON(http.StatusNoContent, gin.H{})
+	c.IndentedJSON(http.StatusNoContent, nil)
 }

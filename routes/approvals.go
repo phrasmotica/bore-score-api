@@ -2,7 +2,6 @@ package routes
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"phrasmotica/bore-score-api/models"
 
@@ -15,7 +14,8 @@ func GetApprovals(c *gin.Context) {
 	ctx := context.TODO()
 
 	if !db.ResultExists(ctx, resultId) {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("result %s does not exist", resultId)})
+		Error.Printf("Result %s does not exist\n", resultId)
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
@@ -23,7 +23,7 @@ func GetApprovals(c *gin.Context) {
 
 	if !success {
 		Error.Println("Could not get approvals")
-		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
+		c.AbortWithStatus(http.StatusServiceUnavailable)
 		return
 	}
 
@@ -36,26 +36,29 @@ func PostApproval(c *gin.Context) {
 	var newApproval models.Approval
 
 	if err := c.BindJSON(&newApproval); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "invalid body format"})
+		Error.Println("Invalid body format")
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 
 	if c.GetString("username") != newApproval.Username {
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"message": "cannot approve on another user's behalf"})
-		c.Abort()
+		Error.Println("Cannot approve on another user's behalf")
+		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
 
 	ctx := context.TODO()
 
 	if !db.UserExists(ctx, newApproval.Username) {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("user %s does not exist", newApproval.Username)})
+		Error.Printf("User %s does not exist", newApproval.Username)
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
 	success, result := db.GetResult(ctx, newApproval.ResultID)
 	if !success {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("result %s does not exist", newApproval.ResultID)})
+		Error.Printf("Result %s does not exist", newApproval.ResultID)
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
@@ -69,13 +72,14 @@ func PostApproval(c *gin.Context) {
 	}
 
 	if !isInResult {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("player %s does not have a score in result %s", newApproval.Username, result.ID)})
+		Error.Printf("Player %s does not have a score in result %s", newApproval.Username, result.ID)
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
 	if success := db.AddApproval(ctx, &newApproval); !success {
 		Error.Println("Could not add approval")
-		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
+		c.AbortWithStatus(http.StatusServiceUnavailable)
 		return
 	}
 

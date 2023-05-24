@@ -12,7 +12,7 @@ func GetLinkTypes(c *gin.Context) {
 
 	if !success {
 		Error.Println("Could not get link types")
-		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"message": "something went wrong"})
+		c.AbortWithStatus(http.StatusServiceUnavailable)
 		return
 	}
 
