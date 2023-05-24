@@ -29,8 +29,7 @@ func main() {
 		{
 			gameByName.GET("", routes.GetGame)
 
-			// TODO: require superuser permission
-			gameByName.DELETE("", routes.DeleteGame)
+			gameByName.DELETE("", auth.TokenAuth(false), auth.CheckPermission("superuser"), routes.DeleteGame)
 		}
 	}
 
@@ -47,8 +46,7 @@ func main() {
 			groupById.GET("/players", auth.TokenAuth(false), routes.GetPlayersInGroup)
 			groupById.GET("/results", auth.TokenAuth(false), routes.GetResultsForGroup)
 
-			// TODO: require superuser permission
-			groupById.DELETE("", auth.TokenAuth(false), routes.DeleteGroup)
+			groupById.DELETE("", auth.TokenAuth(false), auth.CheckPermission("superuser"), routes.DeleteGroup)
 		}
 	}
 
