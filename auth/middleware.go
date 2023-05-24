@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/exp/slices"
 )
 
 // TODO: put these in a more central place, or inject them as dependencies
@@ -58,6 +59,23 @@ func TokenAuth(optional bool) gin.HandlerFunc {
 
 		c.Set("username", claims.Username)
 		c.Set("email", claims.Email)
+
+		c.Set("permissions", claims.Permissions)
+
+		c.Next()
+	}
+}
+
+func CheckPermission(permission string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		username := c.GetString("username")
+		permissions := c.GetStringSlice("permissions")
+
+		if !slices.Contains(permissions, permission) {
+			Error.Printf("User %s does not have the %s permission\n", username, permission)
+			c.AbortWithStatus(http.StatusForbidden)
+			return
+		}
 
 		c.Next()
 	}
