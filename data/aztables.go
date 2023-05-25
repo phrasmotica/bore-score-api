@@ -749,6 +749,7 @@ func (d *TableStorageDatabase) AddUser(ctx context.Context, newUser *models.User
 			"TimeCreated": aztables.EDMInt64(newUser.TimeCreated),
 			"Email":       newUser.Email,
 			"Password":    newUser.Password,
+			"Permissions": strings.Join(newUser.Permissions, ";"),
 		},
 	}
 

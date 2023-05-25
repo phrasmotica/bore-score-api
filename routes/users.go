@@ -10,7 +10,15 @@ import (
 	"github.com/google/uuid"
 )
 
-type UserResponse struct {
+type CreateUserRequest struct {
+	Username       string `json:"username" bson:"username"`
+	Email          string `json:"email" bson:"email"`
+	Password       string `json:"password" bson:"password"`
+	DisplayName    string `json:"displayName" bson:"displayName"`
+	ProfilePicture string `json:"profilePicture" bson:"profilePicture"`
+}
+
+type GetUserResponse struct {
 	Username string `json:"username" bson:"username"`
 	Email    string `json:"email" bson:"email"`
 }
@@ -30,7 +38,7 @@ func GetUser(c *gin.Context) {
 
 	Info.Printf("Got user %s\n", username)
 
-	res := &UserResponse{
+	res := &GetUserResponse{
 		Username: username,
 	}
 
@@ -46,11 +54,20 @@ func GetUser(c *gin.Context) {
 func RegisterUser(c *gin.Context) {
 	ctx := context.TODO()
 
-	var newUser models.User
-	if err := c.ShouldBindJSON(&newUser); err != nil {
+	var request CreateUserRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
 		Error.Println("Invalid body format")
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
+	}
+
+	newUser := models.User{
+		ID:          uuid.NewString(),
+		Username:    request.Username,
+		TimeCreated: time.Now().UTC().Unix(),
+		Email:       request.Email,
+		Password:    request.Password,
+		Permissions: []string{},
 	}
 
 	if err := newUser.HashPassword(newUser.Password); err != nil {
@@ -65,8 +82,6 @@ func RegisterUser(c *gin.Context) {
 		return
 	}
 
-	prime(&newUser)
-
 	success := db.AddUser(ctx, &newUser)
 	if !success {
 		Error.Printf("Could not add user %s\n", newUser.Username)
@@ -74,12 +89,25 @@ func RegisterUser(c *gin.Context) {
 		return
 	}
 
-	c.IndentedJSON(http.StatusCreated, gin.H{"email": newUser.Email, "username": newUser.Username})
-}
+	Info.Printf("Created new user %s\n", newUser.Username)
 
-// Primes the user object so that it's ready for database insertion.
-func prime(user *models.User) {
-	user.ID = uuid.NewString()
-	user.TimeCreated = time.Now().UTC().Unix()
-	user.Permissions = []string{}
+	// create a player record that corresponds to the new user
+	newPlayer := models.Player{
+		ID:             uuid.NewString(),
+		Username:       newUser.Username,
+		TimeCreated:    time.Now().UTC().Unix(),
+		DisplayName:    request.DisplayName,
+		ProfilePicture: request.ProfilePicture,
+	}
+
+	playerSuccess := db.AddPlayer(ctx, &newPlayer)
+	if !playerSuccess {
+		Error.Printf("Could not add player record for user %s\n", newUser.Username)
+		c.AbortWithStatus(http.StatusServiceUnavailable)
+		return
+	}
+
+	Info.Printf("Created player record for new user %s\n", newUser.Username)
+
+	c.IndentedJSON(http.StatusNoContent, nil)
 }
