@@ -23,6 +23,12 @@ type GetUserResponse struct {
 	Email    string `json:"email" bson:"email"`
 }
 
+type UpdatePasswordRequest struct {
+	Username        string `json:"username" bson:"username"`
+	CurrentPassword string `json:"currentPassword" bson:"currentPassword"`
+	NewPassword     string `json:"newPassword" bson:"newPassword"`
+}
+
 func GetUser(c *gin.Context) {
 	ctx := context.TODO()
 
@@ -110,4 +116,84 @@ func RegisterUser(c *gin.Context) {
 	Info.Printf("Created player record for new user %s\n", newUser.Username)
 
 	c.IndentedJSON(http.StatusNoContent, nil)
+}
+
+func UpdatePassword(c *gin.Context) {
+	username := c.Param("username")
+	callingUsername := c.GetString("username")
+
+	var request UpdatePasswordRequest
+
+	ctx := context.TODO()
+
+	if err := c.BindJSON(&request); err != nil {
+		Error.Println("Invalid body format")
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	if success, err := validateUpdatePasswordRequest(&request); !success {
+		Error.Printf("Error validating update password request: %s\n", err)
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	if username != request.Username {
+		Error.Println("Update password request is for wrong user")
+		c.AbortWithStatus(http.StatusForbidden)
+		return
+	}
+
+	if callingUsername != request.Username {
+		Error.Println("Cannot update password of a different user")
+		c.AbortWithStatus(http.StatusForbidden)
+		return
+	}
+
+	exists, user := db.GetUser(ctx, request.Username)
+	if !exists {
+		Error.Printf("User %s does not exist", request.Username)
+		c.AbortWithStatus(http.StatusNotFound)
+		return
+	}
+
+	credentialError := user.CheckPassword(request.CurrentPassword)
+	if credentialError != nil {
+		Error.Println("Invalid password")
+		c.AbortWithError(http.StatusUnauthorized, credentialError)
+		return
+	}
+
+	if err := user.HashPassword(request.NewPassword); err != nil {
+		Error.Println("Could not hash password")
+		c.AbortWithError(http.StatusServiceUnavailable, err)
+		return
+	}
+
+	success := db.UpdateUser(ctx, user)
+	if !success {
+		Error.Printf("Could not update password for user %s\n", request.Username)
+		c.AbortWithStatus(http.StatusServiceUnavailable)
+		return
+	}
+
+	Info.Printf("Updated password for user %s\n", request.Username)
+
+	c.IndentedJSON(http.StatusNoContent, nil)
+}
+
+func validateUpdatePasswordRequest(request *UpdatePasswordRequest) (bool, string) {
+	if len(request.Username) <= 0 {
+		return false, "username is missing"
+	}
+
+	if len(request.CurrentPassword) <= 0 {
+		return false, "current password is missing"
+	}
+
+	if len(request.NewPassword) <= 0 {
+		return false, "new password is missing"
+	}
+
+	return true, ""
 }

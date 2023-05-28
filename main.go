@@ -121,6 +121,8 @@ func main() {
 			userByUsername.GET("", auth.TokenAuth(true), routes.GetUser)
 			userByUsername.GET("/invitations", auth.TokenAuth(false), routes.GetGroupInvitationsForUser)
 			userByUsername.GET("/results", auth.TokenAuth(false), routes.GetResultsForUser)
+
+			userByUsername.PUT("/password", auth.TokenAuth(false), routes.UpdatePassword)
 		}
 	}
 

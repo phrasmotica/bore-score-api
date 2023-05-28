@@ -66,6 +66,7 @@ type IDatabase interface {
 	AddUser(ctx context.Context, newUser *models.User) bool
 	UserExists(ctx context.Context, username string) bool
 	UserExistsByEmail(ctx context.Context, email string) bool
+	UpdateUser(ctx context.Context, user *models.User) bool
 
 	GetAllWinMethods(ctx context.Context) (bool, []models.WinMethod)
 

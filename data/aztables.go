@@ -808,6 +808,33 @@ func (d *TableStorageDatabase) UserExistsByEmail(ctx context.Context, email stri
 	return result != nil
 }
 
+// UpdateUser implements IDatabase
+func (d *TableStorageDatabase) UpdateUser(ctx context.Context, user *models.User) bool {
+	entity := aztables.EDMEntity{
+		Entity: aztables.Entity{
+			PartitionKey: "Users",
+			RowKey:       user.ID,
+		},
+		Properties: map[string]interface{}{
+			"Password": user.Password,
+		},
+	}
+
+	marshalled, err := json.Marshal(entity)
+	if err != nil {
+		Error.Println(err)
+		return false
+	}
+
+	_, addErr := d.Client.NewClient("Users").UpdateEntity(ctx, marshalled, nil)
+	if addErr != nil {
+		Error.Println(addErr)
+		return false
+	}
+
+	return true
+}
+
 func (d *TableStorageDatabase) GetAllWinMethods(ctx context.Context) (bool, []models.WinMethod) {
 	winMethods := list(ctx, d.Client, "WinMethods", createWinMethod, nil)
 	return true, winMethods
