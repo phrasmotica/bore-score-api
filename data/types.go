@@ -49,6 +49,7 @@ type IDatabase interface {
 	GetPlayer(ctx context.Context, username string) (bool, *models.Player)
 	PlayerExists(ctx context.Context, username string) bool
 	AddPlayer(ctx context.Context, newPlayer *models.Player) bool
+	UpdatePlayer(ctx context.Context, player *models.Player) bool
 	DeletePlayer(ctx context.Context, username string) bool
 
 	GetAllResults(ctx context.Context) (bool, []models.Result)

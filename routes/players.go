@@ -80,7 +80,7 @@ func PostPlayer(c *gin.Context) {
 		return
 	}
 
-	if success, err := validateNewPlayer(&newPlayer); !success {
+	if success, err := validatePlayer(&newPlayer); !success {
 		Error.Printf("Error validating new player %s: %s\n", newPlayer.DisplayName, err)
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -104,7 +104,7 @@ func PostPlayer(c *gin.Context) {
 	c.IndentedJSON(http.StatusCreated, newPlayer)
 }
 
-func validateNewPlayer(player *models.Player) (bool, string) {
+func validatePlayer(player *models.Player) (bool, string) {
 	if len(player.Username) <= 0 {
 		return false, "player username is missing"
 	}
@@ -114,6 +114,61 @@ func validateNewPlayer(player *models.Player) (bool, string) {
 	}
 
 	return true, ""
+}
+
+func UpdatePlayer(c *gin.Context) {
+	username := c.Param("username")
+	callingUsername := c.GetString("username")
+
+	var player models.Player
+
+	ctx := context.TODO()
+
+	if err := c.BindJSON(&player); err != nil {
+		Error.Println("Invalid body format")
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	// TODO: only need profile picture and display name
+	if success, err := validatePlayer(&player); !success {
+		Error.Printf("Error validating player %s: %s\n", player.DisplayName, err)
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	if username != player.Username {
+		Error.Println("Update request is for wrong player")
+		c.AbortWithStatus(http.StatusForbidden)
+		return
+	}
+
+	if callingUsername != player.Username {
+		Error.Println("Cannot update a different player")
+		c.AbortWithStatus(http.StatusForbidden)
+		return
+	}
+
+	exists, existingPlayer := db.GetPlayer(ctx, player.Username)
+	if !exists {
+		Error.Printf("Player %s does not exist", player.Username)
+		c.AbortWithStatus(http.StatusNotFound)
+		return
+	}
+
+	// ensure we update the correct entity
+	player.ID = existingPlayer.ID
+
+	success := db.UpdatePlayer(ctx, &player)
+	if !success {
+		Error.Printf("Could not update player %s\n", player.Username)
+		c.AbortWithStatus(http.StatusServiceUnavailable)
+		return
+	}
+
+	Info.Printf("Updated player %s\n", player.Username)
+
+	c.IndentedJSON(http.StatusNoContent, nil)
 }
 
 func DeletePlayer(c *gin.Context) {

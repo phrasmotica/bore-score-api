@@ -519,6 +519,34 @@ func (d *TableStorageDatabase) AddPlayer(ctx context.Context, newPlayer *models.
 	return true
 }
 
+// UpdatePlayer implements IDatabase
+func (d *TableStorageDatabase) UpdatePlayer(ctx context.Context, player *models.Player) bool {
+	entity := aztables.EDMEntity{
+		Entity: aztables.Entity{
+			PartitionKey: "Players",
+			RowKey:       player.ID,
+		},
+		Properties: map[string]interface{}{
+			"DisplayName":    player.DisplayName,
+			"ProfilePicture": player.ProfilePicture,
+		},
+	}
+
+	marshalled, err := json.Marshal(entity)
+	if err != nil {
+		Error.Println(err)
+		return false
+	}
+
+	_, addErr := d.Client.NewClient("Players").UpdateEntity(ctx, marshalled, nil)
+	if addErr != nil {
+		Error.Println(addErr)
+		return false
+	}
+
+	return true
+}
+
 // DeletePlayer implements IDatabase
 func (d *TableStorageDatabase) DeletePlayer(ctx context.Context, username string) bool {
 	player := d.findPlayer(ctx, username)

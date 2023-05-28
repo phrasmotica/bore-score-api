@@ -86,6 +86,8 @@ func main() {
 		{
 			playerByUsername.GET("", routes.GetPlayer)
 
+			playerByUsername.PUT("", auth.TokenAuth(false), routes.UpdatePlayer)
+
 			playerByUsername.DELETE("", auth.TokenAuth(false), auth.CheckPermission("superuser"), routes.DeletePlayer)
 		}
 	}
