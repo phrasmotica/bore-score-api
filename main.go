@@ -47,6 +47,11 @@ func main() {
 			groupById.GET("/results", auth.TokenAuth(false), routes.GetResultsForGroup)
 
 			groupById.DELETE("", auth.TokenAuth(false), auth.CheckPermission("superuser"), routes.DeleteGroup)
+
+			groupLeaderboards := groupById.Group("/leaderboard")
+			{
+				groupLeaderboards.GET("/:gameId", auth.TokenAuth(false), routes.GetLeaderboard)
+			}
 		}
 	}
 

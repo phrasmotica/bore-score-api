@@ -28,7 +28,11 @@ func (d *MongoDatabase) GetAllGames(ctx context.Context) (bool, []models.Game) {
 	return true, games
 }
 
-func (d *MongoDatabase) GetGame(ctx context.Context, name string) (bool, *models.Game) {
+func (*MongoDatabase) GetGame(ctx context.Context, id string) (bool, *models.Game) {
+	panic("unimplemented")
+}
+
+func (d *MongoDatabase) GetGameByName(ctx context.Context, name string) (bool, *models.Game) {
 	result := d.findGame(ctx, name)
 	if err := result.Err(); err != nil {
 		Error.Println(err)

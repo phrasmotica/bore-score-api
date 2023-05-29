@@ -59,7 +59,7 @@ func GetGames(c *gin.Context) {
 func GetGame(c *gin.Context) {
 	name := c.Param("name")
 
-	success, game := db.GetGame(context.TODO(), name)
+	success, game := db.GetGameByName(context.TODO(), name)
 
 	if !success {
 		Error.Printf("Game %s does not exist\n", name)

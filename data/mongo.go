@@ -13,6 +13,11 @@ type MongoDatabase struct {
 	Database *mongo.Database
 }
 
+// GetResultsForGroupAndGame implements IDatabase
+func (*MongoDatabase) GetResultsForGroupAndGame(ctx context.Context, groupId string, gameId string) (bool, []models.Result) {
+	panic("unimplemented")
+}
+
 // UpdateUser implements IDatabase
 func (*MongoDatabase) UpdateUser(ctx context.Context, user *models.User) bool {
 	panic("unimplemented")

@@ -83,8 +83,20 @@ func (d *TableStorageDatabase) GetAllGames(ctx context.Context) (bool, []models.
 	return true, games
 }
 
-func (d *TableStorageDatabase) GetGame(ctx context.Context, name string) (bool, *models.Game) {
-	result := d.findGame(ctx, name)
+// GetGameByName implements IDatabase
+func (d *TableStorageDatabase) GetGame(ctx context.Context, id string) (bool, *models.Game) {
+	result := d.findGame(ctx, id)
+	if result == nil {
+		return false, nil
+	}
+
+	game := createGame(result)
+	return true, &game
+}
+
+// GetGameByName implements IDatabase
+func (d *TableStorageDatabase) GetGameByName(ctx context.Context, name string) (bool, *models.Game) {
+	result := d.findGameByName(ctx, name)
 	if result == nil {
 		return false, nil
 	}
@@ -95,7 +107,7 @@ func (d *TableStorageDatabase) GetGame(ctx context.Context, name string) (bool, 
 
 // GameExists implements IDatabase
 func (d *TableStorageDatabase) GameExists(ctx context.Context, name string) bool {
-	result := d.findGame(ctx, name)
+	result := d.findGameByName(ctx, name)
 	return result != nil
 }
 
@@ -143,7 +155,7 @@ func (d *TableStorageDatabase) AddGame(ctx context.Context, newGame *models.Game
 
 // DeleteGame implements IDatabase
 func (d *TableStorageDatabase) DeleteGame(ctx context.Context, name string) bool {
-	game := d.findGame(ctx, name)
+	game := d.findGameByName(ctx, name)
 	if game == nil {
 		return false
 	}
@@ -577,6 +589,15 @@ func (d *TableStorageDatabase) GetResultsForGroup(ctx context.Context, groupId s
 	return true, results
 }
 
+// GetResultsForGroupAndGame implements IDatabase
+func (d *TableStorageDatabase) GetResultsForGroupAndGame(ctx context.Context, groupId string, gameId string) (bool, []models.Result) {
+	results := list(ctx, d.Client, "Results", createResult, &aztables.ListEntitiesOptions{
+		// TODO: compare to game ID instead, but that requires altering the Result schema
+		Filter: to.Ptr(fmt.Sprintf("GroupID eq '%s' and GameName eq '%s'", groupId, gameId)),
+	})
+	return true, results
+}
+
 // GetResultsWithPlayer implements IDatabase
 func (d *TableStorageDatabase) GetResultsWithPlayer(ctx context.Context, username string) (bool, []models.Result) {
 	// TODO: restructure data so that we can find the results containing this player more easily.
@@ -663,7 +684,7 @@ func (d *TableStorageDatabase) AddResult(ctx context.Context, newResult *models.
 
 // DeleteResultsWithGame implements IDatabase
 func (d *TableStorageDatabase) DeleteResultsWithGame(ctx context.Context, gameName string) (bool, int64) {
-	game := d.findGame(ctx, gameName)
+	game := d.findGameByName(ctx, gameName)
 	if game == nil {
 		return false, 0
 	}
@@ -874,7 +895,21 @@ func (d *TableStorageDatabase) GetSummary(ctx context.Context) (bool, *Summary) 
 	}
 }
 
-func (d *TableStorageDatabase) findGame(ctx context.Context, name string) *aztables.EDMEntity {
+func (d *TableStorageDatabase) findGame(ctx context.Context, id string) *aztables.EDMEntity {
+	client := d.Client.NewClient("Games")
+
+	entities := listEntities(ctx, client, &aztables.ListEntitiesOptions{
+		Filter: to.Ptr(fmt.Sprintf("RowKey eq '%s'", id)),
+	})
+
+	if len(entities) == 1 {
+		return &entities[0]
+	}
+
+	return nil
+}
+
+func (d *TableStorageDatabase) findGameByName(ctx context.Context, name string) *aztables.EDMEntity {
 	client := d.Client.NewClient("Games")
 
 	entities := listEntities(ctx, client, &aztables.ListEntitiesOptions{

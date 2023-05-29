@@ -17,7 +17,8 @@ type IDatabase interface {
 	GetApprovals(ctx context.Context, resultId string) (bool, []models.Approval)
 
 	GetAllGames(ctx context.Context) (bool, []models.Game)
-	GetGame(ctx context.Context, name string) (bool, *models.Game)
+	GetGame(ctx context.Context, id string) (bool, *models.Game)
+	GetGameByName(ctx context.Context, name string) (bool, *models.Game)
 	GameExists(ctx context.Context, name string) bool
 	AddGame(ctx context.Context, newGame *models.Game) bool
 	DeleteGame(ctx context.Context, name string) bool
@@ -55,6 +56,7 @@ type IDatabase interface {
 	GetAllResults(ctx context.Context) (bool, []models.Result)
 	GetResultsWithPlayer(ctx context.Context, username string) (bool, []models.Result)
 	GetResultsForGroup(ctx context.Context, groupId string) (bool, []models.Result)
+	GetResultsForGroupAndGame(ctx context.Context, groupId string, gameId string) (bool, []models.Result)
 	GetResult(ctx context.Context, resultId string) (bool, *models.Result)
 	ResultExists(ctx context.Context, resultId string) bool
 	AddResult(ctx context.Context, newResult *models.Result) bool
