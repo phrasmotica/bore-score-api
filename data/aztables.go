@@ -119,6 +119,7 @@ func (d *TableStorageDatabase) AddGame(ctx context.Context, newGame *models.Game
 		return false
 	}
 
+	// TODO: add "CreatedBy" column and use it as partition key
 	entity := aztables.EDMEntity{
 		Entity: aztables.Entity{
 			PartitionKey: "Games",
@@ -216,7 +217,7 @@ func (d *TableStorageDatabase) GroupExists(ctx context.Context, name string) boo
 func (d *TableStorageDatabase) AddGroup(ctx context.Context, newGroup *models.Group) bool {
 	entity := aztables.EDMEntity{
 		Entity: aztables.Entity{
-			PartitionKey: "Groups",
+			PartitionKey: newGroup.CreatedBy,
 			RowKey:       newGroup.ID,
 		},
 		Properties: map[string]interface{}{
@@ -739,7 +740,7 @@ func (d *TableStorageDatabase) ScrubResultsWithPlayer(ctx context.Context, usern
 		// create new entity with scrubbed scores data for merging
 		entity := aztables.EDMEntity{
 			Entity: aztables.Entity{
-				PartitionKey: "Results",
+				PartitionKey: result.GameID,
 				RowKey:       result.ID,
 			},
 			Properties: map[string]interface{}{
