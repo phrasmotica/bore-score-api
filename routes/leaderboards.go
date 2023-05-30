@@ -6,18 +6,21 @@ import (
 	"phrasmotica/bore-score-api/models"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/exp/slices"
 )
 
 type LeaderboardResponse struct {
 	GroupID     string `json:"groupId" bson:"groupId"`
 	GameID      string `json:"gameId" bson:"gameId"`
+	PlayedCount int    `json:"playedCount" bson:"playedCount"`
 	Leaderboard []Rank `json:"leaderboard" bson:"leaderboard"`
 }
 
 type Rank struct {
-	// TODO: add number of games played, wins/draws/losses/etc
+	// TODO: add number of wins/draws/losses/etc
 	Username     string `json:"username" bson:"username"`
 	PointsScored int    `json:"pointsScored" bson:"pointsScored"`
+	PlayedCount  int    `json:"playedCount" bson:"playedCount"`
 }
 
 func GetLeaderboard(c *gin.Context) {
@@ -66,31 +69,31 @@ func computeLeaderboard(ctx context.Context, group *models.Group, game *models.G
 		return false, nil
 	}
 
-	pointsMap := map[string]int{}
+	leaderboard := []Rank{}
 
 	for _, r := range results {
 		for _, s := range r.Scores {
-			_, exists := pointsMap[s.Username]
-			if exists {
-				pointsMap[s.Username] += s.Score
+			idx := slices.IndexFunc(leaderboard, func(k Rank) bool {
+				return k.Username == s.Username
+			})
+
+			if idx >= 0 {
+				leaderboard[idx].PointsScored += s.Score
+				leaderboard[idx].PlayedCount++
 			} else {
-				pointsMap[s.Username] = s.Score
+				leaderboard = append(leaderboard, Rank{
+					Username:     s.Username,
+					PointsScored: s.Score,
+					PlayedCount:  1,
+				})
 			}
 		}
-	}
-
-	leaderboard := []Rank{}
-
-	for player, score := range pointsMap {
-		leaderboard = append(leaderboard, Rank{
-			Username:     player,
-			PointsScored: score,
-		})
 	}
 
 	return true, &LeaderboardResponse{
 		GroupID:     group.ID,
 		GameID:      game.ID,
+		PlayedCount: len(results),
 		Leaderboard: leaderboard,
 	}
 }
