@@ -651,7 +651,7 @@ func (d *TableStorageDatabase) AddResult(ctx context.Context, newResult *models.
 
 	entity := aztables.EDMEntity{
 		Entity: aztables.Entity{
-			PartitionKey: "Results",
+			PartitionKey: newResult.GameID,
 			RowKey:       newResult.ID,
 		},
 		Properties: map[string]interface{}{
