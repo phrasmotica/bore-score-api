@@ -592,8 +592,7 @@ func (d *TableStorageDatabase) GetResultsForGroup(ctx context.Context, groupId s
 // GetResultsForGroupAndGame implements IDatabase
 func (d *TableStorageDatabase) GetResultsForGroupAndGame(ctx context.Context, groupId string, gameId string) (bool, []models.Result) {
 	results := list(ctx, d.Client, "Results", createResult, &aztables.ListEntitiesOptions{
-		// TODO: compare to game ID instead, but that requires altering the Result schema
-		Filter: to.Ptr(fmt.Sprintf("GroupID eq '%s' and GameName eq '%s'", groupId, gameId)),
+		Filter: to.Ptr(fmt.Sprintf("GroupID eq '%s' and GameID eq '%s'", groupId, gameId)),
 	})
 	return true, results
 }
@@ -656,7 +655,7 @@ func (d *TableStorageDatabase) AddResult(ctx context.Context, newResult *models.
 			RowKey:       newResult.ID,
 		},
 		Properties: map[string]interface{}{
-			"GameName":         newResult.GameName,
+			"GameID":           newResult.GameID,
 			"GroupID":          newResult.GroupID,
 			"TimeCreated":      aztables.EDMInt64(newResult.TimeCreated),
 			"TimePlayed":       aztables.EDMInt64(newResult.TimePlayed),
@@ -683,15 +682,15 @@ func (d *TableStorageDatabase) AddResult(ctx context.Context, newResult *models.
 }
 
 // DeleteResultsWithGame implements IDatabase
-func (d *TableStorageDatabase) DeleteResultsWithGame(ctx context.Context, gameName string) (bool, int64) {
-	game := d.findGameByName(ctx, gameName)
+func (d *TableStorageDatabase) DeleteResultsWithGame(ctx context.Context, gameId string) (bool, int64) {
+	game := d.findGame(ctx, gameId)
 	if game == nil {
 		return false, 0
 	}
 
 	client := d.Client.NewClient("Results")
 	entities := listEntities(ctx, client, &aztables.ListEntitiesOptions{
-		Filter: to.Ptr(fmt.Sprintf("GameName eq '%s'", gameName)),
+		Filter: to.Ptr(fmt.Sprintf("GameID eq '%s'", gameId)),
 	})
 
 	deleteCount := 0
@@ -1160,7 +1159,7 @@ func createPlayer(entity *aztables.EDMEntity) models.Player {
 func createResult(entity *aztables.EDMEntity) models.Result {
 	return models.Result{
 		ID:               entity.RowKey,
-		GameName:         propString(entity, "GameName"),
+		GameID:           propString(entity, "GameID"),
 		GroupID:          propString(entity, "GroupID"),
 		TimeCreated:      propInt64(entity, "TimeCreated"),
 		TimePlayed:       propInt64(entity, "TimePlayed"),

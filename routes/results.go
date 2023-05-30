@@ -14,7 +14,7 @@ import (
 
 type ResultResponse struct {
 	ID               string                `json:"id" bson:"id"`
-	GameName         string                `json:"gameName" bson:"gameName"`
+	GameID           string                `json:"gameId" bson:"gameId"`
 	GroupID          string                `json:"groupId" bson:"groupId"`
 	TimeCreated      int64                 `json:"timeCreated" bson:"timeCreated"`
 	TimePlayed       int64                 `json:"timePlayed" bson:"timePlayed"`
@@ -127,8 +127,8 @@ func PostResult(c *gin.Context) {
 
 	ctx := context.TODO()
 
-	if !db.GameExists(ctx, newResult.GameName) {
-		Error.Printf("Game %s does not exist\n", newResult.GameName)
+	if !db.GameExists(ctx, newResult.GameID) {
+		Error.Printf("Game %s does not exist\n", newResult.GameID)
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -164,7 +164,7 @@ func PostResult(c *gin.Context) {
 		return
 	}
 
-	Info.Printf("Added result for game %s\n", newResult.GameName)
+	Info.Printf("Added result for game %s\n", newResult.GameID)
 
 	c.IndentedJSON(http.StatusCreated, newResult)
 }
@@ -198,7 +198,7 @@ func createResultResponse(ctx context.Context, result *models.Result) ResultResp
 
 	return ResultResponse{
 		ID:               result.ID,
-		GameName:         result.GameName,
+		GameID:           result.GameID,
 		GroupID:          result.GroupID,
 		TimeCreated:      result.TimeCreated,
 		TimePlayed:       result.TimePlayed,

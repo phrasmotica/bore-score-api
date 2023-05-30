@@ -60,7 +60,7 @@ type IDatabase interface {
 	GetResult(ctx context.Context, resultId string) (bool, *models.Result)
 	ResultExists(ctx context.Context, resultId string) bool
 	AddResult(ctx context.Context, newResult *models.Result) bool
-	DeleteResultsWithGame(ctx context.Context, gameName string) (bool, int64)
+	DeleteResultsWithGame(ctx context.Context, gameId string) (bool, int64)
 	ScrubResultsWithPlayer(ctx context.Context, username string) (bool, int64)
 
 	GetUser(ctx context.Context, username string) (bool, *models.User)

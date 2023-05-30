@@ -49,7 +49,7 @@ type PlayerScore struct {
 
 type Result struct {
 	ID               string        `json:"id" bson:"id"`
-	GameName         string        `json:"gameName" bson:"gameName"`
+	GameID           string        `json:"gameId" bson:"gameId"`
 	GroupID          string        `json:"groupId" bson:"groupId"`
 	TimeCreated      int64         `json:"timeCreated" bson:"timeCreated"`
 	TimePlayed       int64         `json:"timePlayed" bson:"timePlayed"`

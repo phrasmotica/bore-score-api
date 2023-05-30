@@ -41,8 +41,8 @@ func (d *MongoDatabase) AddResult(ctx context.Context, newResult *models.Result)
 	return true
 }
 
-func (d *MongoDatabase) DeleteResultsWithGame(ctx context.Context, gameName string) (bool, int64) {
-	filter := bson.D{{"gameName", gameName}}
+func (d *MongoDatabase) DeleteResultsWithGame(ctx context.Context, gameId string) (bool, int64) {
+	filter := bson.D{{"gameId", gameId}}
 	deleteResult, err := d.Database.Collection("Results").DeleteMany(ctx, filter)
 
 	if err != nil {

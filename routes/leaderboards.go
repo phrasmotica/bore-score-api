@@ -64,7 +64,7 @@ func GetLeaderboard(c *gin.Context) {
 }
 
 func computeLeaderboard(ctx context.Context, group *models.Group, game *models.Game) (bool, *LeaderboardResponse) {
-	success, results := db.GetResultsForGroupAndGame(ctx, group.ID, game.Name)
+	success, results := db.GetResultsForGroupAndGame(ctx, group.ID, game.ID)
 	if !success {
 		return false, nil
 	}
