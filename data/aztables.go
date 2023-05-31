@@ -94,20 +94,9 @@ func (d *TableStorageDatabase) GetGame(ctx context.Context, id string) (bool, *m
 	return true, &game
 }
 
-// GetGameByName implements IDatabase
-func (d *TableStorageDatabase) GetGameByName(ctx context.Context, name string) (bool, *models.Game) {
-	result := d.findGameByName(ctx, name)
-	if result == nil {
-		return false, nil
-	}
-
-	game := createGame(result)
-	return true, &game
-}
-
 // GameExists implements IDatabase
-func (d *TableStorageDatabase) GameExists(ctx context.Context, name string) bool {
-	result := d.findGameByName(ctx, name)
+func (d *TableStorageDatabase) GameExists(ctx context.Context, id string) bool {
+	result := d.findGame(ctx, id)
 	return result != nil
 }
 
@@ -126,7 +115,6 @@ func (d *TableStorageDatabase) AddGame(ctx context.Context, newGame *models.Game
 			RowKey:       newGame.ID,
 		},
 		Properties: map[string]interface{}{
-			"Name":        newGame.Name,
 			"TimeCreated": aztables.EDMInt64(newGame.TimeCreated),
 			"DisplayName": newGame.DisplayName,
 			"Synopsis":    newGame.Synopsis,
@@ -155,8 +143,8 @@ func (d *TableStorageDatabase) AddGame(ctx context.Context, newGame *models.Game
 }
 
 // DeleteGame implements IDatabase
-func (d *TableStorageDatabase) DeleteGame(ctx context.Context, name string) bool {
-	game := d.findGameByName(ctx, name)
+func (d *TableStorageDatabase) DeleteGame(ctx context.Context, id string) bool {
+	game := d.findGame(ctx, id)
 	if game == nil {
 		return false
 	}
@@ -691,7 +679,7 @@ func (d *TableStorageDatabase) DeleteResultsWithGame(ctx context.Context, gameId
 
 	client := d.Client.NewClient("Results")
 	entities := listEntities(ctx, client, &aztables.ListEntitiesOptions{
-		Filter: to.Ptr(fmt.Sprintf("GameID eq '%s'", gameId)),
+		Filter: to.Ptr(fmt.Sprintf("GameID eq '%s'", game.ID)),
 	})
 
 	deleteCount := 0
@@ -909,20 +897,6 @@ func (d *TableStorageDatabase) findGame(ctx context.Context, id string) *aztable
 	return nil
 }
 
-func (d *TableStorageDatabase) findGameByName(ctx context.Context, name string) *aztables.EDMEntity {
-	client := d.Client.NewClient("Games")
-
-	entities := listEntities(ctx, client, &aztables.ListEntitiesOptions{
-		Filter: to.Ptr(fmt.Sprintf("Name eq '%s'", name)),
-	})
-
-	if len(entities) == 1 {
-		return &entities[0]
-	}
-
-	return nil
-}
-
 func (d *TableStorageDatabase) findGroup(ctx context.Context, id string) *aztables.EDMEntity {
 	client := d.Client.NewClient("Groups")
 
@@ -1081,7 +1055,6 @@ func createApproval(entity *aztables.EDMEntity) models.Approval {
 func createGame(entity *aztables.EDMEntity) models.Game {
 	return models.Game{
 		ID:          entity.RowKey,
-		Name:        propString(entity, "Name"),
 		TimeCreated: propInt64(entity, "TimeCreated"),
 		DisplayName: propString(entity, "DisplayName"),
 		Synopsis:    propString(entity, "Synopsis"),

@@ -18,10 +18,9 @@ type IDatabase interface {
 
 	GetAllGames(ctx context.Context) (bool, []models.Game)
 	GetGame(ctx context.Context, id string) (bool, *models.Game)
-	GetGameByName(ctx context.Context, name string) (bool, *models.Game)
-	GameExists(ctx context.Context, name string) bool
+	GameExists(ctx context.Context, id string) bool
 	AddGame(ctx context.Context, newGame *models.Game) bool
-	DeleteGame(ctx context.Context, name string) bool
+	DeleteGame(ctx context.Context, id string) bool
 
 	GetAllGroups(ctx context.Context) (bool, []models.Group)
 	GetGroups(ctx context.Context) (bool, []models.Group)

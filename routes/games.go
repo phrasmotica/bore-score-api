@@ -57,17 +57,17 @@ func GetGames(c *gin.Context) {
 }
 
 func GetGame(c *gin.Context) {
-	name := c.Param("name")
+	id := c.Param("gameId")
 
-	success, game := db.GetGameByName(context.TODO(), name)
+	success, game := db.GetGame(context.TODO(), id)
 
 	if !success {
-		Error.Printf("Game %s does not exist\n", name)
+		Error.Printf("Game %s does not exist\n", id)
 		c.AbortWithStatus(http.StatusNotFound)
 		return
 	}
 
-	Info.Printf("Got game %s\n", name)
+	Info.Printf("Got game %s\n", id)
 
 	c.IndentedJSON(http.StatusOK, game)
 }
@@ -89,28 +89,18 @@ func PostGame(c *gin.Context) {
 		return
 	}
 
-	if db.GameExists(ctx, newGame.Name) {
-		Error.Printf("Game %s already exists", newGame.Name)
-		c.AbortWithStatus(http.StatusBadRequest)
-		return
-	}
-
 	if success := db.AddGame(ctx, &newGame); !success {
-		Error.Printf("Could not add game %s\n", newGame.Name)
+		Error.Printf("Could not add game %s\n", newGame.ID)
 		c.AbortWithStatus(http.StatusServiceUnavailable)
 		return
 	}
 
-	Info.Printf("Added game %s\n", newGame.Name)
+	Info.Printf("Added game %s\n", newGame.ID)
 
 	c.IndentedJSON(http.StatusCreated, newGame)
 }
 
 func validateNewGame(game *models.Game) (bool, string) {
-	if len(game.Name) <= 0 {
-		return false, "game name is missing"
-	}
-
 	if len(game.DisplayName) <= 0 {
 		return false, "game display name is missing"
 	}
@@ -131,32 +121,32 @@ func validateNewGame(game *models.Game) (bool, string) {
 }
 
 func DeleteGame(c *gin.Context) {
-	name := c.Param("name")
+	id := c.Param("gameId")
 
 	ctx := context.TODO()
 
-	if !db.GameExists(ctx, name) {
-		Error.Printf("Game %s does not exist", name)
+	if !db.GameExists(ctx, id) {
+		Error.Printf("Game %s does not exist", id)
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
-	success, deletedCount := db.DeleteResultsWithGame(ctx, name)
+	success, deletedCount := db.DeleteResultsWithGame(ctx, id)
 	if !success {
-		Error.Printf("Could not delete results for game %s\n", name)
+		Error.Printf("Could not delete results for game %s\n", id)
 		c.AbortWithStatus(http.StatusServiceUnavailable)
 		return
 	}
 
-	Info.Printf("Deleted %d results for game %s\n", deletedCount, name)
+	Info.Printf("Deleted %d results for game %s\n", deletedCount, id)
 
-	if success := db.DeleteGame(ctx, name); !success {
-		Error.Printf("Could not delete game %s\n", name)
+	if success := db.DeleteGame(ctx, id); !success {
+		Error.Printf("Could not delete game %s\n", id)
 		c.AbortWithStatus(http.StatusServiceUnavailable)
 		return
 	}
 
-	Info.Printf("Deleted game %s\n", name)
+	Info.Printf("Deleted game %s\n", id)
 
 	c.IndentedJSON(http.StatusNoContent, nil)
 }

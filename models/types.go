@@ -2,7 +2,6 @@ package models
 
 type Game struct {
 	ID          string `json:"id" bson:"id"`
-	Name        string `json:"name" bson:"name"`
 	TimeCreated int64  `json:"timeCreated" bson:"timeCreated"`
 	DisplayName string `json:"displayName" bson:"displayName"`
 	Synopsis    string `json:"synopsis" bson:"synopsis"`

@@ -25,7 +25,7 @@ func main() {
 
 		games.POST("", routes.PostGame)
 
-		gameByName := games.Group("/:name")
+		gameByName := games.Group("/:gameId")
 		{
 			gameByName.GET("", routes.GetGame)
 

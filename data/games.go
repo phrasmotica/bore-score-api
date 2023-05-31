@@ -28,12 +28,8 @@ func (d *MongoDatabase) GetAllGames(ctx context.Context) (bool, []models.Game) {
 	return true, games
 }
 
-func (*MongoDatabase) GetGame(ctx context.Context, id string) (bool, *models.Game) {
-	panic("unimplemented")
-}
-
-func (d *MongoDatabase) GetGameByName(ctx context.Context, name string) (bool, *models.Game) {
-	result := d.findGame(ctx, name)
+func (d *MongoDatabase) GetGame(ctx context.Context, id string) (bool, *models.Game) {
+	result := d.findGame(ctx, id)
 	if err := result.Err(); err != nil {
 		Error.Println(err)
 		return false, nil
@@ -49,13 +45,13 @@ func (d *MongoDatabase) GetGameByName(ctx context.Context, name string) (bool, *
 	return true, &game
 }
 
-func (d *MongoDatabase) GameExists(ctx context.Context, name string) bool {
-	result := d.findGame(ctx, name)
+func (d *MongoDatabase) GameExists(ctx context.Context, id string) bool {
+	result := d.findGame(ctx, id)
 	return result.Err() == nil
 }
 
-func (d *MongoDatabase) findGame(ctx context.Context, name string) *mongo.SingleResult {
-	filter := bson.D{{"name", name}}
+func (d *MongoDatabase) findGame(ctx context.Context, id string) *mongo.SingleResult {
+	filter := bson.D{{"id", id}}
 	return d.Database.Collection("Games").FindOne(ctx, filter)
 }
 
@@ -73,8 +69,8 @@ func (d *MongoDatabase) AddGame(ctx context.Context, newGame *models.Game) bool 
 	return true
 }
 
-func (d *MongoDatabase) DeleteGame(ctx context.Context, name string) bool {
-	filter := bson.D{{"name", name}}
+func (d *MongoDatabase) DeleteGame(ctx context.Context, id string) bool {
+	filter := bson.D{{"id", id}}
 	_, err := d.Database.Collection("Games").DeleteOne(ctx, filter)
 
 	if err != nil {
