@@ -9,6 +9,7 @@ Run `build.ps1 -Push` locally. This will push the Docker container to Docker Hub
 Set the following Application settings:
 
 - `GIN_MODE`=`release`
+- `JWT_SECRET_KEY`=`<random string, of length at least 32>`
 
 Set **at least one** of the following Application settings:
 
