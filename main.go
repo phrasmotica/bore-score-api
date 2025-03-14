@@ -33,7 +33,7 @@ func main() {
 	router.Use(auth.CORSMiddleware())
 
 	docs.SwaggerInfo.BasePath = "/"
-	router.GET("/swagger/index.html", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	approvals := router.Group("/approvals", auth.TokenAuth(false))
 	{
