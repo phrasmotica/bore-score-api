@@ -27,6 +27,10 @@ import (
 // @host localhost:8000
 // @BasePath /
 // @schemes http
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 func main() {
 	router := gin.Default()
 

@@ -29,6 +29,15 @@ type UpdatePasswordRequest struct {
 	NewPassword     string `json:"newPassword" bson:"newPassword"`
 }
 
+// GetSummary    godoc
+// @Summary      Gets a user
+// @Description  Gets a user
+// @Tags         Summary
+// @Produce      json
+// @Param        username path string true "The user's username"
+// @Security     BearerAuth
+// @Success      200 {object} routes.GetUserResponse
+// @Router       /users/{username} [get]
 func GetUser(c *gin.Context) {
 	ctx := context.TODO()
 

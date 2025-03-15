@@ -20,5 +20,157 @@
     },
     "host": "localhost:8000",
     "basePath": "/",
-    "paths": {}
+    "paths": {
+        "/memberships/{username}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Gets a user's group memberships",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Summary"
+                ],
+                "summary": "Gets a user's group memberships",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "The user's username",
+                        "name": "username",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.GroupMembership"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/summary": {
+            "get": {
+                "description": "Gets a summary of the database",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Summary"
+                ],
+                "summary": "Gets a summary of the database",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/data.Summary"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{username}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Gets a user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Summary"
+                ],
+                "summary": "Gets a user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "The user's username",
+                        "name": "username",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/routes.GetUserResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "data.Summary": {
+            "type": "object",
+            "properties": {
+                "gameCount": {
+                    "type": "integer"
+                },
+                "groupCount": {
+                    "type": "integer"
+                },
+                "playerCount": {
+                    "type": "integer"
+                },
+                "resultCount": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.GroupMembership": {
+            "type": "object",
+            "properties": {
+                "groupId": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "invitationId": {
+                    "type": "string"
+                },
+                "timeCreated": {
+                    "type": "integer"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "routes.GetUserResponse": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
 }

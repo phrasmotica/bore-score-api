@@ -8,6 +8,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// GetSummary    godoc
+// @Summary      Gets a user's group memberships
+// @Description  Gets a user's group memberships
+// @Tags         Summary
+// @Produce      json
+// @Param        username path string true "The user's username"
+// @Security     BearerAuth
+// @Success      200 {object} []models.GroupMembership
+// @Failure      401
+// @Router       /memberships/{username} [get]
 func GetGroupMemberships(c *gin.Context) {
 	username := c.Param("username")
 	callingUsername := c.GetString("username")
@@ -26,7 +36,7 @@ func GetGroupMemberships(c *gin.Context) {
 		return
 	}
 
-	success, approvals := db.GetGroupMemberships(ctx, username)
+	success, memberships := db.GetGroupMemberships(ctx, username)
 
 	if !success {
 		Error.Println("Could not get group memberships")
@@ -34,9 +44,9 @@ func GetGroupMemberships(c *gin.Context) {
 		return
 	}
 
-	Info.Printf("Got %d group memberships\n", len(approvals))
+	Info.Printf("Got %d group memberships\n", len(memberships))
 
-	c.IndentedJSON(http.StatusOK, approvals)
+	c.IndentedJSON(http.StatusOK, memberships)
 }
 
 func AddGroupMembership(c *gin.Context) {

@@ -1,4 +1,36 @@
 basePath: /
+definitions:
+  data.Summary:
+    properties:
+      gameCount:
+        type: integer
+      groupCount:
+        type: integer
+      playerCount:
+        type: integer
+      resultCount:
+        type: integer
+    type: object
+  models.GroupMembership:
+    properties:
+      groupId:
+        type: string
+      id:
+        type: string
+      invitationId:
+        type: string
+      timeCreated:
+        type: integer
+      username:
+        type: string
+    type: object
+  routes.GetUserResponse:
+    properties:
+      email:
+        type: string
+      username:
+        type: string
+    type: object
 host: localhost:8000
 info:
   contact:
@@ -12,7 +44,71 @@ info:
   termsOfService: http://swagger.io/terms/
   title: BoreScore API
   version: 0.1.0
-paths: {}
+paths:
+  /memberships/{username}:
+    get:
+      description: Gets a user's group memberships
+      parameters:
+      - description: The user's username
+        in: path
+        name: username
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.GroupMembership'
+            type: array
+        "401":
+          description: Unauthorized
+      security:
+      - BearerAuth: []
+      summary: Gets a user's group memberships
+      tags:
+      - Summary
+  /summary:
+    get:
+      description: Gets a summary of the database
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/data.Summary'
+      summary: Gets a summary of the database
+      tags:
+      - Summary
+  /users/{username}:
+    get:
+      description: Gets a user
+      parameters:
+      - description: The user's username
+        in: path
+        name: username
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/routes.GetUserResponse'
+      security:
+      - BearerAuth: []
+      summary: Gets a user
+      tags:
+      - Summary
 schemes:
 - http
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"
