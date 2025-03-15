@@ -48,7 +48,7 @@ func TokenAuth(optional bool) gin.HandlerFunc {
 			return
 		}
 
-		err, claims := ValidateToken(tokenString)
+		claims, err := ValidateToken(tokenString)
 		if err != nil {
 			Error.Println(err.Error())
 			c.AbortWithStatus(http.StatusUnauthorized)
