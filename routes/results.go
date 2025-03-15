@@ -2,7 +2,6 @@ package routes
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"phrasmotica/bore-score-api/data"
 	"phrasmotica/bore-score-api/models"
@@ -237,7 +236,7 @@ func computeOverallApproval(ctx context.Context, db data.IDatabase, result *mode
 			}
 		}
 	} else {
-		Error.Println(fmt.Sprintf("Could not get approvals for result %s\n", result.ID))
+		Error.Printf("Could not get approvals for result %s\n", result.ID)
 	}
 
 	return approvalStatus
