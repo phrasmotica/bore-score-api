@@ -10,7 +10,7 @@ if ($Debugger) {
 }
 
 if (!$RunOnly) {
-    docker-compose -f .\docker-compose.dependencies.yml -f $file build
+    docker-compose -f .\docker-compose.dependencies.yml -f $file --env-file .\.env.docker build
 }
 
-docker-compose -f .\docker-compose.dependencies.yml -f $file up
+docker-compose -f .\docker-compose.dependencies.yml -f $file --env-file .\.env.docker up
