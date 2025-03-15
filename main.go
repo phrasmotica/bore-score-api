@@ -138,12 +138,6 @@ func main() {
 		winMethods.GET("", routes.GetWinMethods)
 	}
 
-	token := router.Group("/token")
-	{
-		token.POST("", routes.GenerateToken)
-		token.POST("/refresh", auth.TokenAuth(false), routes.RefreshToken)
-	}
-
 	users := router.Group("/users")
 	{
 		users.POST("", routes.RegisterUser)
