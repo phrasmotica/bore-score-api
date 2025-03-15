@@ -15,7 +15,7 @@ import (
 var jwtKey = []byte(os.Getenv("JWT_PUBLIC_KEY"))
 
 type JWTClaim struct {
-	Username    string   `json:"username"`
+	Username    string   `json:"preferred_username"`
 	Email       string   `json:"email"`
 	Permissions []string `json:"permissions"`
 	jwt.StandardClaims
