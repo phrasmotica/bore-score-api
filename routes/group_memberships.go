@@ -11,7 +11,7 @@ import (
 // GetSummary    godoc
 // @Summary      Gets a user's group memberships
 // @Description  Gets a user's group memberships
-// @Tags         Summary
+// @Tags         Groups
 // @Produce      json
 // @Param        username path string true "The user's username"
 // @Security     BearerAuth

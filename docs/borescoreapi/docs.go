@@ -37,7 +37,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Summary"
+                    "Groups"
                 ],
                 "summary": "Gets a user's group memberships",
                 "parameters": [
@@ -97,7 +97,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Summary"
+                    "Users"
                 ],
                 "summary": "Gets a user",
                 "parameters": [

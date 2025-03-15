@@ -69,7 +69,7 @@ paths:
       - BearerAuth: []
       summary: Gets a user's group memberships
       tags:
-      - Summary
+      - Groups
   /summary:
     get:
       description: Gets a summary of the database
@@ -103,7 +103,7 @@ paths:
       - BearerAuth: []
       summary: Gets a user
       tags:
-      - Summary
+      - Users
 schemes:
 - http
 securityDefinitions:

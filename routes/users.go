@@ -32,7 +32,7 @@ type UpdatePasswordRequest struct {
 // GetSummary    godoc
 // @Summary      Gets a user
 // @Description  Gets a user
-// @Tags         Summary
+// @Tags         Users
 // @Produce      json
 // @Param        username path string true "The user's username"
 // @Security     BearerAuth
