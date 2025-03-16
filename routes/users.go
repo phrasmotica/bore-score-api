@@ -82,7 +82,6 @@ func RegisterUser(c *gin.Context) {
 		TimeCreated: time.Now().UTC().Unix(),
 		Email:       request.Email,
 		Password:    request.Password,
-		Permissions: []string{},
 	}
 
 	if err := newUser.HashPassword(newUser.Password); err != nil {

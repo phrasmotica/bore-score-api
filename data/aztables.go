@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"phrasmotica/bore-score-api/models"
-	"strings"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
@@ -786,7 +785,6 @@ func (d *TableStorageDatabase) AddUser(ctx context.Context, newUser *models.User
 			"TimeCreated": aztables.EDMInt64(newUser.TimeCreated),
 			"Email":       newUser.Email,
 			"Password":    newUser.Password,
-			"Permissions": strings.Join(newUser.Permissions, ";"),
 		},
 	}
 
@@ -1162,7 +1160,6 @@ func createUser(entity *aztables.EDMEntity) models.User {
 		TimeCreated: propInt64(entity, "TimeCreated"),
 		Email:       propString(entity, "Email"),
 		Password:    propString(entity, "Password"),
-		Permissions: strings.Split(propString(entity, "Permissions"), ";"),
 	}
 }
 
