@@ -15,10 +15,15 @@ import (
 var jwtKey = []byte(os.Getenv("JWT_PUBLIC_KEY"))
 
 type JWTClaim struct {
-	Username    string   `json:"preferred_username"`
-	Email       string   `json:"email"`
-	Permissions []string `json:"permissions"`
+	Username       string                          `json:"preferred_username"`
+	Email          string                          `json:"email"`
+	Azp            string                          `json:"azp"`
+	ResourceAccess map[string]ClientResourceAccess `json:"resource_access"`
 	jwt.StandardClaims
+}
+
+type ClientResourceAccess struct {
+	Roles []string `json:"roles"`
 }
 
 func ValidateToken(signedToken string) (claims *JWTClaim, err error) {
